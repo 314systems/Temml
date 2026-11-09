@@ -32,12 +32,14 @@
     "esm": "^3.2.25",
     "globals": "^17.14.0",
     "rollup": "^4.59.0",
-    "terser": "^5.34.0"
+    "terser": "^5.34.0",
+    "vitest": "^5.1.0"
   },
   "scripts": {
     "lint": "eslint temml.js src",
-    "unit-test": "node ./test/unit-test.cjs",
-    "test": "pnpm lint && pnpm build && pnpm unit-test",
+    "unit-test": "vitest run",
+    "test:watch": "vitest",
+    "test": "pnpm lint && pnpm unit-test",
     "minify": "terser dist/temml.js -o dist/temml.min.js -c -m && terser contrib/mhchem/mhchem.js -o contrib/mhchem/mhchem.min.js -c -m && terser contrib/copy-tex/copy-tex.js -o contrib/copy-tex/copy-tex.min.js -c -m",
     "build": "rollup --config ./utils/rollupConfig.mjs && node utils/insertPlugins.js && node utils/copyfiles.js && pnpm minify",
     "dist": "pnpm build"
