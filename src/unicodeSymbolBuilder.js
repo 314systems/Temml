@@ -2,7 +2,7 @@
 // whose purpose is to generate `unicodeSymbols` for Parser.js
 // In this way, only this module, and not the distribution/browser,
 // needs String's normalize function.
-import * as accents from "./unicodeAccents";
+import accents from "./unicodeAccents";
 
 const result = {};
 const letters =
