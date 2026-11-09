@@ -1,6 +1,6 @@
 import defineEnvironment from "../defineEnvironment";
 import { parseCD } from "./cd";
-import { bordermatrixParseTree } from "./borderTree.js"
+import { bordermatrixParseTree } from "./borderTree"
 import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import { Span } from "../domTree"
@@ -12,12 +12,23 @@ import { checkSymbolNodeType } from "../parseNode";
 import { stringFromArg } from "../macros"
 import { calculateSize } from "../units"
 import * as mml from "../buildMathML";
+import { isMathNodeOfType } from "../mathMLTree";
+import type { MathNode } from "../mathMLTree";
+import type { EnvContext } from "../defineEnvironment";
+import type { MacroDefinition, MacroExpansion } from "../defineMacro";
+import type { MathMLBuilder } from "../defineFunction";
+import type Namespace from "../Namespace";
+import type Parser from "../Parser";
+import type { AnyParseNode, ColSpec, ParseNode } from "../parseNode";
+import type { CssStyle, MathDomNode } from "../tree";
+import type { StyleStr } from "../types";
+import type { Measurement } from "../units";
 
 // Helper functions
-function getHLines(parser) {
+function getHLines(parser: Parser): boolean[] {
   // Return an array. The array length = number of hlines.
   // Each element in the array tells if the line is dashed.
-  const hlineInfo = [];
+  const hlineInfo: boolean[] = [];
   parser.consumeSpaces();
   let nxt = parser.fetch().text;
   if (nxt === "\\relax") {
@@ -34,7 +45,7 @@ function getHLines(parser) {
   return hlineInfo;
 }
 
-const validateAmsEnvironmentContext = context => {
+const validateAmsEnvironmentContext = (context: EnvContext): void => {
   const settings = context.parser.settings;
   if (!settings.displayMode) {
     throw new ParseError(`{${context.envName}} can be used only in display mode.`);
@@ -42,16 +53,18 @@ const validateAmsEnvironmentContext = context => {
 }
 
 const sizeRegEx = /([-+]?) *(\d+(?:\.\d*)?|\.\d+) *([a-z]{2})/
-const arrayGaps = macros => {
-  let arraystretch = macros.get("\\arraystretch")
-  if (typeof arraystretch !== "string") {
-    arraystretch = stringFromArg(arraystretch.tokens)
-  }
-  arraystretch = isNaN(arraystretch) ? null : Number(arraystretch)
-  let arraycolsepStr = macros.get("\\arraycolsep")
-  if (typeof arraycolsepStr !== "string") {
-    arraycolsepStr = stringFromArg(arraycolsepStr.tokens)
-  }
+const arrayGaps = (
+  macros: Namespace<MacroDefinition>
+): [number | null, Measurement | null] => {
+  const stretchMacro = macros.get("\\arraystretch")
+  const stretchStr: string = typeof stretchMacro === "string"
+    ? stretchMacro
+    : stringFromArg((stretchMacro as MacroExpansion).tokens)
+  const arraystretch = isNaN(Number(stretchStr)) ? null : Number(stretchStr)
+  const colsepMacro = macros.get("\\arraycolsep")
+  const arraycolsepStr: string = typeof colsepMacro === "string"
+    ? colsepMacro
+    : stringFromArg((colsepMacro as MacroExpansion).tokens)
   const match = sizeRegEx.exec(arraycolsepStr)
   const arraycolsep = match
     ? { number: +(match[1] + match[2]), unit: match[3] }
@@ -59,13 +72,14 @@ const arrayGaps = macros => {
   return [arraystretch, arraycolsep]
 }
 
-const checkCellForLabels = cell => {
+const checkCellForLabels = (cell: AnyParseNode[]): string => {
   // Check if the author wrote a \tag{} inside this cell.
   let rowLabel = ""
   for (let i = 0; i < cell.length; i++) {
-    if (cell[i].type === "label") {
+    const node = cell[i]
+    if (node.type === "label") {
       if (rowLabel) { throw new ParseError(("Multiple \\labels in one row")) }
-      rowLabel = cell[i].string
+      rowLabel = node.string
     }
   }
   return rowLabel
@@ -76,7 +90,7 @@ const checkCellForLabels = cell => {
 // * true: Automatic equation numbering, overridable by \tag
 // * false: Tags allowed on each row, but no automatic numbering
 // This function *doesn't* work with the "split" environment name.
-function getAutoTag(name) {
+function getAutoTag(name: string): boolean | undefined {
   if (name.indexOf("ed") === -1) {
     return name.indexOf("*") === -1;
   }
@@ -89,21 +103,33 @@ function getAutoTag(name) {
  * with one group per cell.  If given an optional argument scriptLevel
  * ("text", "display", etc.), then each cell is cast into that scriptLevel.
  */
+interface ArrayOptions {
+  cols?: ColSpec[];
+  envClasses: string[]; // align(ed|at|edat) | array | cases | cd | small | multline
+  autoTag?: boolean;
+  singleRow?: boolean;
+  emptySingleRow?: boolean;
+  maxNumCols?: number;
+  leqno?: boolean;
+  arraystretch?: number | null;
+  arraycolsep?: Measurement | null;
+}
+
 function parseArray(
-  parser,
+  parser: Parser,
   {
-    cols, // [{ type: string , align: l|c|r|null }]
-    envClasses, // align(ed|at|edat) | array | cases | cd | small | multline
-    autoTag,        // boolean
-    singleRow,      // boolean
-    emptySingleRow, // boolean
-    maxNumCols,     // number
-    leqno,          // boolean
-    arraystretch,   // number  | null
-    arraycolsep     // size value | null
-},
-  scriptLevel
-) {
+    cols,
+    envClasses,
+    autoTag,
+    singleRow,
+    emptySingleRow,
+    maxNumCols,
+    leqno,
+    arraystretch,
+    arraycolsep
+  }: ArrayOptions,
+  scriptLevel: StyleStr
+): ParseNode<"array"> {
   const endToken = envClasses && envClasses.includes("bordermatrix") ? "}" : "\\end"
   parser.gullet.beginGroup();
   if (!singleRow) {
@@ -115,14 +141,14 @@ function parseArray(
   // Start group for first cell
   parser.gullet.beginGroup();
 
-  let row = [];
+  let row: AnyParseNode[] = [];
   const body = [row];
-  const rowGaps = [];
-  const labels = [];
+  const rowGaps: Array<Measurement | null> = [];
+  const labels: string[] = [];
 
-  const hLinesBeforeRow = [];
+  const hLinesBeforeRow: boolean[][] = [];
 
-  const tags = (autoTag != null ? [] : undefined);
+  const tags: Array<boolean | AnyParseNode[]> | undefined = (autoTag != null ? [] : undefined);
 
   // amsmath uses \global\@eqnswtrue and \global\@eqnswfalse to represent
   // whether this row should have an equation number.  Simulate this with
@@ -136,7 +162,8 @@ function parseArray(
     if (tags) {
       if (parser.gullet.macros.get("\\df@tag")) {
         tags.push(parser.subparse([new Token("\\df@tag")]));
-        parser.gullet.macros.set("\\df@tag", undefined, true);
+        // Undefine \df@tag.
+        parser.gullet.macros.set("\\df@tag", undefined as unknown as MacroDefinition, true);
       } else {
         tags.push(Boolean(autoTag) &&
             parser.gullet.macros.get("\\@eqnsw") === "1");
@@ -150,14 +177,14 @@ function parseArray(
 
   while (true) {
     // Parse each cell in its own group (namespace)
-    let cell = parser.parseExpression(false, singleRow ? "\\end" : "\\\\");
+    const cellBody = parser.parseExpression(false, singleRow ? "\\end" : "\\\\");
     parser.gullet.endGroup();
     parser.gullet.beginGroup();
 
-    cell = {
+    const cell: ParseNode<"ordgroup"> = {
       type: "ordgroup",
       mode: parser.mode,
-      body: cell,
+      body: cellBody,
       semisimple: true
     };
     row.push(cell);
@@ -194,7 +221,7 @@ function parseArray(
       break;
     } else if (next === "\\\\") {
       parser.consume();
-      let size;
+      let size: ParseNode<"size"> | null | undefined;
       // \def\Let@{\let\\\math@cr}
       // \def\math@cr{...\math@cr@}
       // \def\math@cr@{\new@ifnextchar[\math@cr@@{\math@cr@@[\z@]}}
@@ -244,17 +271,17 @@ function parseArray(
 
 // Decides on a scriptLevel for cells in an array according to whether the given
 // environment name starts with the letter 'd'.
-function dCellStyle(envName) {
+function dCellStyle(envName: string): StyleStr {
   return envName.slice(0, 1) === "d" ? "display" : "text"
 }
 
-const alignMap = {
+const alignMap: Record<string, string> = {
   c: "center ",
   l: "left ",
   r: "right "
 };
 
-const glue = group => {
+const glue = (group: ParseNode<"array">): MathNode => {
   const glueNode = new mathMLTree.MathNode("mtd", [])
   glueNode.style = { padding: "0", width: "50%" }
   if (group.envClasses.includes("multline")) {
@@ -263,15 +290,18 @@ const glue = group => {
   return glueNode
 }
 
-const mathmlBuilder = function(group, style) {
-  const tbl = [];
+// The cells of a table row. Rows only ever contain <mtd> cells.
+const cellsOf = (mtr: MathNode): MathNode[] => mtr.children as MathNode[]
+
+const mathmlBuilder: MathMLBuilder<"array"> = function(group, style) {
+  const tbl: MathNode[] = [];
   const numRows = group.body.length
   const hlines = group.hLinesBeforeRow;
   const tagIsPresent = (group.tags && group.tags.some((tag) => tag));
 
   for (let i = 0; i < numRows; i++) {
     const rw = group.body[i];
-    const row = [];
+    const row: MathNode[] = [];
     const cellLevel = group.scriptLevel === "text"
       ? StyleLevel.TEXT
       : group.scriptLevel === "script"
@@ -295,20 +325,23 @@ const mathmlBuilder = function(group, style) {
     const numColumns = group.body[0].length
     // Fill out a short row with empty <mtd> elements.
     for (let k = 0; k < numColumns - rw.length; k++) {
-      row.push(new mathMLTree.MathNode("mtd", [], [], style))
+      // FIXME: This passes the Style object as the inline style of the cell.
+      row.push(new mathMLTree.MathNode("mtd", [], [], style as unknown as CssStyle))
     }
     if (tagIsPresent) {
-      const tag = group.tags[i];
-      let tagElement
+      const tag = group.tags![i];
+      let tagElement: MathDomNode
       if (tag === true) {  // automatic numbering
         tagElement = new mathMLTree.MathNode("mtext", [new Span(["tml-eqn"])])
       } else if (tag === false) {
         // \nonumber/\notag or starred environment
         tagElement = new mathMLTree.MathNode("mtext", [], [])
       } else {  // manual \tag
-        tagElement = mml.buildExpressionRow(tag[0].body, style.withLevel(cellLevel), true)
-        tagElement = mml.consolidateText(tagElement)
-        tagElement.classes = ["tml-tag"]
+        const tagNode = mml.consolidateText(mml.buildExpressionRow(
+          (tag[0] as ParseNode<"text">).body, style.withLevel(cellLevel), true
+        )) as MathNode
+        tagNode.classes = ["tml-tag"]
+        tagElement = tagNode
       }
       if (tagElement) {
         row.unshift(glue(group))
@@ -330,18 +363,18 @@ const mathmlBuilder = function(group, style) {
     // Write horizontal rules
     if (i === 0 && hlines[0].length > 0) {
       if (hlines[0].length === 2) {
-        mtr.children.forEach(cell => { cell.style.borderTop = "0.15em double" })
+        cellsOf(mtr).forEach(cell => { cell.style.borderTop = "0.15em double" })
       } else {
-        mtr.children.forEach(cell => {
+        cellsOf(mtr).forEach(cell => {
           cell.style.borderTop = hlines[0][0] ? "0.06em dashed" : "0.06em solid"
         })
       }
     }
     if (hlines[i + 1].length > 0) {
       if (hlines[i + 1].length === 2) {
-        mtr.children.forEach(cell => { cell.style.borderBottom = "0.15em double" })
+        cellsOf(mtr).forEach(cell => { cell.style.borderBottom = "0.15em double" })
       } else {
-        mtr.children.forEach(cell => {
+        cellsOf(mtr).forEach(cell => {
           cell.style.borderBottom = hlines[i + 1][0] ? "0.06em dashed" : "0.06em solid"
         })
       }
@@ -350,8 +383,8 @@ const mathmlBuilder = function(group, style) {
     // Check for \hphantom \from \bordermatrix
     let mustSquashRow = true
     for (let j = 0; j < mtr.children.length; j++) {
-      const child = mtr.children[j].children[0];
-      if (!(child && child.type === "mpadded" && child.attributes.height === "0px")) {
+      const child = cellsOf(mtr)[j].children[0];
+      if (!(isMathNodeOfType(child, "mpadded") && child.attributes.height === "0px")) {
         mustSquashRow = false
         break
       }
@@ -361,8 +394,8 @@ const mathmlBuilder = function(group, style) {
       // TODO: Remove the next line when Firefox no longer needs it.
       mtr.classes.push("ff-squash") // necessary in Firefox only.
       for (let j = 0; j < mtr.children.length; j++) {
-        mtr.children[j].style.paddingTop = "0"
-        mtr.children[j].style.paddingBottom = "0"
+        cellsOf(mtr)[j].style.paddingTop = "0"
+        cellsOf(mtr)[j].style.paddingBottom = "0"
       }
     }
 
@@ -376,14 +409,14 @@ const mathmlBuilder = function(group, style) {
     const pad = String(1.4 * group.arraystretch - 0.8) + "ex"
     for (let i = 0; i < tbl.length; i++) {
       for (let j = 0; j < tbl[i].children.length; j++) {
-        tbl[i].children[j].style.paddingTop = pad
-        tbl[i].children[j].style.paddingBottom = pad
+        cellsOf(tbl[i])[j].style.paddingTop = pad
+        cellsOf(tbl[i])[j].style.paddingBottom = pad
       }
     }
   }
 
-  let sidePadding
-  let sidePadUnit
+  let sidePadding: string | undefined
+  let sidePadUnit: string | undefined
   if (group.envClasses.length > 0) {
     sidePadding = group.envClasses.includes("abut")
       ? "0"
@@ -404,7 +437,7 @@ const mathmlBuilder = function(group, style) {
   if (sidePadding) {
     const numCols = tbl.length === 0 ? 0 : tbl[0].children.length
 
-    const sidePad = (j, hand) => {
+    const sidePad = (j: number, hand: number): string | undefined => {
       if (j === 0 && hand === 0) { return "0" }
       if (j === numCols - 1 && hand === 1) { return "0" }
       if (group.envClasses[0] !== "align") { return sidePadding }
@@ -419,17 +452,17 @@ const mathmlBuilder = function(group, style) {
     // Side padding
     for (let i = 0; i < tbl.length; i++) {
       for (let j = 0; j < tbl[i].children.length; j++) {
-        tbl[i].children[j].style.paddingLeft = `${sidePad(j, 0)}${sidePadUnit}`
-        tbl[i].children[j].style.paddingRight = `${sidePad(j, 1)}${sidePadUnit}`
+        cellsOf(tbl[i])[j].style.paddingLeft = `${sidePad(j, 0)}${sidePadUnit}`
+        cellsOf(tbl[i])[j].style.paddingRight = `${sidePad(j, 1)}${sidePadUnit}`
       }
     }
   }
   if (group.envClasses.length === 0) {
     // Set zero padding on side of the matrix
     for (let i = 0; i < tbl.length; i++) {
-      tbl[i].children[0].style.paddingLeft = "0em"
+      cellsOf(tbl[i])[0].style.paddingLeft = "0em"
       if (tbl[i].children.length === tbl[0].children.length) {
-        tbl[i].children[tbl[i].children.length - 1].style.paddingRight = "0em"
+        cellsOf(tbl[i])[tbl[i].children.length - 1].style.paddingRight = "0em"
       }
     }
   }
@@ -443,19 +476,19 @@ const mathmlBuilder = function(group, style) {
         for (let j = 0; j < row.children.length; j++) {
           // Chromium does not recognize text-align: left. Use -webkit-
           // TODO: Remove -webkit- when Chromium no longer needs it.
-          row.children[j].classes = ["tml-" + (j % 2 ? "left" : "right")]
+          cellsOf(row)[j].classes = ["tml-" + (j % 2 ? "left" : "right")]
         }
         if (tagIsPresent) {
           const k = group.leqno ? 0 : row.children.length - 1
-          row.children[k].classes = [];  // Default is center.
+          cellsOf(row)[k].classes = [];  // Default is center.
         }
       }
       if (row.children.length > 1 && group.envClasses.includes("cases")) {
-        row.children[1].style.paddingLeft = "1em"
+        cellsOf(row)[1].style.paddingLeft = "1em"
       }
 
       if (group.envClasses.includes("cases") || group.envClasses.includes("subarray")) {
-        for (const cell of row.children) {
+        for (const cell of cellsOf(row)) {
           cell.classes.push("tml-left")
         }
       }
@@ -498,48 +531,50 @@ const mathmlBuilder = function(group, style) {
         : cols[0].separator === "|"
         ? "0.06em solid "
         : "0.06em dashed "
-      for (const row of table.children) {
-        row.children[0].style.borderLeft = sep
+      for (const row of table.children as MathNode[]) {
+        cellsOf(row)[0].style.borderLeft = sep
       }
     }
     let iCol = tagIsPresent ? 0 : -1
     for (let i = iStart; i < iEnd; i++) {
-      if (cols[i].type === "align") {
-        const colAlign = alignMap[cols[i].align];
+      const col = cols[i]
+      if (col.type === "align") {
+        const colAlign = alignMap[col.align];
         iCol += 1
-        for (const row of table.children) {
+        for (const row of table.children as MathNode[]) {
           if (colAlign.trim() !== "center" && iCol < row.children.length) {
-            row.children[iCol].classes = ["tml-" + colAlign.trim()]
+            cellsOf(row)[iCol].classes = ["tml-" + colAlign.trim()]
           }
         }
         prevTypeWasAlign = true;
-      } else if (cols[i].type === "separator") {
+      } else if (col.type === "separator") {
         // MathML accepts only single lines between cells.
         // So we read only the first of consecutive separators.
         if (prevTypeWasAlign) {
           const sep = cols[i + 1].type === "separator"
             ? "0.15em double"
-            : cols[i].separator === "|"
+            : col.separator === "|"
             ? "0.06em solid"
             : "0.06em dashed"
-          for (const row of table.children) {
+          for (const row of table.children as MathNode[]) {
             if (iCol < row.children.length) {
-              row.children[iCol].style.borderRight = sep
+              cellsOf(row)[iCol].style.borderRight = sep
             }
           }
         }
         prevTypeWasAlign = false
       }
     }
-    if (cols[cols.length - 1].type === "separator") {
+    const lastCol = cols[cols.length - 1]
+    if (lastCol.type === "separator") {
       const sep = cols[cols.length - 2].type === "separator"
         ? "0.15em double"
-        : cols[cols.length - 1].separator === "|"
+        : lastCol.separator === "|"
         ? "0.06em solid"
         : "0.06em dashed"
-      for (const row of table.children) {
-        row.children[row.children.length - 1].style.borderRight = sep
-        row.children[row.children.length - 1].style.paddingRight = "0.4em"
+      for (const row of table.children as MathNode[]) {
+        cellsOf(row)[row.children.length - 1].style.borderRight = sep
+        cellsOf(row)[row.children.length - 1].style.paddingRight = "0.4em"
       }
     }
   }
@@ -554,12 +589,12 @@ const mathmlBuilder = function(group, style) {
 };
 
 // Convenience function for align, align*, aligned, alignat, alignat*, alignedat, split.
-const alignedHandler = function(context, args) {
+const alignedHandler = function(context: EnvContext, args: AnyParseNode[]): ParseNode<"array"> {
   if (context.envName.indexOf("ed") === -1) {
     validateAmsEnvironmentContext(context);
   }
   const isSplit = context.envName === "split";
-  const cols = [];
+  const cols: ColSpec[] = [];
   const res = parseArray(
     context.parser,
     {
@@ -582,17 +617,18 @@ const alignedHandler = function(context, args) {
   // At the same time, prepend empty group {} at beginning of every second
   // cell in each row (starting with second cell) so that operators become
   // binary.  This behavior is implemented in amsmath's \start@aligned.
-  let numMaths;
+  let numMaths: number | undefined;
   let numCols = 0;
   const isAlignedAt = context.envName.indexOf("at") > -1
   if (args[0] && isAlignedAt) {
     // alignat environment takes an argument w/ number of columns
     let arg0 = ""
-    for (let i = 0; i < args[0].body.length; i++) {
-      const textord = assertNodeType(args[0].body[i], "textord")
+    const arg0Body = assertNodeType(args[0], "ordgroup").body
+    for (let i = 0; i < arg0Body.length; i++) {
+      const textord = assertNodeType(arg0Body[i], "textord")
       arg0 += textord.text
     }
-    if (isNaN(arg0)) {
+    if (isNaN(Number(arg0))) {
       throw new ParseError("The alignat enviroment requires a numeric first argument.")
     }
     numMaths = Number(arg0)
@@ -602,7 +638,7 @@ const alignedHandler = function(context, args) {
     if (isAlignedAt) {
       // Case 1
       const curMaths = row.length / 2;
-      if (numMaths < curMaths) {
+      if (numMaths! < curMaths) {
         throw new ParseError(
           "Too many math in a row: " + `expected ${numMaths}, but got ${curMaths}`,
           row[0]
@@ -654,7 +690,7 @@ defineEnvironment({
     // - The argument is a bare symbol node.
     const symNode = checkSymbolNodeType(args[0]);
     const colalign = symNode ? [args[0]] : assertNodeType(args[0], "ordgroup").body;
-    const cols = colalign.map(function(nde) {
+    const cols = colalign.map(function(nde): ColSpec {
       const node = assertSymbolNodeType(nde);
       const ca = node.text;
       if ("lcr".indexOf(ca) !== -1) {
@@ -676,7 +712,7 @@ defineEnvironment({
       throw new ParseError("Unknown column alignment: " + ca, nde);
     });
     const [arraystretch, arraycolsep] = arrayGaps(context.parser.gullet.macros)
-    const res = {
+    const res: ArrayOptions = {
       cols,
       envClasses: ["array"],
       maxNumCols: cols.length,
@@ -712,17 +748,17 @@ defineEnvironment({
     numArgs: 0
   },
   handler(context) {
-    const delimiters = {
+    const delimiters = ({
       matrix: null,
       pmatrix: ["(", ")"],
       bmatrix: ["[", "]"],
       Bmatrix: ["\\{", "\\}"],
       vmatrix: ["|", "|"],
       Vmatrix: ["\\Vert", "\\Vert"]
-    }[context.envName.replace("*", "")];
+    } as Record<string, string[] | null>)[context.envName.replace("*", "")];
     // \hskip -\arraycolsep in amsmath
     let colAlign = "c";
-    const payload = {
+    const payload: ArrayOptions = {
       envClasses: [],
       cols: []
     };
@@ -751,7 +787,10 @@ defineEnvironment({
       : [];
     const [arraystretch, arraycolsep] = arrayGaps(context.parser.gullet.macros)
     res.arraystretch = arraystretch
-    if (arraycolsep && !(arraycolsep === 6 && arraycolsep === "pt")) {
+    // TODO: This was `arraycolsep && !(arraycolsep === 6 && arraycolsep === "pt")`, which
+    // compares an object with a number and a string, so it is the same as below. It was
+    // likely meant to skip the default 6pt, but doing so would change matrix spacing.
+    if (arraycolsep) {
       res.arraycolsep = arraycolsep
     }
     return delimiters
@@ -775,7 +814,7 @@ defineEnvironment({
     numArgs: 0
   },
   handler(context) {
-    const payload = { cols: [], envClasses: ["bordermatrix"] }
+    const payload: ArrayOptions = { cols: [], envClasses: ["bordermatrix"] }
     const res = parseArray(context.parser, payload, "text")
     res.cols = res.body.length > 0
       ? new Array(res.body[0].length).fill({ type: "align", align: "c" })
@@ -812,7 +851,7 @@ defineEnvironment({
     // Parsing of {subarray} is similar to {array}
     const symNode = checkSymbolNodeType(args[0]);
     const colalign = symNode ? [args[0]] : assertNodeType(args[0], "ordgroup").body;
-    const cols = colalign.map(function(nde) {
+    const cols = colalign.map(function(nde): ColSpec {
       const node = assertSymbolNodeType(nde);
       const ca = node.text;
       // {subarray} only recognizes "l" & "c"
@@ -827,11 +866,7 @@ defineEnvironment({
     if (cols.length > 1) {
       throw new ParseError("{subarray} can contain only one column");
     }
-    let res = {
-      cols,
-      envClasses: ["small"]
-    };
-    res = parseArray(context.parser, res, "script");
+    const res = parseArray(context.parser, { cols, envClasses: ["small"] }, "script");
     if (res.body.length > 0 && res.body[0].length > 1) {
       throw new ParseError("{subarray} can contain only one column");
     }
@@ -853,7 +888,7 @@ defineEnvironment({
     numArgs: 0
   },
   handler(context) {
-    const payload = {
+    const payload: ArrayOptions = {
       cols: [],
       envClasses: ["cases"]
     };

@@ -3,8 +3,11 @@ import * as mathMLTree from "../mathMLTree";
 import * as mml from "../buildMathML";
 import { assertSymbolNodeType } from "../parseNode";
 import ParseError from "../ParseError";
+import type { MathNode } from "../mathMLTree";
+import type Parser from "../Parser";
+import type { AnyParseNode, ParseNode } from "../parseNode";
 
-const cdArrowFunctionName = {
+const cdArrowFunctionName: Record<string, string> = {
   ">": "\\\\cdrightarrow",
   "<": "\\\\cdleftarrow",
   "=": "\\\\cdlongequal",
@@ -14,20 +17,24 @@ const cdArrowFunctionName = {
   ".": "no arrow"
 };
 
-const newCell = () => {
+const newCell = (): ParseNode<"styling"> => {
   // Create an empty cell, to be filled below with parse nodes.
   return { type: "styling", body: [], mode: "math", scriptLevel: "display" };
 };
 
-const isStartOfArrow = (node) => {
+const isStartOfArrow = (node: AnyParseNode): boolean => {
   return node.type === "textord" && node.text === "@";
 };
 
-const isLabelEnd = (node, endChar) => {
+const isLabelEnd = (node: AnyParseNode, endChar: string): boolean => {
   return (node.type === "mathord" || node.type === "atom") && node.text === endChar;
 };
 
-function cdArrow(arrowChar, labels, parser) {
+function cdArrow(
+  arrowChar: string,
+  labels: ParseNode<"ordgroup">[],
+  parser: Parser
+): AnyParseNode {
   // Return a parse tree of an arrow and its labels.
   // This acts in a way similar to a macro expansion.
   const funcName = cdArrowFunctionName[arrowChar];
@@ -38,7 +45,7 @@ function cdArrow(arrowChar, labels, parser) {
     case "\\uparrow":
     case "\\downarrow": {
       const leftLabel = parser.callFunction("\\\\cdleft", [labels[0]], []);
-      const bareArrow = {
+      const bareArrow: ParseNode<"atom"> = {
         type: "atom",
         text: funcName,
         mode: "math",
@@ -46,7 +53,7 @@ function cdArrow(arrowChar, labels, parser) {
       };
       const sizedArrow = parser.callFunction("\\Big", [bareArrow], []);
       const rightLabel = parser.callFunction("\\\\cdright", [labels[1]], []);
-      const arrowGroup = {
+      const arrowGroup: ParseNode<"ordgroup"> = {
         type: "ordgroup",
         mode: "math",
         body: [leftLabel, sizedArrow, rightLabel],
@@ -57,7 +64,7 @@ function cdArrow(arrowChar, labels, parser) {
     case "\\\\cdlongequal":
       return parser.callFunction("\\\\cdlongequal", [], []);
     case "\\Vert": {
-      const arrow = { type: "textord", text: "\\Vert", mode: "math" };
+      const arrow: ParseNode<"textord"> = { type: "textord", text: "\\Vert", mode: "math" };
       return parser.callFunction("\\Big", [arrow], []);
     }
     default:
@@ -65,9 +72,9 @@ function cdArrow(arrowChar, labels, parser) {
   }
 }
 
-export function parseCD(parser) {
+export function parseCD(parser: Parser): ParseNode<"array"> {
   // Get the array's parse nodes with \\ temporarily mapped to \cr.
-  const parsedRows = [];
+  const parsedRows: AnyParseNode[][] = [];
   parser.gullet.beginGroup();
   parser.gullet.macros.set("\\cr", "\\\\\\relax");
   parser.gullet.beginGroup();
@@ -89,7 +96,7 @@ export function parseCD(parser) {
     }
   }
 
-  let row = [];
+  let row: AnyParseNode[] = [];
   const body = [row];
 
   // Loop thru the parse nodes. Collect them into cells and arrows.
@@ -114,7 +121,7 @@ export function parseCD(parser) {
         const arrowChar = assertSymbolNodeType(rowNodes[j]).text;
 
         // Create two empty label nodes. We may or may not use them.
-        const labels = new Array(2);
+        const labels: ParseNode<"ordgroup">[] = new Array(2);
         labels[0] = { type: "ordgroup", mode: "math", body: [] };
         labels[1] = { type: "ordgroup", mode: "math", body: [] };
 
@@ -220,11 +227,11 @@ defineFunction({
     };
   },
   mathmlBuilder(group, style) {
-    if (group.label.body.length === 0) {
-      return new mathMLTree.MathNode("mrow", style)  // empty label
+    if ((group.label as ParseNode<"ordgroup">).body.length === 0) {
+      return new mathMLTree.MathNode("mrow")  // empty label
     }
     // Abuse an <mtable> to create vertically centered content.
-    const mrow = mml.buildGroup(group.label, style)
+    const mrow = mml.buildGroup(group.label, style) as MathNode
     if (group.side === "left") {
       mrow.classes.push("tml-shift-left")
     }

@@ -101,7 +101,7 @@ const toMarkup = function(this: HtmlElementData, tagName: string): string {
  * an inline style.
  *
  */
-export class Span implements HtmlElementData, VirtualNode {
+export class Span implements HtmlElementData, MathDomNode {
   classes: string[];
   attributes: Record<string, string>;
   style: CssStyle;
@@ -124,6 +124,12 @@ export class Span implements HtmlElementData, VirtualNode {
 
   toMarkup(): string {
     return toMarkup.call(this, "span");
+  }
+
+  // A <span> placed in the MathML tree, e.g. for an equation number, holds no
+  // text until postProcess fills it in.
+  toText(): string {
+    return ""
   }
 }
 

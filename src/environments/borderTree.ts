@@ -1,5 +1,6 @@
+import type { AnyParseNode, ParseNode } from "../parseNode"
 
-const ordGroup = (body) => {
+const ordGroup = (body: AnyParseNode[]): ParseNode<"ordgroup"> => {
   return {
     "type": "ordgroup",
     "mode": "math",
@@ -8,7 +9,10 @@ const ordGroup = (body) => {
   }
 }
 
-const phantom = (body, type) => {
+const phantom = (
+  body: AnyParseNode[],
+  type: "hphantom" | "vphantom"
+): ParseNode<"hphantom"> | ParseNode<"vphantom"> => {
   return {
     "type": type,
     "mode": "math",
@@ -35,17 +39,20 @@ const phantom = (body, type) => {
  * As before, this ensures consistent row heights of left and main.
  */
 
-export const bordermatrixParseTree = (matrix, delimiters) => {
+export const bordermatrixParseTree = (
+  matrix: ParseNode<"array">,
+  delimiters?: string[]
+): ParseNode<"ordgroup"> => {
   const body = matrix.body
   body[0].shift() // dispose of top left cell
 
   // Create an array for the left column
-  const leftColumnBody = new Array(body.length - 1).fill().map(() => [])
+  const leftColumnBody: AnyParseNode[][] = new Array(body.length - 1).fill(undefined).map(() => [])
   for (let i = 1; i < body.length; i++) {
     // The visible part of the cell
-    leftColumnBody[i - 1].push(body[i].shift())
+    leftColumnBody[i - 1].push(body[i].shift()!)
     // A vphantom with contents from the pmatrix, to set minimum cell height
-    const phantomBody = [];
+    const phantomBody: AnyParseNode[] = [];
     for (let j = 0; j < body[i].length; j++) {
       phantomBody.push(body[i][j])
     }
@@ -53,31 +60,31 @@ export const bordermatrixParseTree = (matrix, delimiters) => {
   }
 
   // Create an array for the top row
-  const topRowBody = new Array(body.length).fill().map(() => [])
+  const topRowBody: AnyParseNode[][] = new Array(body.length).fill(undefined).map(() => [])
   for (let j = 0; j < body[0].length; j++) {
     topRowBody[0].push(body[0][j])
   }
   // Copy the rest of the pmatrix, but squashed via \hphantom
   for (let i = 1; i < body.length; i++) {
     for (let j = 0; j < body[0].length; j++) {
-      topRowBody[i].push(phantom(body[i][j].body, "hphantom"))
+      topRowBody[i].push(phantom((body[i][j] as ParseNode<"ordgroup">).body, "hphantom"))
     }
   }
 
   // Squash the top row of the main {pmatrix}
   for (let j = 0; j < body[0].length; j++) {
-    body[0][j] = phantom(body[0][j].body, "hphantom")
+    body[0][j] = phantom((body[0][j] as ParseNode<"ordgroup">).body, "hphantom")
   }
 
   // Now wrap the arrays in the proper parse nodes.
 
-  const leftColumn = {
+  const leftColumn: ParseNode<"array"> = {
     type: "array",
     mode: "math",
     body: leftColumnBody,
     cols: [{ type: "align", align: "c" }],
     rowGaps: new Array(leftColumnBody.length - 1).fill(null),
-    hLinesBeforeRow: new Array(leftColumnBody.length + 1).fill().map(() => []),
+    hLinesBeforeRow: new Array(leftColumnBody.length + 1).fill(undefined).map(() => []),
     envClasses: [],
     scriptLevel: "text",
     arraystretch: 1,
@@ -85,13 +92,13 @@ export const bordermatrixParseTree = (matrix, delimiters) => {
     arraycolsep: { "number": 0.04, unit: "em" }
   }
 
-  const topRow = {
+  const topRow: ParseNode<"array"> = {
     type: "array",
     mode: "math",
     body: topRowBody,
     cols: new Array(topRowBody.length).fill({ type: "align", align: "c" }),
     rowGaps: new Array(topRowBody.length - 1).fill(null),
-    hLinesBeforeRow: new Array(topRowBody.length + 1).fill().map(() => []),
+    hLinesBeforeRow: new Array(topRowBody.length + 1).fill(undefined).map(() => []),
     envClasses: [],
     scriptLevel: "text",
     arraystretch: 1,
@@ -99,14 +106,14 @@ export const bordermatrixParseTree = (matrix, delimiters) => {
     arraycolsep: null
   }
 
-  const topWrapper = {
+  const topWrapper: ParseNode<"styling"> = {
     type: "styling",
     mode: "math",
     scriptLevel: "text", // Must set this explicitly.
     body: [topRow]       // Default level is "script".
   }
 
-  const container = {
+  const container: ParseNode<"leftright"> = {
     type: "leftright",
     mode: "math",
     body: [matrix],
@@ -115,7 +122,7 @@ export const bordermatrixParseTree = (matrix, delimiters) => {
     rightColor: undefined
   }
 
-  const base = {
+  const base: ParseNode<"op"> = {
     type: "op",   // The base of a TeX \overset
     mode: "math",
     limits: true,
@@ -126,7 +133,7 @@ export const bordermatrixParseTree = (matrix, delimiters) => {
     body: [container]
   }
 
-  const mover = {
+  const mover: ParseNode<"supsub"> = {
     type: "supsub",  // We're using the MathML equivalent
     mode: "math",    // of TeX \overset.
     stack: true,

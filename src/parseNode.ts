@@ -315,11 +315,11 @@ export interface ParseNodeTypes {
     cols?: ColSpec[];
     rowGaps?: Array<Measurement | null>;
     hLinesBeforeRow: boolean[][];
-    envClasses?: string[];
+    envClasses: string[];
     autoTag?: boolean;
     scriptLevel?: StyleStr;
     tags?: Array<boolean | AnyParseNode[]> | null;
-    labels?: string[];
+    labels: string[];
     leqno?: boolean;
     arraystretch?: number | null;
     arraycolsep?: Measurement | null;
