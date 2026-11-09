@@ -18,7 +18,7 @@ export default defineConfig([
     output: { ...output, format: "es", name: "temml", exports: "auto", file: "./dist/temml.mjs" }
   },
   {
-    input: "./src/postProcess.js",
+    input: "./src/postProcess.ts",
     output: { ...output, format: "umd", name: "temml", file: "./dist/temmlPostProcess.js" }
   }
 ]);
