@@ -25,7 +25,7 @@ defineFunction({
       if (mathFunction) {
         if (!muUnit) {
           throw new ParseError(
-            `LaTeX's ${funcName} supports only mu units, ` + `not ${size.value.unit} units`,
+            `LaTeX's ${funcName} supports only mu units, not ${size.value.unit} units`,
             token,
           );
         }
@@ -70,13 +70,13 @@ defineFunction({
 
 export const spaceCharacter = (width: number): string => {
   if (width >= 0.05555 && width <= 0.05556) {
-    return '\u200a'; // &VeryThinSpace;
+    return '\u{200A}'; // &VeryThinSpace;
   } else if (width >= 0.1666 && width <= 0.1667) {
-    return '\u2009'; // &ThinSpace;
+    return '\u{2009}'; // &ThinSpace;
   } else if (width >= 0.2222 && width <= 0.2223) {
-    return '\u2005'; // &MediumSpace;
+    return '\u{2005}'; // &MediumSpace;
   } else if (width >= 0.2777 && width <= 0.2778) {
-    return '\u2005\u200a'; // &ThickSpace;
+    return '\u{2005}\u{200A}'; // &ThickSpace;
   } else {
     return '';
   }

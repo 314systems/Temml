@@ -3,7 +3,7 @@
 // provided in the the arrays below, in that order.
 //
 export const metrics = {
-  quad: [1.0, 1.171, 1.472], // Extracted from TeX
+  quad: [1, 1.171, 1.472], // Extracted from TeX
 
   // The TeX default rule thickness, 0.04 em, often disappears from a browser screen.
   // So we use a thicker rule.

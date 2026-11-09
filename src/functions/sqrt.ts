@@ -4,7 +4,7 @@ import * as mml from '../buildMathML';
 import type { AnyParseNode } from '../parseNode';
 
 // Letters that are x-height w/o a descender.
-const xHeights = [
+const xHeights = new Set([
   'a',
   'c',
   'e',
@@ -39,7 +39,7 @@ const xHeights = [
   '\\pi',
   '\\tau',
   '\\omega',
-];
+]);
 
 defineFunction({
   type: 'sqrt',
@@ -55,7 +55,7 @@ defineFunction({
     // TODO: Remove this check after Chromium is fixed.
     const inner = (body as { body?: AnyParseNode[] }).body;
     const text = inner && inner.length === 1 ? (inner[0] as { text?: unknown }).text : undefined;
-    if (inner && typeof text === 'string' && xHeights.includes(text)) {
+    if (inner && typeof text === 'string' && xHeights.has(text)) {
       // Chromium does not put enough space above an x-height letter.
       // Insert a strut.
       inner.push({

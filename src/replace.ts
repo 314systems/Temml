@@ -5,71 +5,71 @@
 
 // First, a few helpers.
 const script: Readonly<Record<string, number>> = Object.freeze({
-  B: 0x20ea, // Offset from ASCII B to Unicode script B
-  E: 0x20eb,
-  F: 0x20eb,
-  H: 0x20c3,
-  I: 0x20c7,
-  L: 0x20c6,
-  M: 0x20e6,
-  R: 0x20c9,
-  e: 0x20ca,
-  g: 0x20a3,
-  o: 0x20c5,
+  B: 0x20_ea, // Offset from ASCII B to Unicode script B
+  E: 0x20_eb,
+  F: 0x20_eb,
+  H: 0x20_c3,
+  I: 0x20_c7,
+  L: 0x20_c6,
+  M: 0x20_e6,
+  R: 0x20_c9,
+  e: 0x20_ca,
+  g: 0x20_a3,
+  o: 0x20_c5,
 });
 
 const frak: Readonly<Record<string, number>> = Object.freeze({
-  C: 0x20ea,
-  H: 0x20c4,
-  I: 0x20c8,
-  R: 0x20ca,
-  Z: 0x20ce,
+  C: 0x20_ea,
+  H: 0x20_c4,
+  I: 0x20_c8,
+  R: 0x20_ca,
+  Z: 0x20_ce,
 });
 
 const bbb: Readonly<Record<string, number>> = Object.freeze({
-  C: 0x20bf, // blackboard bold
-  H: 0x20c5,
-  N: 0x20c7,
-  P: 0x20c9,
-  Q: 0x20c9,
-  R: 0x20cb,
-  Z: 0x20ca,
+  C: 0x20_bf, // blackboard bold
+  H: 0x20_c5,
+  N: 0x20_c7,
+  P: 0x20_c9,
+  Q: 0x20_c9,
+  R: 0x20_cb,
+  Z: 0x20_ca,
 });
 
 const bold: Readonly<Record<string, number>> = Object.freeze({
-  '\u03f5': 0x1d2e7, // lunate epsilon
-  '\u03d1': 0x1d30c, // vartheta
-  '\u03f0': 0x1d2ee, // varkappa
-  '\u03c6': 0x1d319, // varphi
-  '\u03f1': 0x1d2ef, // varrho
-  '\u03d6': 0x1d30b, // varpi
+  '\u{3F5}': 0x1_d2_e7, // lunate epsilon
+  '\u{3D1}': 0x1_d3_0c, // vartheta
+  '\u{3F0}': 0x1_d2_ee, // varkappa
+  '\u{3C6}': 0x1_d3_19, // varphi
+  '\u{3F1}': 0x1_d2_ef, // varrho
+  '\u{3D6}': 0x1_d3_0b, // varpi
 });
 
 const boldItalic: Readonly<Record<string, number>> = Object.freeze({
-  '\u03f5': 0x1d35b, // lunate epsilon
-  '\u03d1': 0x1d380, // vartheta
-  '\u03f0': 0x1d362, // varkappa
-  '\u03c6': 0x1d38d, // varphi
-  '\u03f1': 0x1d363, // varrho
-  '\u03d6': 0x1d37f, // varpi
+  '\u{3F5}': 0x1_d3_5b, // lunate epsilon
+  '\u{3D1}': 0x1_d3_80, // vartheta
+  '\u{3F0}': 0x1_d3_62, // varkappa
+  '\u{3C6}': 0x1_d3_8d, // varphi
+  '\u{3F1}': 0x1_d3_63, // varrho
+  '\u{3D6}': 0x1_d3_7f, // varpi
 });
 
 const boldsf: Readonly<Record<string, number>> = Object.freeze({
-  '\u03f5': 0x1d395, // lunate epsilon
-  '\u03d1': 0x1d3ba, // vartheta
-  '\u03f0': 0x1d39c, // varkappa
-  '\u03c6': 0x1d3c7, // varphi
-  '\u03f1': 0x1d39d, // varrho
-  '\u03d6': 0x1d3b9, // varpi
+  '\u{3F5}': 0x1_d3_95, // lunate epsilon
+  '\u{3D1}': 0x1_d3_ba, // vartheta
+  '\u{3F0}': 0x1_d3_9c, // varkappa
+  '\u{3C6}': 0x1_d3_c7, // varphi
+  '\u{3F1}': 0x1_d3_9d, // varrho
+  '\u{3D6}': 0x1_d3_b9, // varpi
 });
 
 const bisf: Readonly<Record<string, number>> = Object.freeze({
-  '\u03f5': 0x1d3cf, // lunate epsilon
-  '\u03d1': 0x1d3f4, // vartheta
-  '\u03f0': 0x1d3d6, // varkappa
-  '\u03c6': 0x1d401, // varphi
-  '\u03f1': 0x1d3d7, // varrho
-  '\u03d6': 0x1d3f3, // varpi
+  '\u{3F5}': 0x1_d3_cf, // lunate epsilon
+  '\u{3D1}': 0x1_d3_f4, // vartheta
+  '\u{3F0}': 0x1_d3_d6, // varkappa
+  '\u{3C6}': 0x1_d4_01, // varphi
+  '\u{3F1}': 0x1_d3_d7, // varrho
+  '\u{3D6}': 0x1_d3_f3, // varpi
 });
 
 // Code point offsets below are derived from https://www.unicode.org/charts/PDF/U1D400.pdf
@@ -83,43 +83,43 @@ const offset: Readonly<Offsets> = Object.freeze({
       return 0;
     },
     bold: (ch) => {
-      return 0x1d3bf;
+      return 0x1_d3_bf;
     },
     italic: (ch) => {
-      return 0x1d3f3;
+      return 0x1_d3_f3;
     },
     'bold-italic': (ch) => {
-      return 0x1d427;
+      return 0x1_d4_27;
     },
     script: (ch) => {
-      return script[ch] || 0x1d45b;
+      return script[ch] || 0x1_d4_5b;
     },
     'script-bold': (ch) => {
-      return 0x1d48f;
+      return 0x1_d4_8f;
     },
     fraktur: (ch) => {
-      return frak[ch] || 0x1d4c3;
+      return frak[ch] || 0x1_d4_c3;
     },
     'fraktur-bold': (ch) => {
-      return 0x1d52b;
+      return 0x1_d5_2b;
     },
     'double-struck': (ch) => {
-      return bbb[ch] || 0x1d4f7;
+      return bbb[ch] || 0x1_d4_f7;
     },
     'sans-serif': (ch) => {
-      return 0x1d55f;
+      return 0x1_d5_5f;
     },
     'sans-serif-bold': (ch) => {
-      return 0x1d593;
+      return 0x1_d5_93;
     },
     'sans-serif-italic': (ch) => {
-      return 0x1d5c7;
+      return 0x1_d5_c7;
     },
     'sans-serif-bold-italic': (ch) => {
-      return 0x1d63c;
+      return 0x1_d6_3c;
     },
     monospace: (ch) => {
-      return 0x1d62f;
+      return 0x1_d6_2f;
     },
   },
   lowerCaseLatin: {
@@ -128,43 +128,43 @@ const offset: Readonly<Offsets> = Object.freeze({
       return 0;
     },
     bold: (ch) => {
-      return 0x1d3b9;
+      return 0x1_d3_b9;
     },
     italic: (ch) => {
-      return ch === 'h' ? 0x20a6 : 0x1d3ed;
+      return ch === 'h' ? 0x20_a6 : 0x1_d3_ed;
     },
     'bold-italic': (ch) => {
-      return 0x1d421;
+      return 0x1_d4_21;
     },
     script: (ch) => {
-      return script[ch] || 0x1d455;
+      return script[ch] || 0x1_d4_55;
     },
     'script-bold': (ch) => {
-      return 0x1d489;
+      return 0x1_d4_89;
     },
     fraktur: (ch) => {
-      return 0x1d4bd;
+      return 0x1_d4_bd;
     },
     'fraktur-bold': (ch) => {
-      return 0x1d525;
+      return 0x1_d5_25;
     },
     'double-struck': (ch) => {
-      return 0x1d4f1;
+      return 0x1_d4_f1;
     },
     'sans-serif': (ch) => {
-      return 0x1d559;
+      return 0x1_d5_59;
     },
     'sans-serif-bold': (ch) => {
-      return 0x1d58d;
+      return 0x1_d5_8d;
     },
     'sans-serif-italic': (ch) => {
-      return 0x1d5c1;
+      return 0x1_d5_c1;
     },
     'sans-serif-bold-italic': (ch) => {
-      return 0x1d5f5;
+      return 0x1_d5_f5;
     },
     monospace: (ch) => {
-      return 0x1d629;
+      return 0x1_d6_29;
     },
   },
   upperCaseGreek: {
@@ -173,14 +173,14 @@ const offset: Readonly<Offsets> = Object.freeze({
       return 0;
     },
     bold: (ch) => {
-      return 0x1d317;
+      return 0x1_d3_17;
     },
     italic: (ch) => {
-      return 0x1d351;
+      return 0x1_d3_51;
     },
     // \boldsymbol actually returns upright bold for upperCaseGreek
     'bold-italic': (ch) => {
-      return 0x1d317;
+      return 0x1_d3_17;
     },
     script: (ch) => {
       return 0;
@@ -199,16 +199,16 @@ const offset: Readonly<Offsets> = Object.freeze({
     },
     // Unicode has no code points for regular-weight san-serif Greek. Use bold.
     'sans-serif': (ch) => {
-      return 0x1d3c5;
+      return 0x1_d3_c5;
     },
     'sans-serif-bold': (ch) => {
-      return 0x1d3c5;
+      return 0x1_d3_c5;
     },
     'sans-serif-italic': (ch) => {
       return 0;
     },
     'sans-serif-bold-italic': (ch) => {
-      return 0x1d3ff;
+      return 0x1_d3_ff;
     },
     monospace: (ch) => {
       return 0;
@@ -220,13 +220,13 @@ const offset: Readonly<Offsets> = Object.freeze({
       return 0;
     },
     bold: (ch) => {
-      return 0x1d311;
+      return 0x1_d3_11;
     },
     italic: (ch) => {
-      return 0x1d34b;
+      return 0x1_d3_4b;
     },
     'bold-italic': (ch) => {
-      return ch === '\u03d5' ? 0x1d37e : 0x1d385;
+      return ch === '\u{3D5}' ? 0x1_d3_7e : 0x1_d3_85;
     },
     script: (ch) => {
       return 0;
@@ -245,16 +245,16 @@ const offset: Readonly<Offsets> = Object.freeze({
     },
     // Unicode has no code points for regular-weight san-serif Greek. Use bold.
     'sans-serif': (ch) => {
-      return 0x1d3bf;
+      return 0x1_d3_bf;
     },
     'sans-serif-bold': (ch) => {
-      return 0x1d3bf;
+      return 0x1_d3_bf;
     },
     'sans-serif-italic': (ch) => {
       return 0;
     },
     'sans-serif-bold-italic': (ch) => {
-      return 0x1d3f9;
+      return 0x1_d3_f9;
     },
     monospace: (ch) => {
       return 0;
@@ -311,7 +311,7 @@ const offset: Readonly<Offsets> = Object.freeze({
       return 0;
     },
     bold: (ch) => {
-      return 0x1d79e;
+      return 0x1_d7_9e;
     },
     italic: (ch) => {
       return 0;
@@ -332,13 +332,13 @@ const offset: Readonly<Offsets> = Object.freeze({
       return 0;
     },
     'double-struck': (ch) => {
-      return 0x1d7a8;
+      return 0x1_d7_a8;
     },
     'sans-serif': (ch) => {
-      return 0x1d7b2;
+      return 0x1_d7_b2;
     },
     'sans-serif-bold': (ch) => {
-      return 0x1d7bc;
+      return 0x1_d7_bc;
     },
     'sans-serif-italic': (ch) => {
       return 0;
@@ -347,7 +347,7 @@ const offset: Readonly<Offsets> = Object.freeze({
       return 0;
     },
     monospace: (ch) => {
-      return 0x1d7c6;
+      return 0x1_d7_c6;
     },
   },
 });
@@ -359,11 +359,11 @@ export const variantChar = (ch: string, variant: string): string => {
       ? 'upperCaseLatin'
       : 0x60 < codePoint && codePoint < 0x7b
         ? 'lowerCaseLatin'
-        : 0x390 < codePoint && codePoint < 0x3aa
+        : 0x3_90 < codePoint && codePoint < 0x3_aa
           ? 'upperCaseGreek'
-          : (0x3b0 < codePoint && codePoint < 0x3ca) || ch === '\u03d5'
+          : (0x3_b0 < codePoint && codePoint < 0x3_ca) || ch === '\u{3D5}'
             ? 'lowerCaseGreek'
-            : (0x1d6e1 < codePoint && codePoint < 0x1d6fc) || bold[ch]
+            : (0x1_d6_e1 < codePoint && codePoint < 0x1_d6_fc) || bold[ch]
               ? 'varGreek'
               : 0x2f < codePoint && codePoint < 0x3a
                 ? 'numeral'

@@ -63,7 +63,7 @@ const mathmlBuilder: MathMLBuilder<'operatorname'> = (group, style) => {
         case 'mo': {
           const child = node.children[0];
           if (node.children.length === 1 && child instanceof mathMLTree.TextNode) {
-            child.text = child.text.replace(/\u2212/, '-').replace(/\u2217/, '*');
+            child.text = child.text.replace(/\u{2212}/u, '-').replace(/\u{2217}/u, '*');
           } else {
             isAllString = false;
           }
@@ -90,7 +90,7 @@ const mathmlBuilder: MathMLBuilder<'operatorname'> = (group, style) => {
     if (group.parentIsSupSub) {
       return new mathMLTree.MathNode('mrow', expression);
     } else {
-      const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u2061', 'text')]);
+      const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u{2061}', 'text')]);
       return mathMLTree.newDocumentFragment([only, operator]);
     }
   }
@@ -108,7 +108,7 @@ const mathmlBuilder: MathMLBuilder<'operatorname'> = (group, style) => {
   if (!group.parentIsSupSub) {
     // Append an <mo>&ApplyFunction;</mo>.
     // ref: https://www.w3.org/TR/REC-MathML/chap3_2.html#sec3.2.4
-    const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u2061', 'text')]);
+    const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u{2061}', 'text')]);
     const fragment = [wrapper, operator];
     if (group.needsLeadingSpace) {
       // LaTeX gives operator spacing, but a <mi> gets ord spacing.

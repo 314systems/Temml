@@ -47,34 +47,32 @@ let render = (
   if (alreadyInMathElement) {
     // The <math> element already exists. Populate it.
     baseNode.textContent = '';
-    math.children.forEach((e) => {
-      baseNode.appendChild(e.toNode());
-    });
+    for (const e of math.children) {
+      baseNode.append(e.toNode());
+    }
   } else if (math.children.length > 1) {
     baseNode.textContent = '';
-    math.children.forEach((e) => {
-      baseNode.appendChild(e.toNode());
-    });
+    for (const e of math.children) {
+      baseNode.append(e.toNode());
+    }
   } else {
-    baseNode.appendChild(math.toNode());
+    baseNode.append(math.toNode());
   }
 };
 
 // Temml's styles don't work properly in quirks mode. Print out an error, and
 // disable rendering.
-if (typeof document !== 'undefined') {
-  if (document.compatMode !== 'CSS1Compat') {
-    if (typeof console !== 'undefined') {
-      console.warn(
-        "Warning: Temml doesn't work in quirks mode. Make sure your " +
-          'website has a suitable doctype.',
-      );
-    }
-
-    render = () => {
-      throw new ParseError("Temml doesn't work in quirks mode.");
-    };
+if (typeof document !== 'undefined' && document.compatMode !== 'CSS1Compat') {
+  if (typeof console !== 'undefined') {
+    console.warn(
+      "Warning: Temml doesn't work in quirks mode. Make sure your " +
+        'website has a suitable doctype.',
+    );
   }
+
+  render = () => {
+    throw new ParseError("Temml doesn't work in quirks mode.");
+  };
 }
 
 /**
@@ -100,6 +98,7 @@ const generateParseTree = (expression: string, options?: Options): AnyParseNode[
 const definePreamble = (expression: string, options?: Options): MacroMap => {
   const settings = new Settings(options);
   settings.macros = Object.create(null);
+  // eslint-disable-next-line unicorn/no-instanceof-builtins -- Preserve support for boxed strings.
   if (!(typeof expression === 'string' || (expression as unknown) instanceof String)) {
     throw new TypeError('Temml can only parse string typed expression');
   }

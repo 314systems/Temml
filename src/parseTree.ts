@@ -8,6 +8,7 @@ import type Settings from './Settings';
  */
 const parseTree = (toParse: string, settings: Settings): AnyParseNode[] => {
   // Also accept String objects from JavaScript callers.
+  // eslint-disable-next-line unicorn/no-instanceof-builtins -- Preserve support for boxed strings.
   if (!(typeof toParse === 'string' || (toParse as unknown) instanceof String)) {
     throw new TypeError('Temml can only parse string typed expression');
   }

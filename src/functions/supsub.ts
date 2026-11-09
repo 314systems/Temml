@@ -55,10 +55,14 @@ defineFunctionBuilders({
     }
 
     // A stacked supsub has an op base whose body holds the stacked group.
-    const children: MathDomNode[] =
-      group.stack && (group.base as ParseNode<'op'>).body!.length === 1
-        ? [mml.buildGroup((group.base as ParseNode<'op'>).body![0], style)]
-        : [mml.buildGroup(group.base, style)];
+    const children: MathDomNode[] = [
+      mml.buildGroup(
+        group.stack && (group.base as ParseNode<'op'>).body!.length === 1
+          ? (group.base as ParseNode<'op'>).body![0]
+          : group.base,
+        style,
+      ),
+    ];
 
     // Note regarding scriptstyle level.
     // (Sub|super)scripts should not shrink beyond MathML scriptlevel 2 aka \scriptscriptstyle
@@ -84,11 +88,11 @@ defineFunctionBuilders({
       if (baseText && baseText.length === 1) {
         // Make an italic correction on the superscript.
         const text = baseText;
-        if (smallPad.indexOf(text) > -1) {
+        if (smallPad.includes(text)) {
           sup.classes.push('tml-sml-pad');
-        } else if (mediumPad.indexOf(text) > -1) {
+        } else if (mediumPad.includes(text)) {
           sup.classes.push('tml-med-pad');
-        } else if (largePad.indexOf(text) > -1) {
+        } else if (largePad.includes(text)) {
           sup.classes.push('tml-lrg-pad');
         }
       }
@@ -117,7 +121,26 @@ defineFunctionBuilders({
       } else {
         nodeType = 'msup';
       }
-    } else if (!group.sup) {
+    } else if (group.sup) {
+      const base = group.base;
+      if (
+        base &&
+        ((base.type === 'op' && base.limits) || base.type === 'multiscript') &&
+        (style.level === StyleLevel.DISPLAY ||
+          ('alwaysHandleSupSub' in base && base.alwaysHandleSupSub))
+      ) {
+        nodeType = 'munderover';
+      } else if (
+        base &&
+        base.type === 'operatorname' &&
+        base.alwaysHandleSupSub &&
+        (style.level === StyleLevel.DISPLAY || base.limits)
+      ) {
+        nodeType = 'munderover';
+      } else {
+        nodeType = 'msubsup';
+      }
+    } else {
       const base = group.base;
       if (group.stack) {
         nodeType = 'munder';
@@ -138,32 +161,13 @@ defineFunctionBuilders({
       } else {
         nodeType = 'msub';
       }
-    } else {
-      const base = group.base;
-      if (
-        base &&
-        ((base.type === 'op' && base.limits) || base.type === 'multiscript') &&
-        (style.level === StyleLevel.DISPLAY ||
-          ('alwaysHandleSupSub' in base && base.alwaysHandleSupSub))
-      ) {
-        nodeType = 'munderover';
-      } else if (
-        base &&
-        base.type === 'operatorname' &&
-        base.alwaysHandleSupSub &&
-        (style.level === StyleLevel.DISPLAY || base.limits)
-      ) {
-        nodeType = 'munderover';
-      } else {
-        nodeType = 'msubsup';
-      }
     }
 
     let node: MathNode | DocumentFragment = new mathMLTree.MathNode(nodeType, children);
     if (appendApplyFunction) {
       // Append an <mo>&ApplyFunction;</mo>.
       // ref: https://www.w3.org/TR/REC-MathML/chap3_2.html#sec3.2.4
-      const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u2061', 'text')]);
+      const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u{2061}', 'text')]);
       if (needsLeadingSpace) {
         const space = new mathMLTree.MathNode('mspace');
         space.setAttribute('width', '0.1667em'); // thin space.

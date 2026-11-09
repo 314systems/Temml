@@ -47,13 +47,25 @@ const findEndOfMath = (delimiter: string, text: string, startIndex: number): num
 
     if (braceLevel <= 0 && text.slice(index, index + delimLength) === delimiter) {
       return index;
-    } else if (character === '\\') {
-      index++;
-    } else if (character === '{') {
-      braceLevel++;
-    } else if (character === '}') {
-      braceLevel--;
-    }
+    } else
+      switch (character) {
+        case '\\': {
+          index++;
+
+          break;
+        }
+        case '{': {
+          braceLevel++;
+
+          break;
+        }
+        case '}': {
+          braceLevel--;
+
+          break;
+        }
+        // No default
+      }
 
     index++;
   }
@@ -163,17 +175,25 @@ const amsDelimiters: Delimiter[] = [
 ];
 
 const delimitersFromKey = (key: string): Delimiter[] => {
-  if (key === '$' || key === '(') {
-    return firstDraftDelimiters[key];
-  } else if (key === '$+' || key === '(+') {
-    const firstDraft = firstDraftDelimiters[key.slice(0, 1)];
-    return firstDraft.concat(amsDelimiters);
-  } else if (key === 'ams') {
-    return amsDelimiters;
-  } else if (key === 'all') {
-    return firstDraftDelimiters['('].concat(firstDraftDelimiters['$']).concat(amsDelimiters);
-  } else {
-    return defaultDelimiters;
+  switch (key) {
+    case '$':
+    case '(': {
+      return firstDraftDelimiters[key];
+    }
+    case '$+':
+    case '(+': {
+      const firstDraft = firstDraftDelimiters[key.slice(0, 1)];
+      return firstDraft.concat(amsDelimiters);
+    }
+    case 'ams': {
+      return amsDelimiters;
+    }
+    case 'all': {
+      return firstDraftDelimiters['('].concat(firstDraftDelimiters['$']).concat(amsDelimiters);
+    }
+    default: {
+      return defaultDelimiters;
+    }
   }
 };
 
@@ -194,7 +214,7 @@ const renderMathInText = (text: string, optionsCopy: ResolvedOptions): DocumentF
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
     if (item.type === 'text') {
-      fragment.appendChild(document.createTextNode(item.data));
+      fragment.append(document.createTextNode(item.data));
     } else {
       const span = document.createElement('span');
       let math = item.data;
@@ -216,10 +236,10 @@ const renderMathInText = (text: string, optionsCopy: ResolvedOptions): DocumentF
           'Temml auto-render: Failed to parse `' + item.data + '` with ',
           e,
         );
-        fragment.appendChild(document.createTextNode(item.rawData));
+        fragment.append(document.createTextNode(item.rawData));
         continue;
       }
-      fragment.appendChild(span);
+      fragment.append(span);
     }
   }
 
@@ -234,14 +254,14 @@ const renderElem = (elem: Element, optionsCopy: ResolvedOptions): void => {
       const frag = renderMathInText(childNode.textContent!, optionsCopy);
       if (frag) {
         i += frag.childNodes.length - 1;
-        elem.replaceChild(frag, childNode);
+        childNode.replaceWith(frag);
       }
     } else if (childNode.nodeType === 1) {
       // Element node
       const className = ' ' + (childNode as Element).className + ' ';
       const shouldRender =
-        optionsCopy.ignoredTags.indexOf(childNode.nodeName.toLowerCase()) === -1 &&
-        optionsCopy.ignoredClasses.every((x) => className.indexOf(' ' + x + ' ') === -1);
+        !optionsCopy.ignoredTags.includes(childNode.nodeName.toLowerCase()) &&
+        optionsCopy.ignoredClasses.every((x) => !className.includes(' ' + x + ' '));
 
       if (shouldRender) {
         renderElem(childNode as Element, optionsCopy);

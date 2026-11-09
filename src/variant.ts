@@ -31,26 +31,32 @@ export const getVariant = (group: SymbolParseNode, style: Style): string | null 
   // But first, determine the math variant.
 
   // Deal with the \textit, \textbf, etc., functions.
-  if (style.fontFamily === 'texttt') {
-    return 'monospace';
-  } else if (style.fontFamily === 'textsc') {
-    return 'normal'; // handled via character substitution in symbolsOrd.js.
-  } else if (style.fontFamily === 'textsf') {
-    if (style.fontShape === 'textit' && style.fontWeight === 'textbf') {
-      return 'sans-serif-bold-italic';
-    } else if (style.fontShape === 'textit') {
-      return 'sans-serif-italic';
-    } else if (style.fontWeight === 'textbf') {
-      return 'sans-serif-bold';
-    } else {
-      return 'sans-serif';
+  switch (style.fontFamily) {
+    case 'texttt': {
+      return 'monospace';
     }
-  } else if (style.fontShape === 'textit' && style.fontWeight === 'textbf') {
-    return 'bold-italic';
-  } else if (style.fontShape === 'textit') {
-    return 'italic';
-  } else if (style.fontWeight === 'textbf') {
-    return 'bold';
+    case 'textsc': {
+      return 'normal'; // handled via character substitution in symbolsOrd.js.
+    }
+    case 'textsf': {
+      if (style.fontShape === 'textit' && style.fontWeight === 'textbf') {
+        return 'sans-serif-bold-italic';
+      } else if (style.fontShape === 'textit') {
+        return 'sans-serif-italic';
+      } else if (style.fontWeight === 'textbf') {
+        return 'sans-serif-bold';
+      } else {
+        return 'sans-serif';
+      }
+    }
+    default:
+      if (style.fontShape === 'textit' && style.fontWeight === 'textbf') {
+        return 'bold-italic';
+      } else if (style.fontShape === 'textit') {
+        return 'italic';
+      } else if (style.fontWeight === 'textbf') {
+        return 'bold';
+      }
   }
 
   // Deal with the \mathit, mathbf, etc, functions.
@@ -65,7 +71,7 @@ export const getVariant = (group: SymbolParseNode, style: Style): string | null 
     case 'mathrm': {
       const codePoint = group.text.codePointAt(0) ?? 0;
       // LaTeX \mathrm returns italic for Greek characters.
-      return 0x03ab < codePoint && codePoint < 0x03cf ? 'italic' : 'normal';
+      return 0x03_ab < codePoint && codePoint < 0x03_cf ? 'italic' : 'normal';
     }
     case 'greekItalic':
       return 'italic';

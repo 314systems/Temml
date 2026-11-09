@@ -20,10 +20,10 @@ const ptPerUnit = {
   pt: 800 / 803, // convert TeX point to CSS (Postscript) point
   pc: (12 * 800) / 803, // pica
   dd: ((1238 / 1157) * 800) / 803, // didot
-  cc: ((14856 / 1157) * 800) / 803, // cicero (12 didot)
+  cc: ((14_856 / 1157) * 800) / 803, // cicero (12 didot)
   nd: ((685 / 642) * 800) / 803, // new didot
   nc: ((1370 / 107) * 800) / 803, // new cicero (12 new didot)
-  sp: ((1 / 65536) * 800) / 803, // scaled point (TeX's internal smallest unit)
+  sp: ((1 / 65_536) * 800) / 803, // scaled point (TeX's internal smallest unit)
   mm: 25.4 / 72,
   cm: 2.54 / 72,
   in: 1 / 72,
@@ -34,7 +34,7 @@ const ptPerUnit = {
  * Determine whether the specified unit (either a string defining the unit
  * or a "size" parse node containing a unit field) is valid.
  */
-const validUnits: readonly string[] = [
+const validUnits: ReadonlySet<string> = new Set([
   'em',
   'ex',
   'mu',
@@ -50,13 +50,13 @@ const validUnits: readonly string[] = [
   'nd',
   'nc',
   'sp',
-];
+]);
 
 export const validUnit = (unit: string | { unit: string }): boolean => {
   if (typeof unit !== 'string') {
     unit = unit.unit;
   }
-  return validUnits.includes(unit);
+  return validUnits.has(unit);
 };
 
 export const emScale = (styleLevel: number): number => {

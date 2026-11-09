@@ -52,7 +52,7 @@ defineFunction({
       (postArg.body.length > 0 && postArg.body[0].type !== 'supsub')
     ) {
       throw new ParseError(
-        '\\sideset can parse only subscripts and ' + 'superscripts in its first two arguments',
+        '\\sideset can parse only subscripts and superscripts in its first two arguments',
         token,
       );
     }
@@ -63,7 +63,16 @@ defineFunction({
 
     if (!prescripts && !postscripts) {
       return base;
-    } else if (!prescripts) {
+    } else if (prescripts) {
+      return {
+        type: 'multiscript',
+        mode: parser.mode,
+        isSideset: funcName === '\\sideset',
+        prescripts,
+        postscripts,
+        base,
+      };
+    } else {
       // It's not a multi-script. Get a \textstyle supsub.
       return {
         type: 'styling',
@@ -78,15 +87,6 @@ defineFunction({
             sub: postscripts!.sub,
           },
         ],
-      };
-    } else {
-      return {
-        type: 'multiscript',
-        mode: parser.mode,
-        isSideset: funcName === '\\sideset',
-        prescripts,
-        postscripts,
-        base,
       };
     }
   },

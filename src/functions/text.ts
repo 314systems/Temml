@@ -33,9 +33,7 @@ const styleWithFont = (group: ParseNode<'text'>, style: Style): Style => {
   } else if (textFontWeights[font]) {
     return style.withTextFontWeight(textFontWeights[font]);
   } else if (font === '\\emph') {
-    return style.fontShape === 'textit'
-      ? style.withTextFontShape('textup')
-      : style.withTextFontShape('textit');
+    return style.withTextFontShape(style.fontShape === 'textit' ? 'textup' : 'textit');
   }
   return style.withTextFontShape(textFontShapes[font]);
 };

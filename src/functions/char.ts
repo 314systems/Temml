@@ -21,7 +21,7 @@ defineFunction({
       number += node.text;
     }
     const code = parseInt(number);
-    if (isNaN(code)) {
+    if (Number.isNaN(code)) {
       throw new ParseError(`\\@char has non-numeric argument ${number}`, token);
     }
     return {

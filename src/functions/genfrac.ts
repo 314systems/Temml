@@ -34,13 +34,25 @@ const adjustStyle = (functionSize: StyleStr | 'auto', originalStyle: Style): Sty
   } else if (functionSize === 'text' && style.level === StyleLevel.DISPLAY) {
     // We're in a \tfrac but incoming style is displaystyle, so:
     style = style.withLevel(StyleLevel.TEXT);
-  } else if (functionSize === 'auto') {
-    style = style.incrementLevel();
-  } else if (functionSize === 'script') {
-    style = style.withLevel(StyleLevel.SCRIPT);
-  } else if (functionSize === 'scriptscript') {
-    style = style.withLevel(StyleLevel.SCRIPTSCRIPT);
-  }
+  } else
+    switch (functionSize) {
+      case 'auto': {
+        style = style.incrementLevel();
+
+        break;
+      }
+      case 'script': {
+        style = style.withLevel(StyleLevel.SCRIPT);
+
+        break;
+      }
+      case 'scriptscript': {
+        style = style.withLevel(StyleLevel.SCRIPTSCRIPT);
+
+        break;
+      }
+      // No default
+    }
   return style;
 };
 

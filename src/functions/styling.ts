@@ -29,7 +29,7 @@ defineFunction({
     // parse out the implicit body
     const body = parser.parseExpression(true, breakOnTokenText, true);
 
-    const scriptLevel = funcName.slice(1, funcName.length - 5) as StyleStr;
+    const scriptLevel = funcName.slice(1, -5) as StyleStr;
     return {
       type: 'styling',
       mode: parser.mode,

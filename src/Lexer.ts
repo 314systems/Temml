@@ -43,17 +43,17 @@ import { Token } from './Token';
  */
 const spaceRegexString = '[ \r\n\t]';
 const controlWordRegexString = '\\\\[a-zA-Z@]+';
-const controlSymbolRegexString = '\\\\[^\uD800-\uDFFF]';
+const controlSymbolRegexString = '\\\\[^\u{D800}-\u{DFFF}]';
 const controlWordWhitespaceRegexString = `(${controlWordRegexString})${spaceRegexString}*`;
 const controlSpaceRegexString = '\\\\(\n|[ \r\t]+\n?)[ \r\t]*';
-const combiningDiacriticalMarkString = '[\u0300-\u036f]';
+const combiningDiacriticalMarkString = '[\u{300}-\u{36F}]';
 export const combiningDiacriticalMarksEndRegex = new RegExp(`${combiningDiacriticalMarkString}+$`);
 const tokenRegexString =
   `(${spaceRegexString}+)|` + // whitespace
   `${controlSpaceRegexString}|` + // whitespace
-  '([!-\\[\\]-\u2027\u202A-\uD7FF\uF900-\uFFFF]' + // single codepoint
+  '([!-\\[\\]-\u{2027}\u{202A}-\u{D7FF}\u{F900}-\u{FFFF}]' + // single codepoint
   `${combiningDiacriticalMarkString}*` + // ...plus accents
-  '|[\uD800-\uDBFF][\uDC00-\uDFFF]' + // surrogate pair
+  '|[\u{D800}-\u{DBFF}][\u{DC00}-\u{DFFF}]' + // surrogate pair
   `${combiningDiacriticalMarkString}*` + // ...plus accents
   '|\\\\verb\\*([^]).*?\\4' + // \verb*
   '|\\\\verb([^*a-zA-Z]).*?\\5' + // \verb unstarred

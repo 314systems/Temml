@@ -22,11 +22,11 @@ defineFunction({
         first.text = symbols.math[first.text].replace!;
       }
       // \u0338 is the Unicode Combining Long Solidus Overlay
-      first.text = first.text.slice(0, 1) + '\u0338' + first.text.slice(1);
+      first.text = first.text.slice(0, 1) + '\u{338}' + first.text.slice(1);
     } else {
       // When the argument is not a character box, TeX does an awkward, poorly placed overlay.
       // We'll do the same.
-      const notNode: ParseNode<'textord'> = { type: 'textord', mode: 'math', text: '\u0338' };
+      const notNode: ParseNode<'textord'> = { type: 'textord', mode: 'math', text: '\u{338}' };
       const kernNode: ParseNode<'kern'> = {
         type: 'kern',
         mode: 'math',

@@ -19,7 +19,7 @@ import type { ArgType, Mode } from './types';
 import unicodeAccents from /*preval*/ './unicodeAccents';
 import unicodeSymbols from /*preval*/ './unicodeSymbols';
 
-const binLeftCancellers = ['bin', 'op', 'open', 'punct', 'rel'];
+const binLeftCancellers = new Set(['bin', 'op', 'open', 'punct', 'rel']);
 const endOfExpression = new Set(['}', '\\endgroup', '\\end', '\\right', '\\endtoggle', '&']);
 const sizeRegEx = /([-+]?) *(\d+(?:\.\d*)?|\.\d+) *([a-z]{2})/;
 const textRegEx = /^ *\\text/;
@@ -67,7 +67,7 @@ const textOf = (node: AnyParseNode): unknown => (node as { text?: unknown }).tex
  */
 
 export default class Parser {
-  mode: Mode;
+  mode: Mode = 'math';
   gullet: MacroExpander;
   settings: Settings;
   leftrightDepth: number;
@@ -76,7 +76,6 @@ export default class Parser {
 
   constructor(input: string, settings: Settings) {
     // Start in math mode
-    this.mode = 'math';
     // Create a new macro expander (gullet) and (indirectly via that) also a
     // new lexer (mouth) for this parser (stomach, in the language of TeX)
     this.gullet = new MacroExpander(input, settings, this.mode);
@@ -158,9 +157,9 @@ export default class Parser {
   parsePreamble(): MacroMap {
     this.parseInGroup();
     const macros: MacroMap = Object.create(null);
-    Object.entries(this.gullet.macros.current).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(this.gullet.macros.current)) {
       macros[key] = value;
-    });
+    }
     this.gullet.endGroup();
     return macros;
   }
@@ -397,56 +396,67 @@ export default class Parser {
       // Lex the first token
       const lex = this.fetch();
 
-      if (lex.text === '\\limits' || lex.text === '\\nolimits') {
-        // We got a limit control
-        if (base && base.type === 'op') {
-          const limits = lex.text === '\\limits';
-          base.limits = limits;
-          base.alwaysHandleSupSub = true;
-        } else if (base && base.type === 'operatorname') {
-          if (base.alwaysHandleSupSub) {
-            base.limits = lex.text === '\\limits';
+      switch (lex.text) {
+        case '\\limits':
+        case '\\nolimits': {
+          // We got a limit control
+          if (base && base.type === 'op') {
+            const limits = lex.text === '\\limits';
+            base.limits = limits;
+            base.alwaysHandleSupSub = true;
+          } else if (base && base.type === 'operatorname') {
+            if (base.alwaysHandleSupSub) {
+              base.limits = lex.text === '\\limits';
+            }
+          } else {
+            throw new ParseError('Limit controls must follow a math operator', lex);
           }
-        } else {
-          throw new ParseError('Limit controls must follow a math operator', lex);
-        }
-        this.consume();
-      } else if (lex.text === '^') {
-        // We got a superscript start
-        if (superscript) {
-          throw new ParseError('Double superscript', lex);
-        }
-        superscript = this.handleSupSubscript('superscript');
-      } else if (lex.text === '_') {
-        // We got a subscript start
-        if (subscript) {
-          throw new ParseError('Double subscript', lex);
-        }
-        subscript = this.handleSupSubscript('subscript');
-      } else if (lex.text === "'") {
-        // We got a prime
-        if (superscript) {
-          throw new ParseError('Double superscript', lex);
-        }
-        const prime: ParseNode<'textord'> = { type: 'textord', mode: this.mode, text: '\\prime' };
-
-        // Many primes can be grouped together, so we handle this here
-        const primes: AnyParseNode[] = [prime];
-        this.consume();
-        // Keep lexing tokens until we get something that's not a prime
-        while (this.fetch().text === "'") {
-          // For each one, add another prime to the list
-          primes.push(prime);
           this.consume();
+          continue;
         }
-        // If there's a superscript following the primes, combine that
-        // superscript in with the primes.
-        if (this.fetch().text === '^') {
-          primes.push(this.handleSupSubscript('superscript'));
+        case '^': {
+          // We got a superscript start
+          if (superscript) {
+            throw new ParseError('Double superscript', lex);
+          }
+          superscript = this.handleSupSubscript('superscript');
+          continue;
         }
-        // Put everything into an ordgroup as the superscript
-        superscript = { type: 'ordgroup', mode: this.mode, body: primes };
-      } else if (uSubsAndSups[lex.text]) {
+        case '_': {
+          // We got a subscript start
+          if (subscript) {
+            throw new ParseError('Double subscript', lex);
+          }
+          subscript = this.handleSupSubscript('subscript');
+          continue;
+        }
+        case "'": {
+          // We got a prime
+          if (superscript) {
+            throw new ParseError('Double superscript', lex);
+          }
+          const prime: ParseNode<'textord'> = { type: 'textord', mode: this.mode, text: '\\prime' };
+
+          // Many primes can be grouped together, so we handle this here
+          const primes: AnyParseNode[] = [prime];
+          this.consume();
+          // Keep lexing tokens until we get something that's not a prime
+          while (this.fetch().text === "'") {
+            // For each one, add another prime to the list
+            primes.push(prime);
+            this.consume();
+          }
+          // If there's a superscript following the primes, combine that
+          // superscript in with the primes.
+          if (this.fetch().text === '^') {
+            primes.push(this.handleSupSubscript('superscript'));
+          }
+          // Put everything into an ordgroup as the superscript
+          superscript = { type: 'ordgroup', mode: this.mode, body: primes };
+          continue;
+        }
+      }
+      if (uSubsAndSups[lex.text]) {
         // A Unicode subscript or superscript character.
         // We treat these similarly to the unicode-math package.
         // So we render a string of Unicode (sub|super)scripts the
@@ -593,11 +603,11 @@ export default class Parser {
       const arg = this.parseGroupOfType(`argument to '${func}'`, argType, isOptional);
       if (isOptional) {
         optArgs.push(arg);
-      } else if (arg != null) {
-        args.push(arg);
-      } else {
+      } else if (arg == null) {
         // should be unreachable
         throw new ParseError('Null argument, please report this as a bug');
+      } else {
+        args.push(arg);
       }
     }
 
@@ -624,24 +634,24 @@ export default class Parser {
         // hbox argument type wraps the argument in the equivalent of
         // \hbox, which is like \text but switching to \textstyle size.
         const group = this.parseArgumentGroup(optional, 'text');
-        return group != null
-          ? {
+        return group == null
+          ? null
+          : {
               type: 'styling',
               mode: group.mode,
               body: [group],
               scriptLevel: 'text', // simulate \textstyle
-            }
-          : null;
+            };
       }
       case 'raw': {
         const token = this.parseStringGroup('raw', optional);
-        return token != null
-          ? {
+        return token == null
+          ? null
+          : {
               type: 'raw',
               mode: 'text',
               string: token.text,
-            }
-          : null;
+            };
       }
       case 'primitive': {
         if (optional) {
@@ -669,7 +679,7 @@ export default class Parser {
     while (true) {
       const ch = this.fetch().text;
       // \ufe0e is the Unicode variation selector to supress emoji. Ignore it.
-      if (ch === ' ' || ch === '\u00a0' || ch === '\ufe0e') {
+      if (ch === ' ' || ch === '\u{A0}' || ch === '\u{FE0E}') {
         this.consume();
       } else {
         break;
@@ -729,17 +739,17 @@ export default class Parser {
    */
   parseSizeGroup(optional: boolean): ParseNode<'size'> | null {
     let res;
-    let isBlank = false;
     // don't expand before parseStringGroup
     this.gullet.consumeSpaces();
-    if (!optional && this.gullet.future().text !== '{') {
-      res = this.parseRegexGroup(/^[-+]? *(?:$|\d+|\d+\.\d*|\.\d*) *[a-z]{0,2} *$/, 'size');
-    } else {
+    if (optional || this.gullet.future().text === '{') {
       res = this.parseStringGroup('size', optional);
+    } else {
+      res = this.parseRegexGroup(/^[-+]? *(?:$|\d+|\d+\.\d*|\.\d*) *[a-z]{0,2} *$/, 'size');
     }
     if (!res) {
       return null;
     }
+    let isBlank = false;
     if (!optional && res.text.length === 0) {
       // Because we've tested for what is !optional, this block won't
       // affect \kern, \hspace, etc. It will capture the mandatory arguments
@@ -783,7 +793,7 @@ export default class Parser {
     // generate valid links in such cases; we interpret this as
     // "undefined" behaviour, and keep them as-is. Some browser will
     // replace backslashes with forward slashes.
-    const url = res.text.replace(/{\u2044}/g, '/');
+    const url = res.text.replaceAll('{\u{2044}}', '/');
     return {
       type: 'url',
       mode: this.mode,
@@ -834,11 +844,11 @@ export default class Parser {
     name: string, // For error reporting.
     breakOnTokenText?: string | null,
   ): AnyParseNode | null {
-    const firstToken = this.fetch();
-    const text = firstToken.text;
     if (name === "argument to '\\left'") {
       return this.parseSymbol();
     }
+    const firstToken = this.fetch();
+    const text = firstToken.text;
     let result: AnyParseNode | null;
     // Try to parse an open brace or \begingroup
     if (text === '{' || text === '\\begingroup' || text === '\\toggle') {
@@ -962,7 +972,7 @@ export default class Parser {
       // This behavior is not strict (XeTeX-compatible) in math mode.
       if (this.settings.strict && this.mode === 'math') {
         throw new ParseError(
-          `Accented Unicode text character "${text[0]}" used in ` + `math mode`,
+          `Accented Unicode text character "${text[0]}" used in math mode`,
           nucleus,
         );
       }
@@ -971,11 +981,11 @@ export default class Parser {
     // Strip off any combining characters
     const match = this.mode === 'math' ? combiningDiacriticalMarksEndRegex.exec(text) : null;
     if (match) {
-      text = text.substring(0, match.index);
+      text = text.slice(0, match.index);
       if (text === 'i') {
-        text = '\u0131'; // dotless i, in math and text mode
+        text = '\u{131}'; // dotless i, in math and text mode
       } else if (text === 'j') {
-        text = '\u0237'; // dotless j, in math and text mode
+        text = '\u{237}'; // dotless j, in math and text mode
       }
     }
     // Recognize base symbol
@@ -984,7 +994,7 @@ export default class Parser {
       let group = symbols[this.mode][text].group;
       if (
         group === 'bin' &&
-        (binLeftCancellers.includes(this.prevAtomType) || this.prevAtomType === '')
+        (binLeftCancellers.has(this.prevAtomType) || this.prevAtomType === '')
       ) {
         // Change from a binary operator to a unary (prefix) operator
         group = 'open';
@@ -1000,10 +1010,12 @@ export default class Parser {
           loc,
           text,
         };
-        if ((family === 'rel' || family === 'bin') && this.prevAtomType === 'text') {
-          if (textRegEx.test(loc!.lexer.input.slice(loc!.end))) {
-            atom.needsSpacing = true; // Fix a MathML bug.
-          }
+        if (
+          (family === 'rel' || family === 'bin') &&
+          this.prevAtomType === 'text' &&
+          textRegEx.test(loc!.lexer.input.slice(loc!.end))
+        ) {
+          atom.needsSpacing = true; // Fix a MathML bug.
         }
         s = atom;
       } else {
@@ -1011,10 +1023,10 @@ export default class Parser {
           // Unicode 14 disambiguates chancery from roundhand.
           // See https://www.unicode.org/charts/PDF/U1D400.pdf
           this.consume();
-          const nextCode = this.fetch().text.charCodeAt(0);
+          const nextCode = this.fetch().text.codePointAt(0);
           // mathcal is Temml default. Use mathscript if called for.
-          const font = nextCode === 0xfe01 ? 'mathscr' : 'mathcal';
-          if (nextCode === 0xfe00 || nextCode === 0xfe01) {
+          const font = nextCode === 0xfe_01 ? 'mathscr' : 'mathcal';
+          if (nextCode === 0xfe_00 || nextCode === 0xfe_01) {
             this.consume();
           }
           return {
@@ -1033,7 +1045,7 @@ export default class Parser {
         } as SymbolParseNode;
       }
       symbol = s;
-    } else if (text.charCodeAt(0) >= 0x80 || combiningDiacriticalMarksEndRegex.exec(text)) {
+    } else if ((text.codePointAt(0) ?? 0) >= 0x80 || combiningDiacriticalMarksEndRegex.test(text)) {
       // no symbol for e.g. ^
       if (this.settings.strict && this.mode === 'math') {
         throw new ParseError(`Unicode text character "${text[0]}" used in math mode`, nucleus);

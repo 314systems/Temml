@@ -28,7 +28,7 @@ export const deflt = <T extends object, K extends keyof T, D>(
 
 const uppercase = /([A-Z])/g;
 export const hyphenate = (str: string): string => {
-  return str.replace(uppercase, '-$1').toLowerCase();
+  return str.replaceAll(uppercase, '-$1').toLowerCase();
 };
 
 const ESCAPE_LOOKUP: Record<string, string> = {
@@ -45,7 +45,7 @@ const ESCAPE_REGEX = /[&><"']/g;
  * Escapes text to prevent scripting attacks.
  */
 export const escape = (text: unknown): string => {
-  return String(text).replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
+  return String(text).replaceAll(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 };
 
 /**
@@ -54,22 +54,27 @@ export const escape = (text: unknown): string => {
  * a single element, we want to pull that out.
  */
 export const getBaseElem = (group: AnyParseNode): AnyParseNode => {
-  if (group.type === 'ordgroup') {
-    if (group.body.length === 1) {
-      return getBaseElem(group.body[0]);
-    } else {
+  switch (group.type) {
+    case 'ordgroup': {
+      if (group.body.length === 1) {
+        return getBaseElem(group.body[0]);
+      } else {
+        return group;
+      }
+    }
+    case 'color': {
+      if (group.body.length === 1) {
+        return getBaseElem(group.body[0]);
+      } else {
+        return group;
+      }
+    }
+    case 'font': {
+      return getBaseElem(group.body);
+    }
+    default: {
       return group;
     }
-  } else if (group.type === 'color') {
-    if (group.body.length === 1) {
-      return getBaseElem(group.body[0]);
-    } else {
-      return group;
-    }
-  } else if (group.type === 'font') {
-    return getBaseElem(group.body);
-  } else {
-    return group;
   }
 };
 
@@ -102,7 +107,7 @@ export const protocolFromUrl = (url: string): string | null => {
   // https://url.spec.whatwg.org/#url-parsing strips leading whitespace
   // (\x00) or C0 control (\x00-\x1F) characters.
   // eslint-disable-next-line no-control-regex
-  const protocol = /^[\x00-\x20]*([^\\/#?]*?)(:|&#0*58|&#x0*3a|&colon)/i.exec(url);
+  const protocol = /^[\u{0}-\u{20}]*([^\\/#?]*?)(:|&#0*58|&#x0*3a|&colon)/iu.exec(url);
   if (!protocol) {
     return '_relative';
   }

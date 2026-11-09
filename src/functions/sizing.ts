@@ -11,7 +11,7 @@ const sizeMap: Record<string, number> = {
   '\\scriptsize': 0.7,
   '\\footnotesize': 0.8,
   '\\small': 0.9,
-  '\\normalsize': 1.0,
+  '\\normalsize': 1,
   '\\large': 1.2,
   '\\Large': 1.44,
   '\\LARGE': 1.728,

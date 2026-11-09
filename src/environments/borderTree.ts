@@ -47,7 +47,7 @@ export const bordermatrixParseTree = (
   body[0].shift(); // dispose of top left cell
 
   // Create an array for the left column
-  const leftColumnBody: AnyParseNode[][] = new Array(body.length - 1).fill(undefined).map(() => []);
+  const leftColumnBody: AnyParseNode[][] = Array.from({ length: body.length - 1 }, () => []);
   for (let i = 1; i < body.length; i++) {
     // The visible part of the cell
     leftColumnBody[i - 1].push(body[i].shift()!);
@@ -60,7 +60,7 @@ export const bordermatrixParseTree = (
   }
 
   // Create an array for the top row
-  const topRowBody: AnyParseNode[][] = new Array(body.length).fill(undefined).map(() => []);
+  const topRowBody: AnyParseNode[][] = Array.from({ length: body.length }, () => []);
   for (let j = 0; j < body[0].length; j++) {
     topRowBody[0].push(body[0][j]);
   }
@@ -83,12 +83,12 @@ export const bordermatrixParseTree = (
     mode: 'math',
     body: leftColumnBody,
     cols: [{ type: 'align', align: 'c' }],
-    rowGaps: new Array(leftColumnBody.length - 1).fill(null),
-    hLinesBeforeRow: new Array(leftColumnBody.length + 1).fill(undefined).map(() => []),
+    rowGaps: Array.from({ length: leftColumnBody.length - 1 }, () => null),
+    hLinesBeforeRow: Array.from({ length: leftColumnBody.length + 1 }, () => []),
     envClasses: [],
     scriptLevel: 'text',
     arraystretch: 1,
-    labels: new Array(leftColumnBody.length).fill(''),
+    labels: Array.from({ length: leftColumnBody.length }, () => ''),
     arraycolsep: { number: 0.04, unit: 'em' },
   };
 
@@ -96,13 +96,13 @@ export const bordermatrixParseTree = (
     type: 'array',
     mode: 'math',
     body: topRowBody,
-    cols: new Array(topRowBody.length).fill({ type: 'align', align: 'c' }),
-    rowGaps: new Array(topRowBody.length - 1).fill(null),
-    hLinesBeforeRow: new Array(topRowBody.length + 1).fill(undefined).map(() => []),
+    cols: Array.from({ length: topRowBody.length }, () => ({ type: 'align', align: 'c' })),
+    rowGaps: Array.from({ length: topRowBody.length - 1 }, () => null),
+    hLinesBeforeRow: Array.from({ length: topRowBody.length + 1 }, () => []),
     envClasses: [],
     scriptLevel: 'text',
     arraystretch: 1,
-    labels: new Array(topRowBody.length).fill(''),
+    labels: Array.from({ length: topRowBody.length }, () => ''),
     arraycolsep: null,
   };
 

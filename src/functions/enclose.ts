@@ -5,10 +5,10 @@ import { colorFromSpec, validateColor } from './color';
 import * as mml from '../buildMathML';
 import type { MathMLBuilder } from '../defineFunction';
 
-const boxTags = ['\\boxed', '\\fcolorbox', '\\colorbox'];
+const boxTags = new Set(['\\boxed', '\\fcolorbox', '\\colorbox']);
 
 const mathmlBuilder: MathMLBuilder<'enclose'> = (group, style) => {
-  const tag = boxTags.includes(group.label) ? 'mrow' : 'menclose';
+  const tag = boxTags.has(group.label) ? 'mrow' : 'menclose';
   const node = new mathMLTree.MathNode(tag, [mml.buildGroup(group.body, style)]);
   switch (group.label) {
     case '\\overline':

@@ -32,4 +32,4 @@ defineFunction({
  * \verb replaces each space with a no-break space \xA0
  */
 const makeVerb = (group: ParseNode<'verb'>): string =>
-  group.body.replace(/ /g, group.star ? '\u2423' : '\xA0');
+  group.body.replaceAll(' ', group.star ? '\u{2423}' : '\u{A0}');

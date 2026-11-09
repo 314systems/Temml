@@ -6,7 +6,7 @@ import ParseError from '../ParseError';
 import type { MathNode } from '../mathMLTree';
 import type { ParseNode } from '../parseNode';
 
-const textModeLap = ['\\clap', '\\llap', '\\rlap'];
+const textModeLap = new Set(['\\clap', '\\llap', '\\rlap']);
 
 defineFunction({
   type: 'lap',
@@ -16,7 +16,7 @@ defineFunction({
     allowedInText: true,
   },
   handler: ({ parser, funcName, token }, args) => {
-    if (textModeLap.includes(funcName)) {
+    if (textModeLap.has(funcName)) {
       if (parser.settings.strict && parser.mode !== 'text') {
         throw new ParseError(
           `{${funcName}} can be used only in text mode.

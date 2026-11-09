@@ -38,15 +38,12 @@ const mathmlBuilder: MathMLBuilder<'accent'> = (group, style) => {
       accentNode.classes.push('tml-vec'); // Firefox sizing of \vec arrow
     }
     const wbkPostfix = isVec ? '-vec' : needsWbkVertShift ? '-acc' : '';
-    if (smallNudge.indexOf(text) > -1) {
-      accentNode.classes.push(`chr-sml${vecPostfix}`);
-      accentNode.classes.push(`wbk-sml${wbkPostfix}`);
-    } else if (mediumNudge.indexOf(text) > -1) {
-      accentNode.classes.push(`chr-med${vecPostfix}`);
-      accentNode.classes.push(`wbk-med${wbkPostfix}`);
-    } else if (largeNudge.indexOf(text) > -1) {
-      accentNode.classes.push(`chr-lrg${vecPostfix}`);
-      accentNode.classes.push(`wbk-lrg${wbkPostfix}`);
+    if (smallNudge.includes(text)) {
+      accentNode.classes.push(`chr-sml${vecPostfix}`, `wbk-sml${wbkPostfix}`);
+    } else if (mediumNudge.includes(text)) {
+      accentNode.classes.push(`chr-med${vecPostfix}`, `wbk-med${wbkPostfix}`);
+    } else if (largeNudge.includes(text)) {
+      accentNode.classes.push(`chr-lrg${vecPostfix}`, `wbk-lrg${wbkPostfix}`);
     } else if (isVec) {
       accentNode.classes.push(`wbk-vec`);
     } else if (needsWbkVertShift) {
@@ -100,18 +97,18 @@ const needsWebkitVerticalShift = new Set([
 ]);
 
 const combiningChar: Record<string, string> = {
-  '\\`': '\u0300',
-  "\\'": '\u0301',
-  '\\^': '\u0302',
-  '\\~': '\u0303',
-  '\\=': '\u0304',
-  '\\u': '\u0306',
-  '\\.': '\u0307',
-  '\\"': '\u0308',
-  '\\r': '\u030A',
-  '\\H': '\u030B',
-  '\\v': '\u030C',
-  '\\c': '\u0327',
+  '\\`': '\u{300}',
+  "\\'": '\u{301}',
+  '\\^': '\u{302}',
+  '\\~': '\u{303}',
+  '\\=': '\u{304}',
+  '\\u': '\u{306}',
+  '\\.': '\u{307}',
+  '\\"': '\u{308}',
+  '\\r': '\u{30A}',
+  '\\H': '\u{30B}',
+  '\\v': '\u{30C}',
+  '\\c': '\u{327}',
 };
 
 // Accents
@@ -188,7 +185,7 @@ defineFunction({
       baseText &&
       baseText.length === 1 &&
       context.funcName in combiningChar &&
-      smalls.indexOf(baseText) > -1
+      smalls.includes(baseText)
     ) {
       // Return a combining accent character
       return {
@@ -198,7 +195,7 @@ defineFunction({
       };
     } else if (context.funcName === '\\c' && mode === 'text' && baseText && baseText.length === 1) {
       // combining cedilla
-      return { type: 'textord', mode: 'text', text: baseText + '\u0327' };
+      return { type: 'textord', mode: 'text', text: baseText + '\u{327}' };
     } else {
       // Build up the accent
       return {

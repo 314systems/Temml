@@ -16,7 +16,7 @@ defineFunction({
     return {
       type: 'label',
       mode: parser.mode,
-      string: assertNodeType(args[0], 'raw').string.replace(invalidIdRegEx, ''),
+      string: assertNodeType(args[0], 'raw').string.replaceAll(invalidIdRegEx, ''),
     };
   },
   mathmlBuilder(group, style) {

@@ -19,7 +19,7 @@ export default defineConfig([
 
       ecmaVersion: 'latest',
       sourceType: 'module',
-    }
+    },
   },
   {
     files: ['**/*.ts'],
@@ -45,6 +45,22 @@ export default defineConfig([
     rules: {
       'unicorn/number-literal-case': 'off',
       'unicorn/prefer-ternary': 'off',
+      'unicorn/prefer-string-raw': 'off',
+    },
+  },
+  {
+    files: [
+      'src/buildMathML.ts',
+      'src/environments/array.ts',
+      'src/functions/font.ts',
+      'src/functions/mclass.ts',
+      'src/functions/operatorname.ts',
+      'src/functions/tip.ts',
+      'src/linebreaking.ts',
+    ],
+    rules: {
+      // These builders traverse MathNode children, not browser DOM elements.
+      'unicorn/better-dom-traversing': 'off',
     },
   },
 ]);

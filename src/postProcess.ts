@@ -51,15 +51,11 @@ export const postProcess = (block: Element | Document): void => {
   }
 
   // Populate \ref & \eqref text content
-  const refs = block.getElementsByClassName('tml-ref');
-  [...refs].forEach((ref) => {
+  const refs = [...block.getElementsByClassName('tml-ref')];
+  for (const ref of refs) {
     const attr = ref.getAttribute('href');
     let str = labelMap[attr!.slice(1)];
-    if (ref.className.indexOf('tml-eqref') === -1) {
-      // \ref. Omit parens.
-      str = str.replace(/^\(/, '');
-      str = str.replace(/\)$/, '');
-    } else {
+    if (ref.className.includes('tml-eqref')) {
       // \eqref. Include parens
       if (str.charAt(0) !== '(') {
         str = '(' + str;
@@ -67,12 +63,16 @@ export const postProcess = (block: Element | Document): void => {
       if (str.slice(-1) !== ')') {
         str = str + ')';
       }
+    } else {
+      // \ref. Omit parens.
+      str = str.replace(/^\(/, '');
+      str = str.replace(/\)$/, '');
     }
     const mtext = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mtext');
-    mtext.appendChild(document.createTextNode(str));
+    mtext.append(document.createTextNode(str));
     const math = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'math');
-    math.appendChild(mtext);
+    math.append(mtext);
     ref.textContent = '';
-    ref.appendChild(math);
-  });
+    ref.append(math);
+  }
 };

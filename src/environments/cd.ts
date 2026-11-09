@@ -87,7 +87,7 @@ export const parseCD = (parser: Parser): ParseNode<'array'> => {
     if (next === '&' || next === '\\\\') {
       parser.consume();
     } else if (next === '\\end') {
-      if (parsedRows[parsedRows.length - 1].length === 0) {
+      if (parsedRows.at(-1)!.length === 0) {
         parsedRows.pop(); // final row ended in \\
       }
       break;
@@ -107,10 +107,7 @@ export const parseCD = (parser: Parser): ParseNode<'array'> => {
     let cell = newCell();
 
     for (let j = 0; j < rowNodes.length; j++) {
-      if (!isStartOfArrow(rowNodes[j])) {
-        // If a parseNode is not an arrow, it goes into a cell.
-        cell.body.push(rowNodes[j]);
-      } else {
+      if (isStartOfArrow(rowNodes[j])) {
         // Parse node j is an "@", the start of an arrow.
         // Before starting on the arrow, push the cell into `row`.
         row.push(cell);
@@ -121,15 +118,16 @@ export const parseCD = (parser: Parser): ParseNode<'array'> => {
         const arrowChar = assertSymbolNodeType(rowNodes[j]).text;
 
         // Create two empty label nodes. We may or may not use them.
-        const labels: ParseNode<'ordgroup'>[] = new Array(2);
-        labels[0] = { type: 'ordgroup', mode: 'math', body: [] };
-        labels[1] = { type: 'ordgroup', mode: 'math', body: [] };
+        const labels: ParseNode<'ordgroup'>[] = [
+          { type: 'ordgroup', mode: 'math', body: [] },
+          { type: 'ordgroup', mode: 'math', body: [] },
+        ];
 
         // Process the arrow.
-        if ('=|.'.indexOf(arrowChar) > -1) {
+        if ('=|.'.includes(arrowChar)) {
           // Three "arrows", ``@=`, `@|`, and `@.`, do not take labels.
           // Do nothing here.
-        } else if ('<>AV'.indexOf(arrowChar) > -1) {
+        } else if ('<>AV'.includes(arrowChar)) {
           // Four arrows, `@>>>`, `@<<<`, `@AAA`, and `@VVV`, each take
           // two optional labels. E.g. the right-point arrow syntax is
           // really:  @>{optional label}>{optional label}>
@@ -172,6 +170,9 @@ export const parseCD = (parser: Parser): ParseNode<'array'> => {
         // is not an arrow gets collected into a cell. So create an empty
         // cell now. It will collect upcoming parseNodes.
         cell = newCell();
+      } else {
+        // If a parseNode is not an arrow, it goes into a cell.
+        cell.body.push(rowNodes[j]);
       }
     }
     if (i % 2 === 0) {
@@ -198,10 +199,10 @@ export const parseCD = (parser: Parser): ParseNode<'array'> => {
     mode: 'math',
     body,
     tags: null,
-    labels: new Array(body.length + 1).fill(''),
+    labels: Array.from({ length: body.length + 1 }, () => ''),
     envClasses: ['jot', 'cd'],
     cols: [],
-    hLinesBeforeRow: new Array(body.length + 1).fill([]),
+    hLinesBeforeRow: Array.from({ length: body.length + 1 }, () => []),
   };
 };
 

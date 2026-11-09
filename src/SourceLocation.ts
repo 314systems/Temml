@@ -41,10 +41,10 @@ export default class SourceLocation {
   ): SourceLocation | null | undefined {
     if (!second) {
       return first && first.loc;
-    } else if (!first || !first.loc || !second.loc || first.loc.lexer !== second.loc.lexer) {
-      return null;
-    } else {
+    } else if (first && first.loc && second.loc && first.loc.lexer === second.loc.lexer) {
       return new SourceLocation(first.loc.lexer, first.loc.start, second.loc.end);
+    } else {
+      return null;
     }
   }
 }

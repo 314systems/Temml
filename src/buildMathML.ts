@@ -27,7 +27,9 @@ export const makeText = (text: string, mode: Mode, style?: Style): TextNode => {
   if (
     symbols[mode][text] &&
     symbols[mode][text].replace &&
-    text.charCodeAt(0) !== 0xd835 &&
+    // Check the UTF-16 high surrogate used by mathematical alphanumeric symbols.
+    // eslint-disable-next-line unicorn/prefer-code-point
+    text.charCodeAt(0) !== 0xd8_35 &&
     !(
       Object.hasOwn(ligatures, text) &&
       style &&
@@ -95,11 +97,11 @@ export const consolidateText = (mrow: MathDomNode): MathDomNode => {
       // Firefox does not render a space at either end of an <mtext> string.
       // To get proper rendering, we replace leading or trailing spaces with no-break spaces.
       if (text.text.charAt(0) === ' ') {
-        text.text = '\u00a0' + text.text.slice(1);
+        text.text = '\u{A0}' + text.text.slice(1);
       }
       const L = text.text.length;
       if (L > 0 && text.text.charAt(L - 1) === ' ') {
-        text.text = text.text.slice(0, -1) + '\u00a0';
+        text.text = text.text.slice(0, -1) + '\u{A0}';
       }
       for (const [key, value] of Object.entries(mrow.attributes)) {
         mtext.attributes[key] = value;
@@ -127,7 +129,7 @@ export const makeRow = (body: MathDomNode[], semisimple = false): MathDomNode =>
       first.attributes.lspace = '0em';
       first.attributes.rspace = '0em';
     }
-    const last = body[body.length - 1];
+    const last = body.at(-1);
     if (isMathNodeOfType(last, 'mo') && !last.attributes.fence) {
       last.attributes.lspace = '0em';
       last.attributes.rspace = '0em';
@@ -150,7 +152,7 @@ const isNumberPunctuation = (group: MathDomNode | undefined): group is MathNode 
     return child instanceof TextNode && child.text === '.';
   } else if (group.type === 'mtext' && group.children.length === 1) {
     const child = group.children[0];
-    return child instanceof TextNode && child.text === '\u2008'; // punctuation space
+    return child instanceof TextNode && child.text === '\u{2008}'; // punctuation space
   } else if (
     group.type === 'mo' &&
     group.children.length === 1 &&
@@ -299,11 +301,11 @@ const glue = (): MathNode => {
   return new mathMLTree.MathNode('mtd', [], [], { padding: '0', width: '50%' });
 };
 
-const labelContainers: MathNodeType[] = ['mrow', 'mtd', 'mtable', 'mtr'];
+const labelContainers: Set<MathNodeType> = new Set(['mrow', 'mtd', 'mtable', 'mtr']);
 const getLabel = (parent: { children: MathDomNode[] }): string | undefined => {
   for (const node of parent.children) {
     if (node instanceof MathNode) {
-      if (labelContainers.includes(node.type)) {
+      if (labelContainers.has(node.type)) {
         if (node.classes[0] === 'tml-label') {
           const label = node.label;
           return label;

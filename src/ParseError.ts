@@ -35,7 +35,7 @@ class ParseError extends Error {
       }
 
       // Underline token in question using combining underscores
-      const underlined = input.slice(start, end).replace(/[^]/g, '$&\u0332');
+      const underlined = input.slice(start, end).replaceAll(/[^]/g, '$&\u{332}');
 
       // Extract some context from the input and add it to the error
       let left;

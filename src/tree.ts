@@ -37,7 +37,7 @@ export class DocumentFragment implements MathDomNode {
     const frag = document.createDocumentFragment();
 
     for (let i = 0; i < this.children.length; i++) {
-      frag.appendChild(this.children[i].toNode());
+      frag.append(this.children[i].toNode());
     }
 
     return frag;

@@ -149,23 +149,31 @@ defineMacro('\\char', (context) => {
   let token = context.popToken();
   let base: number | undefined;
   let number: number | string | undefined = '';
-  if (token.text === "'") {
-    base = 8;
-    token = context.popToken();
-  } else if (token.text === '"') {
-    base = 16;
-    token = context.popToken();
-  } else if (token.text === '`') {
-    token = context.popToken();
-    if (token.text[0] === '\\') {
-      number = token.text.charCodeAt(1);
-    } else if (token.text === 'EOF') {
-      throw new ParseError('\\char` missing argument');
-    } else {
-      number = token.text.charCodeAt(0);
+  switch (token.text) {
+    case "'": {
+      base = 8;
+      token = context.popToken();
+      break;
     }
-  } else {
-    base = 10;
+    case '"': {
+      base = 16;
+      token = context.popToken();
+      break;
+    }
+    case '`': {
+      token = context.popToken();
+      if (token.text[0] === '\\') {
+        number = token.text.codePointAt(1);
+      } else if (token.text === 'EOF') {
+        throw new ParseError('\\char` missing argument');
+      } else {
+        number = token.text.codePointAt(0);
+      }
+      break;
+    }
+    default: {
+      base = 10;
+    }
   }
   if (base) {
     // Parse a number in the given base, starting with first `token`.
@@ -192,7 +200,7 @@ const recreateArgStr = (context: MacroExpander): string => {
   // Recreate the macro's original argument string from the array of parse tokens.
   const tokens = context.consumeArgs(1)[0];
   let str = '';
-  let expectedLoc = tokens[tokens.length - 1].loc!.start;
+  let expectedLoc = tokens.at(-1)!.loc!.start;
   for (let i = tokens.length - 1; i >= 0; i--) {
     const actualLoc = tokens[i].loc!.start;
     if (actualLoc > expectedLoc) {
@@ -211,7 +219,7 @@ const recreateArgStr = (context: MacroExpander): string => {
 defineMacro('\\surd', '\\sqrt{\\vphantom{|}}');
 
 // See comment for \oplus in symbols.js.
-defineMacro('\u2295', '\\oplus');
+defineMacro('\u{2295}', '\\oplus');
 
 // Since Temml has no \par, ignore \long.
 defineMacro('\\long', '');
@@ -248,7 +256,7 @@ defineMacro('\\underbar', '\\underline{\\text{#1}}');
 // We'll call \varvdots, which gets a glyph from symbols.js.
 // The zero-width rule gets us an equivalent to the vertical 6pt kern.
 defineMacro('\\vdots', '{\\varvdots\\rule{0pt}{15pt}}');
-defineMacro('\u22ee', '\\vdots');
+defineMacro('\u{22EE}', '\\vdots');
 
 // {array} environment gaps
 defineMacro('\\arraystretch', '1'); // line spacing factor times 12pt
@@ -338,10 +346,8 @@ defineMacro('\\dots', (context) => {
     thedots = dotsByToken[next];
   } else if (next.slice(0, 4) === '\\not') {
     thedots = '\\dotsb';
-  } else if (next in symbols.math) {
-    if (['bin', 'rel'].includes(symbols.math[next].group)) {
-      thedots = '\\dotsb';
-    }
+  } else if (next in symbols.math && ['bin', 'rel'].includes(symbols.math[next].group)) {
+    thedots = '\\dotsb';
   }
   return thedots;
 });
@@ -429,7 +435,7 @@ defineMacro('\\nonumber', '\\gdef\\@eqnsw{0}');
 defineMacro('\\bmod', '\\mathbin{\\text{mod}}');
 defineMacro(
   '\\pod',
-  '\\allowbreak' + '\\mathchoice{\\mkern18mu}{\\mkern8mu}{\\mkern8mu}{\\mkern8mu}(#1)',
+  '\\allowbreak\\mathchoice{\\mkern18mu}{\\mkern8mu}{\\mkern8mu}{\\mkern8mu}(#1)',
 );
 defineMacro('\\pmod', '\\pod{{\\rm mod}\\mkern6mu#1}');
 defineMacro(
@@ -517,7 +523,7 @@ defineMacro('\\coloncolonapprox', '\\Colonapprox');
 defineMacro('\\coloncolonsim', '\\Colonsim');
 
 // Present in newtxmath, pxfonts and txfonts
-defineMacro('\\notni', '\\mathrel{\\char`\u220C}');
+defineMacro('\\notni', '\\mathrel{\\char`\u{220C}}');
 defineMacro('\\limsup', '\\DOTSB\\operatorname*{lim\\,sup}');
 defineMacro('\\liminf', '\\DOTSB\\operatorname*{lim\\,inf}');
 
@@ -599,9 +605,9 @@ const pdvHelper = (args: Token[][]): string[] => {
   const power = String(denoms.length);
   const numOp = power === '1' ? '\\partial' : `\\partial^${power}`;
   let denominator = '';
-  denoms.map((e) => {
+  for (const e of denoms) {
     denominator += '\\partial ' + e.trim() + '\\,';
-  });
+  }
   return [numerator, numOp, denominator.replace(/\\,$/, '')];
 };
 defineMacro('\\pdv@numerator', (context) => {

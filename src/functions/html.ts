@@ -15,12 +15,11 @@ defineFunction({
     allowedInText: true,
   },
   handler: ({ parser, funcName, token }, args) => {
-    const value = assertNodeType(args[0], 'raw').string;
-    const body = args[1];
-
     if (parser.settings.strict) {
       throw new ParseError(`Function "${funcName}" is disabled in strict mode`, token);
     }
+    const value = assertNodeType(args[0], 'raw').string;
+    const body = args[1];
 
     let trustContext: TrustContext;
     const attributes: Record<string, string> = {};

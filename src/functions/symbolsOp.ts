@@ -5,22 +5,22 @@ import { padding } from './arrow';
 
 // Operator ParseNodes created in Parser.js from symbol Groups in src/symbols.js.
 
-const short = [
+const short = new Set([
   '\\shortmid',
   '\\nshortmid',
   '\\shortparallel',
   '\\nshortparallel',
   '\\smallsetminus',
-];
+]);
 
-const arrows = ['\\Rsh', '\\Lsh', '\\restriction'];
+const arrows = new Set(['\\Rsh', '\\Lsh', '\\restriction']);
 
 const isArrow = (str: string): boolean => {
   if (str.length === 1) {
     const codePoint = str.codePointAt(0)!;
-    return 0x218f < codePoint && codePoint < 0x2200;
+    return 0x21_8f < codePoint && codePoint < 0x22_00;
   }
-  return str.indexOf('arrow') > -1 || str.indexOf('harpoon') > -1 || arrows.includes(str);
+  return str.includes('arrow') || str.includes('harpoon') || arrows.has(str);
 };
 
 defineFunctionBuilders({
@@ -52,7 +52,7 @@ defineFunctionBuilders({
       node.setAttribute('stretchy', 'false');
     } else if (group.family === 'rel' && isArrow(group.text)) {
       node.setAttribute('stretchy', 'false');
-    } else if (short.includes(group.text)) {
+    } else if (short.has(group.text)) {
       node.setAttribute('mathsize', '70%');
     } else if (group.text === ':') {
       // ":" is not in the MathML operator dictionary. Give it BIN spacing.

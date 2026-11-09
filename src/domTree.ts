@@ -16,7 +16,7 @@ import * as utils from './utils';
  * with spaces, we also remove empty classes.
  */
 export const createClass = (classes: string[]): string => {
-  return classes.filter((cls) => cls).join(' ');
+  return classes.filter(Boolean).join(' ');
 };
 
 interface HtmlElementData {
@@ -47,7 +47,7 @@ const toNode = function (this: HtmlElementData, tagName: string): HTMLElement {
 
   // Append the children, also as HTML nodes
   for (let i = 0; i < this.children.length; i++) {
-    node.appendChild(this.children[i].toNode());
+    node.append(this.children[i].toNode());
   }
 
   return node;
@@ -166,7 +166,7 @@ export class AnchorNode implements MathDomNode {
       node.className = createClass(this.classes);
     }
     for (let i = 0; i < this.children.length; i++) {
-      node.appendChild(this.children[i].toNode());
+      node.append(this.children[i].toNode());
     }
     return node;
   }

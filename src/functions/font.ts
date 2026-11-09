@@ -7,11 +7,11 @@ import type { MathMLBuilder } from '../defineFunction';
 import type { ParseNode } from '../parseNode';
 import type { MathDomNode } from '../tree';
 
-const varNameFonts = ['mathrm', 'mathit'];
+const varNameFonts = new Set(['mathrm', 'mathit']);
 
 const isLongVariableName = (group: ParseNode<'font'>, font: string): boolean => {
   if (
-    !varNameFonts.includes(font) ||
+    !varNameFonts.has(font) ||
     !group.body ||
     group.body.type !== 'ordgroup' ||
     group.body.body.length === 1
@@ -27,7 +27,7 @@ const isLongVariableName = (group: ParseNode<'font'>, font: string): boolean => 
       !(
         parseNodeType === 'mathord' ||
         (parseNodeType === 'textord' &&
-          !isNaN(Number((group.body.body[i] as ParseNode<'textord'>).text)))
+          !Number.isNaN(Number((group.body.body[i] as ParseNode<'textord'>).text)))
       )
     ) {
       return false;
@@ -45,7 +45,6 @@ const mathmlBuilder: MathMLBuilder<'font'> = (group, style) => {
   const newStyle = style.withFont(font);
   // The checks below read the children as MathNodes, as the original duck-typed code did.
   const mathGroup = mml.buildGroup(group.body, newStyle) as MathNode;
-  const children = mathGroup.children as MathNode[];
 
   if (mathGroup.children.length === 0) {
     return mathGroup;
@@ -55,6 +54,7 @@ const mathmlBuilder: MathMLBuilder<'font'> = (group, style) => {
     return mathGroup;
   }
   // Check if it is possible to consolidate elements into a single <mi> element.
+  const children = mathGroup.children as MathNode[];
   if (isLongVariableName(group, font)) {
     // This is a \mathrm{…} or \mathit{…} group. It gets special treatment.
     const grandChild = children[0].children[0];
@@ -108,7 +108,7 @@ const mathmlBuilder: MathMLBuilder<'font'> = (group, style) => {
     // Ref: https://bugs.webkit.org/show_bug.cgi?id=129097
     // We insert a text node that contains a zero-width space and wrap in an mrow.
     // TODO: Get rid of this <mi> workaround when the Firefox bug is fixed.
-    const bogus = new mathMLTree.MathNode('mtext', [new mathMLTree.TextNode('\u200b')]);
+    const bogus = new mathMLTree.MathNode('mtext', [new mathMLTree.TextNode('\u{200B}')]);
     return new mathMLTree.MathNode('mrow', [bogus, mi]);
   }
   return mi;

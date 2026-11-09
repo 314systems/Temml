@@ -48,7 +48,7 @@ class Style {
     this.color = data.color;
     this.font = data.font || '';
     this.fontFamily = data.fontFamily || '';
-    this.fontSize = data.fontSize || 1.0;
+    this.fontSize = data.fontSize || 1;
     this.fontWeight = data.fontWeight || '';
     this.fontShape = data.fontShape || '';
     this.maxSize = data.maxSize;

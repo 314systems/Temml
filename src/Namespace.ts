@@ -100,13 +100,13 @@ export default class Namespace<Value> {
         delete this.undefStack[i][name];
       }
       if (this.undefStack.length > 0) {
-        this.undefStack[this.undefStack.length - 1][name] = value;
+        this.undefStack.at(-1)![name] = value;
       }
     } else {
       // Undo this set at end of this group (possibly to `undefined`),
       // unless an undo is already in place, in which case that older
       // value is the correct one.
-      const top = this.undefStack[this.undefStack.length - 1];
+      const top = this.undefStack.at(-1)!;
       if (top && !Object.hasOwn(top, name)) {
         top[name] = this.current[name];
       }

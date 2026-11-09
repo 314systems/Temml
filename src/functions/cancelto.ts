@@ -37,7 +37,7 @@ defineFunction({
     if (style.color) {
       arrow.style.color = style.color;
     }
-    if (group.isCharacterBox && smalls.indexOf(charText()) > -1) {
+    if (group.isCharacterBox && smalls.includes(charText())) {
       arrow.style.left = '0.1em';
       arrow.style.width = '90%';
     }

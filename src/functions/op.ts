@@ -9,10 +9,10 @@ import type { AnyParseNode } from '../parseNode';
 
 // Some helpers
 
-const ordAtomTypes = ['textord', 'mathord', 'atom'];
+const ordAtomTypes = new Set(['textord', 'mathord', 'atom']);
 
 // Most operators have a large successor symbol, but these don't.
-const noSuccessor = ['\\smallint'];
+const noSuccessor = new Set(['\\smallint']);
 
 // Math operators (e.g. \sin) need a space between these types and themselves:
 export const ordTypes = ['textord', 'mathord', 'ordgroup', 'close', 'leftright', 'font'];
@@ -33,7 +33,7 @@ const mathmlBuilder: MathMLBuilder<'op'> = (group, style) => {
   if (group.symbol) {
     // This is a symbol. Just add the symbol.
     node = new mathMLTree.MathNode('mo', [mml.makeText(group.name!, group.mode)]);
-    if (noSuccessor.includes(group.name!)) {
+    if (noSuccessor.has(group.name!)) {
       node.setAttribute('largeop', 'false');
     } else {
       node.setAttribute('movablelimits', 'false');
@@ -54,7 +54,7 @@ const mathmlBuilder: MathMLBuilder<'op'> = (group, style) => {
     if (!group.parentIsSupSub) {
       // Append an invisible <mo>&ApplyFunction;</mo>.
       // ref: https://www.w3.org/TR/REC-MathML/chap3_2.html#sec3.2.4
-      const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u2061', 'text')]);
+      const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u{2061}', 'text')]);
       const row = [node, operator];
       // Set spacing
       if (group.needsLeadingSpace) {
@@ -75,23 +75,23 @@ const mathmlBuilder: MathMLBuilder<'op'> = (group, style) => {
 };
 
 const singleCharBigOps: Record<string, string> = {
-  '\u220F': '\\prod',
-  '\u2210': '\\coprod',
-  '\u2211': '\\sum',
-  '\u22c0': '\\bigwedge',
-  '\u22c1': '\\bigvee',
-  '\u22c2': '\\bigcap',
-  '\u22c3': '\\bigcup',
-  '\u2a00': '\\bigodot',
-  '\u2a01': '\\bigoplus',
-  '\u2a02': '\\bigotimes',
-  '\u2a04': '\\biguplus',
-  '\u2a05': '\\bigsqcap',
-  '\u2a06': '\\bigsqcup',
-  '\u2a03': '\\bigcupdot',
-  '\u2a07': '\\bigdoublevee',
-  '\u2a08': '\\bigdoublewedge',
-  '\u2a09': '\\bigtimes',
+  '\u{220F}': '\\prod',
+  '\u{2210}': '\\coprod',
+  '\u{2211}': '\\sum',
+  '\u{22C0}': '\\bigwedge',
+  '\u{22C1}': '\\bigvee',
+  '\u{22C2}': '\\bigcap',
+  '\u{22C3}': '\\bigcup',
+  '\u{2A00}': '\\bigodot',
+  '\u{2A01}': '\\bigoplus',
+  '\u{2A02}': '\\bigotimes',
+  '\u{2A04}': '\\biguplus',
+  '\u{2A05}': '\\bigsqcap',
+  '\u{2A06}': '\\bigsqcup',
+  '\u{2A03}': '\\bigcupdot',
+  '\u{2A07}': '\\bigdoublevee',
+  '\u{2A08}': '\\bigdoublewedge',
+  '\u{2A09}': '\\bigtimes',
 };
 
 defineFunction({
@@ -117,23 +117,23 @@ defineFunction({
     '\\bigsqcup',
     '\\bigtimes',
     '\\smallint',
-    '\u220F',
-    '\u2210',
-    '\u2211',
-    '\u22c0',
-    '\u22c1',
-    '\u22c2',
-    '\u22c3',
-    '\u2a00',
-    '\u2a01',
-    '\u2a02',
-    '\u2a03',
-    '\u2a04',
-    '\u2a05',
-    '\u2a06',
-    '\u2a07',
-    '\u2a08',
-    '\u2a09',
+    '\u{220F}',
+    '\u{2210}',
+    '\u{2211}',
+    '\u{22C0}',
+    '\u{22C1}',
+    '\u{22C2}',
+    '\u{22C3}',
+    '\u{2A00}',
+    '\u{2A01}',
+    '\u{2A02}',
+    '\u{2A03}',
+    '\u{2A04}',
+    '\u{2A05}',
+    '\u{2A06}',
+    '\u{2A07}',
+    '\u{2A08}',
+    '\u{2A09}',
   ],
   props: {
     numArgs: 0,
@@ -171,8 +171,8 @@ defineFunction({
     // But if the argument is a <mi> or <mord>, that would be invalid MathML.
     // In that case, we instead promote the text contents of the body to the parent.
     const bodyArray = (body as { body?: AnyParseNode[] }).body;
-    const arr = bodyArray ? bodyArray : [body];
-    const isSymbol = arr.length === 1 && ordAtomTypes.includes(arr[0].type);
+    const arr = bodyArray ?? [body];
+    const isSymbol = arr.length === 1 && ordAtomTypes.has(arr[0].type);
     return {
       type: 'op',
       mode: parser.mode,
@@ -193,26 +193,26 @@ defineFunction({
 // displaystyle. These four groups cover the four possible choices.
 
 const singleCharIntegrals: Record<string, string> = {
-  '\u222b': '\\int',
-  '\u222c': '\\iint',
-  '\u222d': '\\iiint',
-  '\u222e': '\\oint',
-  '\u222f': '\\oiint',
-  '\u2230': '\\oiiint',
-  '\u2231': '\\intclockwise',
-  '\u2232': '\\varointclockwise',
-  '\u2a0c': '\\iiiint',
-  '\u2a0d': '\\intbar',
-  '\u2a0e': '\\intBar',
-  '\u2a0f': '\\fint',
-  '\u2a12': '\\rppolint',
-  '\u2a13': '\\scpolint',
-  '\u2a15': '\\pointint',
-  '\u2a16': '\\sqint',
-  '\u2a17': '\\intlarhk',
-  '\u2a18': '\\intx',
-  '\u2a19': '\\intcap',
-  '\u2a1a': '\\intcup',
+  '\u{222B}': '\\int',
+  '\u{222C}': '\\iint',
+  '\u{222D}': '\\iiint',
+  '\u{222E}': '\\oint',
+  '\u{222F}': '\\oiint',
+  '\u{2230}': '\\oiiint',
+  '\u{2231}': '\\intclockwise',
+  '\u{2232}': '\\varointclockwise',
+  '\u{2A0C}': '\\iiiint',
+  '\u{2A0D}': '\\intbar',
+  '\u{2A0E}': '\\intBar',
+  '\u{2A0F}': '\\fint',
+  '\u{2A12}': '\\rppolint',
+  '\u{2A13}': '\\scpolint',
+  '\u{2A15}': '\\pointint',
+  '\u{2A16}': '\\sqint',
+  '\u{2A17}': '\\intlarhk',
+  '\u{2A18}': '\\intx',
+  '\u{2A19}': '\\intcap',
+  '\u{2A1A}': '\\intcup',
 };
 
 // No limits, not symbols
@@ -323,26 +323,26 @@ defineFunction({
     '\\intx',
     '\\intcap',
     '\\intcup',
-    '\u222b',
-    '\u222c',
-    '\u222d',
-    '\u222e',
-    '\u222f',
-    '\u2230',
-    '\u2231',
-    '\u2232',
-    '\u2a0c',
-    '\u2a0d',
-    '\u2a0e',
-    '\u2a0f',
-    '\u2a12',
-    '\u2a13',
-    '\u2a15',
-    '\u2a16',
-    '\u2a17',
-    '\u2a18',
-    '\u2a19',
-    '\u2a1a',
+    '\u{222B}',
+    '\u{222C}',
+    '\u{222D}',
+    '\u{222E}',
+    '\u{222F}',
+    '\u{2230}',
+    '\u{2231}',
+    '\u{2232}',
+    '\u{2A0C}',
+    '\u{2A0D}',
+    '\u{2A0E}',
+    '\u{2A0F}',
+    '\u{2A12}',
+    '\u{2A13}',
+    '\u{2A15}',
+    '\u{2A16}',
+    '\u{2A17}',
+    '\u{2A18}',
+    '\u{2A19}',
+    '\u{2A1A}',
   ],
   props: {
     numArgs: 0,

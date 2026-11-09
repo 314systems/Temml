@@ -78,7 +78,7 @@ defineFunction({
       // No alt given. Use the file name. Strip away the path.
       alt = src;
       alt = alt.replace(/^.*[\\/]/, '');
-      alt = alt.substring(0, alt.lastIndexOf('.'));
+      alt = alt.slice(0, Math.max(0, alt.lastIndexOf('.')));
     }
 
     if (
@@ -104,11 +104,13 @@ defineFunction({
     const height = calculateSize(group.height, style);
     const depth = { number: 0, unit: 'em' };
 
-    if (group.totalheight.number > 0) {
-      if (group.totalheight.unit === height.unit && group.totalheight.number > height.number) {
-        depth.number = group.totalheight.number - height.number;
-        depth.unit = height.unit;
-      }
+    if (
+      group.totalheight.number > 0 &&
+      group.totalheight.unit === height.unit &&
+      group.totalheight.number > height.number
+    ) {
+      depth.number = group.totalheight.number - height.number;
+      depth.unit = height.unit;
     }
 
     let width: Measurement = { number: 0, unit: 'em' };

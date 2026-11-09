@@ -9,7 +9,7 @@ import type { MathNode } from '../mathMLTree';
 import type { AnyParseNode, ParseNode } from '../parseNode';
 import type Style from '../Style';
 
-const textAtomTypes = ['text', 'textord', 'mathord', 'atom'];
+const textAtomTypes = new Set(['text', 'textord', 'mathord', 'atom']);
 
 // The text of a parse node or MathML text node, if it has one.
 const textOf = (node: unknown): string | undefined => (node as { text?: string }).text;
@@ -48,39 +48,69 @@ const mathmlBuilder = (group: ParseNode<'mclass'>, style: Style): MathNode => {
     const doSpacing = style.level < 2; // Operator spacing is zero inside a (sub|super)script.
     if (node.type === 'mrow') {
       if (doSpacing) {
-        if (group.mclass === 'mbin') {
-          // medium space
-          node.children.unshift(padding(0.2222));
-          node.children.push(padding(0.2222));
-        } else if (group.mclass === 'mrel') {
-          // thickspace
-          node.children.unshift(padding(0.2778));
-          node.children.push(padding(0.2778));
-        } else if (group.mclass === 'mpunct') {
-          node.children.push(padding(0.1667));
-        } else if (group.mclass === 'minner') {
-          node.children.unshift(padding(0.0556)); // 1 mu is the most likely option
-          node.children.push(padding(0.0556));
+        switch (group.mclass) {
+          case 'mbin': {
+            // medium space
+            node.children.unshift(padding(0.2222));
+            node.children.push(padding(0.2222));
+
+            break;
+          }
+          case 'mrel': {
+            // thickspace
+            node.children.unshift(padding(0.2778));
+            node.children.push(padding(0.2778));
+
+            break;
+          }
+          case 'mpunct': {
+            node.children.push(padding(0.1667));
+
+            break;
+          }
+          case 'minner': {
+            node.children.unshift(padding(0.0556)); // 1 mu is the most likely option
+            node.children.push(padding(0.0556));
+
+            break;
+          }
+          // No default
         }
       }
     } else {
-      if (group.mclass === 'mbin') {
-        // medium space
-        node.attributes.lspace = doSpacing ? '0.2222em' : '0';
-        node.attributes.rspace = doSpacing ? '0.2222em' : '0';
-      } else if (group.mclass === 'mrel') {
-        // thickspace
-        node.attributes.lspace = doSpacing ? '0.2778em' : '0';
-        node.attributes.rspace = doSpacing ? '0.2778em' : '0';
-      } else if (group.mclass === 'mpunct') {
-        node.attributes.lspace = '0em';
-        node.attributes.rspace = doSpacing ? '0.1667em' : '0';
-      } else if (group.mclass === 'mopen' || group.mclass === 'mclose') {
-        node.attributes.lspace = '0em';
-        node.attributes.rspace = '0em';
-      } else if (group.mclass === 'minner' && doSpacing) {
-        node.attributes.lspace = '0.0556em'; // 1 mu is the most likely option
-        node.attributes.width = '+0.1111em';
+      switch (group.mclass) {
+        case 'mbin': {
+          // medium space
+          node.attributes.lspace = doSpacing ? '0.2222em' : '0';
+          node.attributes.rspace = doSpacing ? '0.2222em' : '0';
+
+          break;
+        }
+        case 'mrel': {
+          // thickspace
+          node.attributes.lspace = doSpacing ? '0.2778em' : '0';
+          node.attributes.rspace = doSpacing ? '0.2778em' : '0';
+
+          break;
+        }
+        case 'mpunct': {
+          node.attributes.lspace = '0em';
+          node.attributes.rspace = doSpacing ? '0.1667em' : '0';
+
+          break;
+        }
+        case 'mopen':
+        case 'mclose': {
+          node.attributes.lspace = '0em';
+          node.attributes.rspace = '0em';
+
+          break;
+        }
+        default:
+          if (group.mclass === 'minner' && doSpacing) {
+            node.attributes.lspace = '0.0556em'; // 1 mu is the most likely option
+            node.attributes.width = '+0.1111em';
+          }
       }
     }
 
@@ -116,9 +146,9 @@ defineFunction({
     let mustPromote = true;
     const mord: ParseNode<'mathord'> = { type: 'mathord', text: '', mode: parser.mode };
     const bodyArray = (body as { body?: AnyParseNode[] }).body;
-    const arr = bodyArray ? bodyArray : [body];
+    const arr = bodyArray ?? [body];
     for (const arg of arr) {
-      if (textAtomTypes.includes(arg.type)) {
+      if (textAtomTypes.has(arg.type)) {
         const argText = textOf(arg);
         const argBody = (arg as { body?: AnyParseNode[] }).body;
         if (symbols[parser.mode][argText!]) {
@@ -209,11 +239,11 @@ defineFunction({
     const shiftedArg = args[0];
 
     let mclass;
-    if (funcName !== '\\stackrel') {
+    if (funcName === '\\stackrel') {
+      mclass = 'mrel'; // for \stackrel
+    } else {
       // LaTeX applies \binrel spacing to \overset and \underset.
       mclass = binrelClass(baseArg);
-    } else {
-      mclass = 'mrel'; // for \stackrel
     }
 
     const baseType = mclass === 'mrel' || mclass === 'mbin' ? 'op' : 'ordgroup';

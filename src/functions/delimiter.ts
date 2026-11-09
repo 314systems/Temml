@@ -40,25 +40,25 @@ export const leftToRight: Record<string, string> = {
   '⦇': '⦈',
   '\\llparenthesis': '\\rrparenthesis',
   '\\lfloor': '\\rfloor',
-  '\u230a': '\u230b',
+  '\u{230A}': '\u{230B}',
   '\\lceil': '\\rceil',
-  '\u2308': '\u2309',
+  '\u{2308}': '\u{2309}',
   '\\langle': '\\rangle',
-  '\u27e8': '\u27e9',
+  '\u{27E8}': '\u{27E9}',
   '\\lAngle': '\\rAngle',
-  '\u27ea': '\u27eb',
+  '\u{27EA}': '\u{27EB}',
   '\\llangle': '\\rrangle',
   '⦉': '⦊',
   '\\lvert': '\\rvert',
   '\\lVert': '\\rVert',
   '\\lgroup': '\\rgroup',
-  '\u27ee': '\u27ef',
+  '\u{27EE}': '\u{27EF}',
   '\\lmoustache': '\\rmoustache',
-  '\u23b0': '\u23b1',
+  '\u{23B0}': '\u{23B1}',
   '\\llbracket': '\\rrbracket',
-  '\u27e6': '\u27e7',
+  '\u{27E6}': '\u{27E7}',
   '\\lBrace': '\\rBrace',
-  '\u2983': '\u2984',
+  '\u{2983}': '\u{2984}',
 };
 
 export const leftDelimiterNames = new Set(Object.keys(leftToRight));
@@ -83,22 +83,22 @@ const delimiters = new Set([
   '\\rrparenthesis',
   '\\lfloor',
   '\\rfloor',
-  '\u230a',
-  '\u230b',
+  '\u{230A}',
+  '\u{230B}',
   '\\lceil',
   '\\rceil',
-  '\u2308',
-  '\u2309',
+  '\u{2308}',
+  '\u{2309}',
   '<',
   '>',
   '\\langle',
-  '\u27e8',
+  '\u{27E8}',
   '\\rangle',
-  '\u27e9',
+  '\u{27E9}',
   '\\lAngle',
-  '\u27ea',
+  '\u{27EA}',
   '\\rAngle',
-  '\u27eb',
+  '\u{27EB}',
   '\\llangle',
   '⦉',
   '\\rrangle',
@@ -111,27 +111,27 @@ const delimiters = new Set([
   '\\rVert',
   '\\lgroup',
   '\\rgroup',
-  '\u27ee',
-  '\u27ef',
+  '\u{27EE}',
+  '\u{27EF}',
   '\\lmoustache',
   '\\rmoustache',
-  '\u23b0',
-  '\u23b1',
+  '\u{23B0}',
+  '\u{23B1}',
   '\\llbracket',
   '\\rrbracket',
-  '\u27e6',
-  '\u27e7',
+  '\u{27E6}',
+  '\u{27E7}',
   '\\lBrace',
   '\\rBrace',
-  '\u2983',
-  '\u2984',
+  '\u{2983}',
+  '\u{2984}',
   '/',
   '\\backslash',
   '|',
   '\\vert',
   '\\|',
   '\\Vert',
-  '\u2016',
+  '\u{2016}',
   '\\uparrow',
   '\\Uparrow',
   '\\downarrow',
@@ -149,7 +149,7 @@ export const isDelimiter = (str: string): boolean =>
 // Metrics of the different sizes. Found by looking at TeX's output of
 // $\bigl| // \Bigl| \biggl| \Biggl| \showlists$
 // Used to create stacked delimiters of appropriate sizes in makeSizedDelim.
-const sizeToMaxHeight = [0, 1.2, 1.8, 2.4, 3.0];
+const sizeToMaxHeight = [0, 1.2, 1.8, 2.4, 3];
 
 // Delimiter functions
 const checkDelimiter = (delim: AnyParseNode, context: { funcName: string }): SymbolParseNode => {
@@ -175,7 +175,7 @@ const checkDelimiter = (delim: AnyParseNode, context: { funcName: string }): Sym
 };
 
 //                               /         \
-const needExplicitStretch = new Set(['\u002F', '\u005C', '\\backslash', '\u2216', '\\vert', '|']);
+const needExplicitStretch = new Set(['/', '\\', '\\backslash', '\u{2216}', '\\vert', '|']);
 
 const makeFenceMo = (delim: string, mode: Mode, form: string, isStretchy: boolean): MathNode => {
   const text = delim === '.' ? '' : delim;
@@ -221,9 +221,7 @@ defineFunction({
       delim: delim.text,
     };
     const nextToken = context.parser.fetch().text;
-    if (nextToken !== '^' && nextToken !== '_') {
-      return delimNode;
-    } else {
+    if (nextToken === '^' || nextToken === '_') {
       // Chromium mis-renders a sized delim if it is the base of a supsub.
       // So wrap it in a ordgroup.
       return {
@@ -231,6 +229,8 @@ defineFunction({
         mode: 'math',
         body: [delimNode, { type: 'ordgroup', mode: 'math', body: [] }],
       };
+    } else {
+      return delimNode;
     }
   },
   mathmlBuilder: (group) => {
@@ -250,7 +250,7 @@ defineFunction({
       // defaults.
       node.setAttribute('fence', 'false');
     }
-    if (needExplicitStretch.has(delim) || delim.indexOf('arrow') > -1) {
+    if (needExplicitStretch.has(delim) || delim.includes('arrow')) {
       // We have to explicitly set stretchy to true.
       node.setAttribute('stretchy', 'true');
     }
@@ -333,7 +333,7 @@ defineFunction({
 
     const rightNode = makeFenceMo(group.right, group.mode, 'postfix', true);
     if (group.body.length > 0) {
-      const lastElement = group.body[group.body.length - 1];
+      const lastElement = group.body.at(-1)!;
       if (lastElement.type === 'color' && !lastElement.isTextColor) {
         rightNode.setAttribute('mathcolor', lastElement.color);
       }
@@ -402,7 +402,7 @@ defineFunction({
 
     const rightNode = makeFenceMo(group.right, group.mode, 'postfix', false);
     if (group.body.length > 0) {
-      const lastElement = group.body[group.body.length - 1];
+      const lastElement = group.body.at(-1)!;
       if (lastElement.type === 'color' && !lastElement.isTextColor) {
         rightNode.setAttribute('mathcolor', lastElement.color);
       }

@@ -37,7 +37,7 @@ defineFunctionBuilders({
     const text = mml.makeText(group.text, group.mode, style);
     const codePoint = text.text.codePointAt(0) ?? 0;
     // Test for upper-case Greek
-    const defaultVariant = 0x0390 < codePoint && codePoint < 0x03aa ? 'normal' : 'italic';
+    const defaultVariant = 0x03_90 < codePoint && codePoint < 0x03_aa ? 'normal' : 'italic';
     const variant = getVariant(group, style) || defaultVariant;
     if (variant === 'script') {
       text.text = variantChar(text.text, variant);
@@ -64,11 +64,9 @@ defineFunctionBuilders({
   mathmlBuilder(group, style) {
     let ch = group.text;
     const codePoint = ch.codePointAt(0) ?? 0;
-    if (style.fontFamily === 'textsc') {
-      // Convert small latin letters to small caps.
-      if (96 < codePoint && codePoint < 123) {
-        ch = smallCaps[ch];
-      }
+    // Convert small latin letters to small caps.
+    if (style.fontFamily === 'textsc' && 96 < codePoint && codePoint < 123) {
+      ch = smallCaps[ch];
     }
     const text = mml.makeText(ch, group.mode, style);
     const variant = getVariant(group, style) || 'normal';

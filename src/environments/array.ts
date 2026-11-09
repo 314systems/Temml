@@ -59,7 +59,7 @@ const arrayGaps = (macros: Namespace<MacroDefinition>): [number | null, Measurem
     typeof stretchMacro === 'string'
       ? stretchMacro
       : stringFromArg((stretchMacro as MacroExpansion).tokens);
-  const arraystretch = isNaN(Number(stretchStr)) ? null : Number(stretchStr);
+  const arraystretch = Number.isNaN(Number(stretchStr)) ? null : Number(stretchStr);
   const colsepMacro = macros.get('\\arraycolsep');
   const arraycolsepStr: string =
     typeof colsepMacro === 'string'
@@ -91,8 +91,8 @@ const checkCellForLabels = (cell: AnyParseNode[]): string => {
 // * false: Tags allowed on each row, but no automatic numbering
 // This function *doesn't* work with the "split" environment name.
 const getAutoTag = (name: string): boolean | undefined => {
-  if (name.indexOf('ed') === -1) {
-    return name.indexOf('*') === -1;
+  if (!name.includes('ed')) {
+    return !name.includes('*');
   }
   // return undefined;
 };
@@ -148,7 +148,7 @@ const parseArray = (
 
   const hLinesBeforeRow: boolean[][] = [];
 
-  const tags: Array<boolean | AnyParseNode[]> | undefined = autoTag != null ? [] : undefined;
+  const tags: Array<boolean | AnyParseNode[]> | undefined = autoTag == null ? undefined : [];
 
   // amsmath uses \global\@eqnswtrue and \global\@eqnswfalse to represent
   // whether this row should have an equation number.  Simulate this with
@@ -188,67 +188,75 @@ const parseArray = (
     };
     row.push(cell);
     const next = parser.fetch().text;
-    if (next === '&') {
-      if (maxNumCols && row.length === maxNumCols) {
-        if (envClasses.includes('array')) {
-          if (parser.settings.strict) {
+    switch (next) {
+      case '&': {
+        if (maxNumCols && row.length === maxNumCols) {
+          if (envClasses.includes('array')) {
+            if (parser.settings.strict) {
+              throw new ParseError(
+                'Too few columns specified in the {array} column argument.',
+                parser.nextToken,
+              );
+            }
+          } else if (maxNumCols === 2) {
             throw new ParseError(
-              'Too few columns ' + 'specified in the {array} column argument.',
+              'The split environment accepts no more than two columns',
+              parser.nextToken,
+            );
+          } else {
+            throw new ParseError(
+              'The equation environment accepts only one column',
               parser.nextToken,
             );
           }
-        } else if (maxNumCols === 2) {
-          throw new ParseError(
-            'The split environment accepts no more than two columns',
-            parser.nextToken,
-          );
-        } else {
-          throw new ParseError(
-            'The equation environment accepts only one column',
-            parser.nextToken,
-          );
         }
+        parser.consume();
+        continue;
       }
-      parser.consume();
-    } else if (next === endToken) {
-      endRow();
-      // Arrays terminate newlines with `\crcr` which consumes a `\cr` if
-      // the last line is empty.  However, AMS environments keep the
-      // empty row if it's the only one.
-      // NOTE: Currently, `cell` is the last item added into `row`.
-      if (row.length === 1 && cell.body.length === 0 && (body.length > 1 || !emptySingleRow)) {
-        body.pop();
+      case endToken: {
+        endRow();
+        // Arrays terminate newlines with `\crcr` which consumes a `\cr` if
+        // the last line is empty.  However, AMS environments keep the
+        // empty row if it's the only one.
+        // NOTE: Currently, `cell` is the last item added into `row`.
+        if (row.length === 1 && cell.body.length === 0 && (body.length > 1 || !emptySingleRow)) {
+          body.pop();
+        }
+        labels.push(checkCellForLabels(cell.body));
+        if (hLinesBeforeRow.length < body.length + 1) {
+          hLinesBeforeRow.push([]);
+        }
+        break;
       }
-      labels.push(checkCellForLabels(cell.body));
-      if (hLinesBeforeRow.length < body.length + 1) {
-        hLinesBeforeRow.push([]);
-      }
-      break;
-    } else if (next === '\\\\') {
-      parser.consume();
-      let size: ParseNode<'size'> | null | undefined;
-      // \def\Let@{\let\\\math@cr}
-      // \def\math@cr{...\math@cr@}
-      // \def\math@cr@{\new@ifnextchar[\math@cr@@{\math@cr@@[\z@]}}
-      // \def\math@cr@@[#1]{...\math@cr@@@...}
-      // \def\math@cr@@@{\cr}
-      if (parser.gullet.future().text !== ' ') {
-        size = parser.parseSizeGroup(true);
-      }
-      rowGaps.push(size ? size.value : null);
-      endRow();
+      case '\\\\': {
+        parser.consume();
+        let size: ParseNode<'size'> | null | undefined;
+        // \def\Let@{\let\\\math@cr}
+        // \def\math@cr{...\math@cr@}
+        // \def\math@cr@{\new@ifnextchar[\math@cr@@{\math@cr@@[\z@]}}
+        // \def\math@cr@@[#1]{...\math@cr@@@...}
+        // \def\math@cr@@@{\cr}
+        if (parser.gullet.future().text !== ' ') {
+          size = parser.parseSizeGroup(true);
+        }
+        rowGaps.push(size ? size.value : null);
+        endRow();
 
-      labels.push(checkCellForLabels(cell.body));
+        labels.push(checkCellForLabels(cell.body));
 
-      // check for \hline(s) following the row separator
-      hLinesBeforeRow.push(getHLines(parser));
+        // check for \hline(s) following the row separator
+        hLinesBeforeRow.push(getHLines(parser));
 
-      row = [];
-      body.push(row);
-      beginRow();
-    } else {
-      throw new ParseError('Expected & or \\\\ or \\cr or ' + endToken, parser.nextToken);
+        row = [];
+        body.push(row);
+        beginRow();
+        continue;
+      }
+      default: {
+        throw new ParseError('Expected & or \\\\ or \\cr or ' + endToken, parser.nextToken);
+      }
     }
+    break;
   }
 
   // End cell group
@@ -277,7 +285,7 @@ const parseArray = (
 // Decides on a scriptLevel for cells in an array according to whether the given
 // environment name starts with the letter 'd'.
 const dCellStyle = (envName: string): StyleStr => {
-  return envName.slice(0, 1) === 'd' ? 'display' : 'text';
+  return envName.startsWith('d') ? 'display' : 'text';
 };
 
 const alignMap: Record<string, string> = {
@@ -302,7 +310,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
   const tbl: MathNode[] = [];
   const numRows = group.body.length;
   const hlines = group.hLinesBeforeRow;
-  const tagIsPresent = group.tags && group.tags.some((tag) => tag);
+  const tagIsPresent = group.tags && group.tags.some(Boolean);
 
   for (let i = 0; i < numRows; i++) {
     const rw = group.body[i];
@@ -359,7 +367,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
         if (group.leqno) {
           row[0].children.push(tagElement);
         } else {
-          row[row.length - 1].children.push(tagElement);
+          row.at(-1)!.children.push(tagElement);
         }
       }
     }
@@ -375,24 +383,24 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
     // Write horizontal rules
     if (i === 0 && hlines[0].length > 0) {
       if (hlines[0].length === 2) {
-        cellsOf(mtr).forEach((cell) => {
+        for (const cell of cellsOf(mtr)) {
           cell.style.borderTop = '0.15em double';
-        });
+        }
       } else {
-        cellsOf(mtr).forEach((cell) => {
+        for (const cell of cellsOf(mtr)) {
           cell.style.borderTop = hlines[0][0] ? '0.06em dashed' : '0.06em solid';
-        });
+        }
       }
     }
     if (hlines[i + 1].length > 0) {
       if (hlines[i + 1].length === 2) {
-        cellsOf(mtr).forEach((cell) => {
+        for (const cell of cellsOf(mtr)) {
           cell.style.borderBottom = '0.15em double';
-        });
+        }
       } else {
-        cellsOf(mtr).forEach((cell) => {
+        for (const cell of cellsOf(mtr)) {
           cell.style.borderBottom = hlines[i + 1][0] ? '0.06em dashed' : '0.06em solid';
-        });
+        }
       }
     }
 
@@ -434,9 +442,8 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
   let sidePadding: string | undefined;
   let sidePadUnit: string | undefined;
   if (group.envClasses.length > 0) {
-    sidePadding = group.envClasses.includes('abut')
-      ? '0'
-      : group.envClasses.includes('cases')
+    sidePadding =
+      group.envClasses.includes('abut') || group.envClasses.includes('cases')
         ? '0'
         : group.envClasses.includes('small')
           ? '0.1389'
@@ -593,10 +600,10 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
         prevTypeWasAlign = false;
       }
     }
-    const lastCol = cols[cols.length - 1];
+    const lastCol = cols.at(-1)!;
     if (lastCol.type === 'separator') {
       const sep =
-        cols[cols.length - 2].type === 'separator'
+        cols.at(-2)!.type === 'separator'
           ? '0.15em double'
           : lastCol.separator === '|'
             ? '0.06em solid'
@@ -619,7 +626,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
 
 // Convenience function for align, align*, aligned, alignat, alignat*, alignedat, split.
 const alignedHandler = (context: EnvContext, args: AnyParseNode[]): ParseNode<'array'> => {
-  if (context.envName.indexOf('ed') === -1) {
+  if (!context.envName.includes('ed')) {
     validateAmsEnvironmentContext(context);
   }
   const isSplit = context.envName === 'split';
@@ -648,7 +655,7 @@ const alignedHandler = (context: EnvContext, args: AnyParseNode[]): ParseNode<'a
   // binary.  This behavior is implemented in amsmath's \start@aligned.
   let numMaths: number | undefined;
   let numCols = 0;
-  const isAlignedAt = context.envName.indexOf('at') > -1;
+  const isAlignedAt = context.envName.includes('at');
   if (args[0] && isAlignedAt) {
     // alignat environment takes an argument w/ number of columns
     let arg0 = '';
@@ -657,19 +664,19 @@ const alignedHandler = (context: EnvContext, args: AnyParseNode[]): ParseNode<'a
       const textord = assertNodeType(arg0Body[i], 'textord');
       arg0 += textord.text;
     }
-    if (isNaN(Number(arg0))) {
+    if (Number.isNaN(Number(arg0))) {
       throw new ParseError('The alignat enviroment requires a numeric first argument.');
     }
     numMaths = Number(arg0);
     numCols = numMaths * 2;
   }
-  res.body.forEach((row) => {
+  for (const row of res.body) {
     if (isAlignedAt) {
       // Case 1
       const curMaths = row.length / 2;
       if (numMaths! < curMaths) {
         throw new ParseError(
-          'Too many math in a row: ' + `expected ${numMaths}, but got ${curMaths}`,
+          `Too many math in a row: expected ${numMaths}, but got ${curMaths}`,
           row[0],
         );
       }
@@ -677,7 +684,7 @@ const alignedHandler = (context: EnvContext, args: AnyParseNode[]): ParseNode<'a
       // Case 2
       numCols = row.length;
     }
-  });
+  }
 
   // Adjusting alignment.
   // In aligned mode, we add one \qquad between columns;
@@ -722,7 +729,7 @@ defineEnvironment({
     const cols = colalign.map((nde): ColSpec => {
       const node = assertSymbolNodeType(nde);
       const ca = node.text;
-      if ('lcr'.indexOf(ca) !== -1) {
+      if ('lcr'.includes(ca)) {
         return {
           type: 'align',
           align: ca,
@@ -793,7 +800,7 @@ defineEnvironment({
       envClasses: [],
       cols: [],
     };
-    if (context.envName.charAt(context.envName.length - 1) === '*') {
+    if (context.envName.at(-1) === '*') {
       // It's one of the mathtools starred functions.
       // Parse the optional alignment argument.
       const parser = context.parser;
@@ -802,7 +809,7 @@ defineEnvironment({
         parser.consume();
         parser.consumeSpaces();
         colAlign = parser.fetch().text;
-        if ('lcr'.indexOf(colAlign) === -1) {
+        if (!'lcr'.includes(colAlign)) {
           throw new ParseError('Expected l or c or r', parser.nextToken);
         }
         parser.consume();
@@ -815,7 +822,7 @@ defineEnvironment({
     const res = parseArray(context.parser, payload, 'text');
     res.cols =
       res.body.length > 0
-        ? new Array(res.body[0].length).fill({ type: 'align', align: colAlign })
+        ? Array.from({ length: res.body[0].length }, () => ({ type: 'align', align: colAlign }))
         : [];
     const [arraystretch, arraycolsep] = arrayGaps(context.parser.gullet.macros);
     res.arraystretch = arraystretch;
@@ -847,7 +854,9 @@ defineEnvironment({
     const payload: ArrayOptions = { cols: [], envClasses: ['bordermatrix'] };
     const res = parseArray(context.parser, payload, 'text');
     res.cols =
-      res.body.length > 0 ? new Array(res.body[0].length).fill({ type: 'align', align: 'c' }) : [];
+      res.body.length > 0
+        ? Array.from({ length: res.body[0].length }, () => ({ type: 'align', align: 'c' }))
+        : [];
     res.envClasses = [];
     res.arraystretch = 1;
     if (context.envName === 'matrix') {
@@ -886,7 +895,7 @@ defineEnvironment({
       const node = assertSymbolNodeType(nde);
       const ca = node.text;
       // {subarray} only recognizes "l" & "c"
-      if ('lc'.indexOf(ca) !== -1) {
+      if ('lc'.includes(ca)) {
         return {
           type: 'align',
           align: ca,
@@ -928,8 +937,8 @@ defineEnvironment({
       type: 'leftright',
       mode: context.mode,
       body: [res],
-      left: context.envName.indexOf('r') > -1 ? '.' : '\\{',
-      right: context.envName.indexOf('r') > -1 ? '\\}' : '.',
+      left: context.envName.includes('r') ? '.' : '\\{',
+      right: context.envName.includes('r') ? '\\}' : '.',
       rightColor: undefined,
     };
   },

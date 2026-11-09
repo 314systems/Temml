@@ -69,7 +69,7 @@ defineFunction({
       .map((c) => unicodeNumSubs[c])
       .join('');
     // Use a fraction slash.
-    const text = new mathMLTree.TextNode(numerator + '\u2044' + denominator);
+    const text = new mathMLTree.TextNode(numerator + '\u{2044}' + denominator);
     return new mathMLTree.MathNode('mn', [text], ['special-fraction']);
   },
 });

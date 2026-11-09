@@ -112,7 +112,7 @@ export class MathNode implements MathDomNode {
     Object.assign(node.style, this.style);
 
     for (let i = 0; i < this.children.length; i++) {
-      node.appendChild(this.children[i].toNode());
+      node.append(this.children[i].toNode());
     }
 
     return node;

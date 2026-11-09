@@ -124,20 +124,20 @@ export const colorFromSpec = (model: string, spec: string): string => {
     if (!RGBregEx.test(spec)) {
       throw new ParseError('Invalid RGB input.');
     }
-    spec.split(',').map((e) => {
+    for (const e of spec.split(',')) {
       color += toHex(Number(e.trim()));
-    });
+    }
   } else {
     if (!rgbRegEx.test(spec)) {
       throw new ParseError('Invalid rbg input.');
     }
-    spec.split(',').map((e) => {
+    for (const e of spec.split(',')) {
       const num = Number(e.trim());
       if (num > 1) {
         throw new ParseError('Color rgb input must be < 1.');
       }
       color += toHex(Number((num * 255).toFixed(0)));
-    });
+    }
   }
   if (color.charAt(0) !== '#') {
     color = '#' + color;
