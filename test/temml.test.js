@@ -189,6 +189,12 @@ test("\\vec should get the classes for its arrow position", () => {
   expect(temml.renderToString(r`\vec{x}`)).toContain("chr-sml-vec")
 })
 
+test("\\fcolorbox with a color model should use the second color as background", () => {
+  const markup = temml.renderToString(r`\fcolorbox[HTML]{FF0000}{00FF00}{x}`)
+  expect(markup).toContain(`mathbackground="#00FF00"`)
+  expect(markup).toContain("#FF0000")
+})
+
 test("A missing sub- or superscript should be a ParseError", () => {
   expect(() => parse(`x^`, throwOnErrorSettings())).toThrow(temml.ParseError)
   expect(() => parse(`x_`, throwOnErrorSettings())).toThrow("Expected group after '_'")

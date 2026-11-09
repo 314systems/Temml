@@ -127,7 +127,7 @@ defineFunction({
     let backgroundColor: string
     if (model) {
       const borderSpec = assertNodeType(args[0], "raw").string
-      const backgroundSpec = assertNodeType(args[0], "raw").string
+      const backgroundSpec = assertNodeType(args[1], "raw").string
       borderColor = colorFromSpec(model, borderSpec)
       backgroundColor = colorFromSpec(model, backgroundSpec)
     } else {
