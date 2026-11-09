@@ -10,6 +10,8 @@ export default macros;
 
 import symbols from "./symbols";
 import ParseError from "./ParseError";
+import type MacroExpander from "./MacroExpander";
+import type { Token } from "./Token";
 
 //////////////////////////////////////////////////////////////////////
 // macro tools
@@ -82,7 +84,7 @@ defineMacro("\\TextOrMath", function(context) {
   }
 });
 
-export const stringFromArg = arg => {
+export const stringFromArg = (arg: Token[]): string => {
   // Reverse the order of the arg and return a string.
   let str = ""
   for (let i = arg.length - 1; i > -1; i--) {
@@ -92,7 +94,7 @@ export const stringFromArg = arg => {
 }
 
 // Lookup table for parsing numbers in base 8 through 16
-const digitToNumber = {
+const digitToNumber: Record<string, number> = {
   0: 0,
   1: 1,
   2: 2,
@@ -117,13 +119,13 @@ const digitToNumber = {
   F: 15
 };
 
-const nextCharNumber = context => {
+const nextCharNumber = (context: MacroExpander): [number | null, string] => {
   const numStr = context.future().text
   if (numStr === "EOF") { return [null, ""] }
   return [digitToNumber[numStr.charAt(0)], numStr]
 }
 
-const appendCharNumbers = (number, numStr, base) => {
+const appendCharNumbers = (number: number, numStr: string, base: number): number => {
   for (let i = 1; i < numStr.length; i++) {
     const digit = digitToNumber[numStr.charAt(i)]
     number *= base;
@@ -143,8 +145,8 @@ const appendCharNumbers = (number, numStr, base) => {
 // calls to a function \@char dealt with in the Parser.
 defineMacro("\\char", function(context) {
   let token = context.popToken();
-  let base;
-  let number = "";
+  let base: number | undefined;
+  let number: number | string | undefined = "";
   if (token.text === "'") {
     base = 8;
     token = context.popToken();
@@ -171,7 +173,7 @@ defineMacro("\\char", function(context) {
       throw new ParseError(`Invalid base-${base} digit ${token.text}`);
     }
     number = appendCharNumbers(number, numStr, base)
-    let digit;
+    let digit: number | null;
     [digit, numStr] = nextCharNumber(context)
     while (digit != null && digit < base) {
       number *= base;
@@ -184,13 +186,13 @@ defineMacro("\\char", function(context) {
   return `\\@char{${number}}`;
 });
 
-function recreateArgStr(context) {
+function recreateArgStr(context: MacroExpander): string {
   // Recreate the macro's original argument string from the array of parse tokens.
   const tokens = context.consumeArgs(1)[0];
   let str = ""
-  let expectedLoc = tokens[tokens.length - 1].loc.start
+  let expectedLoc = tokens[tokens.length - 1].loc!.start
   for (let i = tokens.length - 1; i >= 0; i--) {
-    const actualLoc = tokens[i].loc.start
+    const actualLoc = tokens[i].loc!.start
     if (actualLoc > expectedLoc) {
       // context.consumeArgs has eaten a space.
       str += " "
@@ -265,7 +267,7 @@ defineMacro("\\implies", "\\DOTSB\\;\\Longrightarrow\\;");
 defineMacro("\\impliedby", "\\DOTSB\\;\\Longleftarrow\\;");
 
 // AMSMath's automatic \dots, based on \mdots@@ macro.
-const dotsByToken = {
+const dotsByToken: Record<string, string> = {
   ",": "\\dotsc",
   "\\not": "\\dotsb",
   // \keybin@ checks for the following:
@@ -552,7 +554,7 @@ defineMacro("\\braket", "\\mathinner{\\langle{#1}\\rangle}");
 defineMacro("\\Bra", "\\left\\langle#1\\right|");
 defineMacro("\\Ket", "\\left|#1\\right\\rangle");
 // A helper for \Braket and \Set
-const replaceVert = (argStr, match) => {
+const replaceVert = (argStr: string, match: RegExpExecArray): string => {
   const ch = match[0] === "|" ? "\\vert" : "\\Vert"
   const replaceStr = `}\\,\\middle${ch}\\,{`
   return argStr.slice(0, match.index) + replaceStr + argStr.slice(match.index + match[0].length)
@@ -560,7 +562,7 @@ const replaceVert = (argStr, match) => {
 defineMacro("\\Braket",  function(context) {
   let argStr = recreateArgStr(context)
   const regEx = /\|\||\||\\\|/g
-  let match
+  let match: RegExpExecArray | null
   while ((match = regEx.exec(argStr)) !== null) {
     argStr = replaceVert(argStr, match)
   }
@@ -590,7 +592,7 @@ defineMacro("\\odv@numerator", "\\frac{\\mathrm{d}#1}{\\mathrm{d}#2}")
 defineMacro("\\odv@next", "\\frac{\\mathrm{d}}{\\mathrm{d}#2}#1")
 defineMacro("\\pdv", "\\@ifstar\\pdv@next\\pdv@numerator");
 
-const pdvHelper = args => {
+const pdvHelper = (args: Token[][]): string[] => {
   const numerator = args[0][0].text
   const denoms = stringFromArg(args[1]).split(",")
   const power = String(denoms.length)

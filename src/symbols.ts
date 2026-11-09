@@ -13,6 +13,9 @@
  * accepted in (e.g. "math" or "text").
  */
 
+import type { AtomFamily } from "./parseNode";
+import type { Mode } from "./types";
+
 // Some of these have a "-token" suffix since these are also used as `ParseNode`
 // types for raw text tokens, and we want to avoid conflicts with higher-level
 // `ParseNode` types. These `ParseNode`s are constructed within `Parser` by
@@ -33,12 +36,26 @@ export const NON_ATOMS = {
   textord: 1
 };
 
-const symbols = Object.create(null);
+/** The group of a symbol, i.e. the type of the parse node it becomes. */
+export type Group = AtomFamily | "accent-token" | "mathord" | "op-token" | "spacing" | "textord";
+
+export interface SymbolEntry {
+  group: Group;
+  replace: string | null;
+}
+
+const symbols: Record<Mode, Record<string, SymbolEntry>> = Object.create(null);
 symbols.math = Object.create(null);
 symbols.text = Object.create(null);
 export default symbols;
 
-export function defineSymbol(mode, group, replace, name, acceptUnicodeChar) {
+export function defineSymbol(
+  mode: Mode,
+  group: Group,
+  replace: string | null,
+  name: string,
+  acceptUnicodeChar?: boolean
+): void {
   if (mode !== "math" && mode !== "text") {
     throw new TypeError(`Invalid mode: ${mode} called in defineSymbol`);
   }
@@ -1047,7 +1064,7 @@ for (let i = 0; i < narrow.length; i++) {
 // The next loop loads wide (surrogate pair) characters.
 // We support some letters in the Unicode range U+1D400 to U+1D7FF,
 // Mathematical Alphanumeric Symbols.
-let wideChar;
+let wideChar: string;
 for (let i = 0; i < letters.length; i++) {
   // The hex numbers in the next line are a surrogate pair.
   // 0xD835 is the high surrogate for all letters in the range we support.

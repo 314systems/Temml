@@ -11,7 +11,9 @@ import SourceLocation from "./SourceLocation";
 import { Token } from "./Token";
 import { isDelimiter } from "./functions/delimiter"
 import type { MacroMap } from "./defineMacro";
-import type { AnyParseNode, NodeType, ParseNode, SymbolParseNode } from "./parseNode";
+import type {
+  AnyParseNode, AtomFamily, NodeType, ParseNode, SymbolParseNode
+} from "./parseNode";
 import type Settings from "./Settings";
 import type { ArgType, Mode } from "./types";
 
@@ -984,7 +986,7 @@ export default class Parser {
       const loc = SourceLocation.range(nucleus);
       let s: AnyParseNode;
       if (Object.hasOwn(ATOMS, group)) {
-        const family = group;
+        const family = group as AtomFamily;
         const atom: ParseNode<"atom"> = {
           type: "atom",
           mode: this.mode,

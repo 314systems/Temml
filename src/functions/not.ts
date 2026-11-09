@@ -19,7 +19,7 @@ defineFunction({
       body = ordargument(args[0])
       const first = body[0] as SymbolParseNode
       if (first.text.charAt(0) === "\\") {
-        first.text = symbols.math[first.text].replace
+        first.text = symbols.math[first.text].replace!
       }
       // \u0338 is the Unicode Combining Long Solidus Overlay
       first.text = first.text.slice(0, 1) + "\u0338" + first.text.slice(1)

@@ -35,7 +35,7 @@ export const makeText = function(text: string, mode: Mode, style?: Style): TextN
         (style.font && style.font.slice(4, 6) === "tt"))
     )
   ) {
-    text = symbols[mode][text].replace;
+    text = symbols[mode][text].replace!;
   }
 
   return new mathMLTree.TextNode(text);
