@@ -2,6 +2,7 @@ import globals from "globals";
 import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
+import unicorn from 'eslint-plugin-unicorn';
 
 export default defineConfig([{
   ignores: ["contrib/auto-render/test/*.js", "src/autocorrect.js"]
@@ -113,5 +114,11 @@ export default defineConfig([{
       args: "none",
       varsIgnorePattern: "^_*$"
     }]
+  }
+}, {
+  extends: [unicorn.configs.unopinionated],
+  rules: {
+    'unicorn/number-literal-case': 'off',
+    'unicorn/prefer-ternary': 'off'
   }
 }]);
