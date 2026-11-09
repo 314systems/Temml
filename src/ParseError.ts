@@ -1,3 +1,5 @@
+import type { LocSource } from "./SourceLocation";
+
 /**
  * This is the ParseError class, which is the main error thrown by Temml
  * functions when something has gone wrong. This is used to distinguish internal
@@ -6,13 +8,15 @@
  * If possible, a caller should provide a Token or ParseNode with information
  * about where in the source string the problem occurred.
  */
-class ParseError {
+class ParseError extends Error {
+  position: number | undefined;
+
   constructor(
-    message, // The error message
-    token // An object providing position information
+    message: string,                // The error message
+    token?: LocSource | null        // An object providing position information
   ) {
     let error = " " + message;
-    let start;
+    let start: number | undefined;
 
     const loc = token && token.loc;
     if (loc && loc.start <= loc.end) {
@@ -49,16 +53,10 @@ class ParseError {
       error += left + underlined + right;
     }
 
-    // Some hackery to make ParseError a prototype of Error
-    // See http://stackoverflow.com/a/8460753
-    const self = new Error(error);
-    self.name = "ParseError";
-    self.__proto__ = ParseError.prototype;
-    self.position = start;
-    return self;
+    super(error);
+    this.name = "ParseError";
+    this.position = start;
   }
 }
-
-ParseError.prototype.__proto__ = Error.prototype;
 
 export default ParseError;

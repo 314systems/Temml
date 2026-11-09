@@ -8,16 +8,22 @@ import * as mathMLTree from "./mathMLTree"
 import ParseError from "./ParseError"
 import symbols, { ligatures } from "./symbols"
 import { _mathmlGroupBuilders as groupBuilders } from "./defineFunction"
-import { MathNode, TextNode } from "./mathMLTree"
+import { MathNode, TextNode, isMathNodeOfType } from "./mathMLTree"
+import type { MathNodeType } from "./mathMLTree"
 import { DocumentFragment } from "./tree"
 import setLineBreaks from "./linebreaking"
 import { AnchorNode } from "./domTree"
+import type { AnyParseNode, ParseNode } from "./parseNode"
+import type Settings from "./Settings"
+import type Style from "./Style"
+import type { MathDomNode } from "./tree"
+import type { Mode } from "./types"
 
 /**
  * Takes a symbol and converts it into a MathML text node after performing
  * optional replacement from symbols.js.
  */
-export const makeText = function(text, mode, style) {
+export const makeText = function(text: string, mode: Mode, style?: Style): TextNode {
   if (
     symbols[mode][text] &&
     symbols[mode][text].replace &&
@@ -35,41 +41,41 @@ export const makeText = function(text, mode, style) {
   return new mathMLTree.TextNode(text);
 };
 
-const copyChar = (newRow, child) => {
-  if (newRow.children.length === 0 ||
-      newRow.children[newRow.children.length - 1].type !== "mtext") {
+const copyChar = (newRow: MathNode, child: MathNode): void => {
+  const last = newRow.children[newRow.children.length - 1]
+  if (newRow.children.length === 0 || !isMathNodeOfType(last, "mtext")) {
     const mtext = new mathMLTree.MathNode(
       "mtext",
-      [new mathMLTree.TextNode(child.children[0].text)]
+      [new mathMLTree.TextNode((child.children[0] as TextNode).text)]
     )
     newRow.children.push(mtext)
   } else {
-    newRow.children[newRow.children.length - 1].children[0].text += child.children[0].text
+    (last.children[0] as TextNode).text += (child.children[0] as TextNode).text
   }
 }
 
-export const consolidateText = mrow => {
+export const consolidateText = (mrow: MathDomNode): MathDomNode => {
   // If possible, consolidate adjacent <mtext> elements into a single element.
-  if (mrow.type !== "mrow" && mrow.type !== "mstyle") { return mrow }
+  if (!isMathNodeOfType(mrow, "mrow") && !isMathNodeOfType(mrow, "mstyle")) { return mrow }
   if (mrow.children.length === 0) { return mrow } // empty group, e.g., \text{}
   const newRow = new mathMLTree.MathNode("mrow")
   for (let i = 0; i < mrow.children.length; i++) {
     const child = mrow.children[i];
-    if (child.type === "mtext" && Object.keys(child.attributes).length === 0) {
+    if (isMathNodeOfType(child, "mtext") && Object.keys(child.attributes).length === 0) {
       copyChar(newRow, child)
-    } else if (child.type === "mrow") {
+    } else if (isMathNodeOfType(child, "mrow")) {
       // We'll also check the children of an mrow. One level only. No recursion.
       let canConsolidate = true
       for (let j = 0; j < child.children.length; j++) {
         const grandChild = child.children[j];
-        if (grandChild.type !== "mtext" || Object.keys(child.attributes).length !== 0) {
+        if (!isMathNodeOfType(grandChild, "mtext") || Object.keys(child.attributes).length !== 0) {
           canConsolidate = false
           break
         }
       }
       if (canConsolidate) {
         for (let j = 0; j < child.children.length; j++) {
-          const grandChild = child.children[j];
+          const grandChild = child.children[j] as MathNode;
           copyChar(newRow, grandChild)
         }
       } else {
@@ -80,23 +86,24 @@ export const consolidateText = mrow => {
     }
   }
   for (let i = 0; i < newRow.children.length; i++) {
-    if (newRow.children[i].type === "mtext") {
-      const mtext = newRow.children[i];
+    const mtext = newRow.children[i];
+    if (isMathNodeOfType(mtext, "mtext")) {
+      const text = mtext.children[0] as TextNode;
       // Firefox does not render a space at either end of an <mtext> string.
       // To get proper rendering, we replace leading or trailing spaces with no-break spaces.
-      if (mtext.children[0].text.charAt(0) === " ") {
-        mtext.children[0].text = "\u00a0" + mtext.children[0].text.slice(1)
+      if (text.text.charAt(0) === " ") {
+        text.text = "\u00a0" + text.text.slice(1)
       }
-      const L = mtext.children[0].text.length
-      if (L > 0 && mtext.children[0].text.charAt(L - 1) === " ") {
-        mtext.children[0].text = mtext.children[0].text.slice(0, -1) + "\u00a0"
+      const L = text.text.length
+      if (L > 0 && text.text.charAt(L - 1) === " ") {
+        text.text = text.text.slice(0, -1) + "\u00a0"
       }
       for (const [key, value] of Object.entries(mrow.attributes)) {
         mtext.attributes[key] = value
       }
     }
   }
-  if (newRow.children.length === 1 && newRow.children[0].type === "mtext") {
+  if (newRow.children.length === 1 && isMathNodeOfType(newRow.children[0], "mtext")) {
     return newRow.children[0]; // A consolidated <mtext>
   } else {
     return newRow
@@ -107,19 +114,20 @@ export const consolidateText = mrow => {
  * Wrap the given array of nodes in an <mrow> node if needed, i.e.,
  * unless the array has length 1.  Always returns a single node.
  */
-export const makeRow = function(body, semisimple = false) {
+export const makeRow = function(body: MathDomNode[], semisimple = false): MathDomNode {
   if (body.length === 1 && !(body[0] instanceof DocumentFragment)) {
     return body[0];
   } else if (!semisimple) {
     // Suppress spacing on <mo> nodes at both ends of the row.
-    if (body[0] instanceof MathNode && body[0].type === "mo" && !body[0].attributes.fence) {
-      body[0].attributes.lspace = "0em"
-      body[0].attributes.rspace = "0em"
+    const first = body[0]
+    if (isMathNodeOfType(first, "mo") && !first.attributes.fence) {
+      first.attributes.lspace = "0em"
+      first.attributes.rspace = "0em"
     }
-    const end = body.length - 1
-    if (body[end] instanceof MathNode && body[end].type === "mo" && !body[end].attributes.fence) {
-      body[end].attributes.lspace = "0em"
-      body[end].attributes.rspace = "0em"
+    const last = body[body.length - 1]
+    if (isMathNodeOfType(last, "mo") && !last.attributes.fence) {
+      last.attributes.lspace = "0em"
+      last.attributes.rspace = "0em"
     }
   }
   return new mathMLTree.MathNode("mrow", body);
@@ -130,8 +138,8 @@ export const makeRow = function(body, semisimple = false) {
  * or <mo separator="true" lspace="0em" rspace="0em">,</mo>
  * which is how a braced comma {,} renders in MathML
  */
-function isNumberPunctuation(group) {
-  if (!group) {
+function isNumberPunctuation(group: MathDomNode | undefined): group is MathNode {
+  if (!(group instanceof MathNode)) {
     return false
   }
   if (group.type === 'mi' && group.children.length === 1) {
@@ -150,7 +158,7 @@ function isNumberPunctuation(group) {
     return false
   }
 }
-const isComma = (expression, i) => {
+const isComma = (expression: AnyParseNode[], i: number) => {
   const node = expression[i];
   const followingNode = expression[i + 1];
   return (node.type === "atom" && node.text === ",") &&
@@ -158,7 +166,7 @@ const isComma = (expression, i) => {
     node.loc && followingNode.loc && node.loc.end === followingNode.loc.start
 }
 
-const isRel = item => {
+const isRel = (item: AnyParseNode): boolean => {
   return (item.type === "atom" && item.family === "rel") ||
       (item.type === "mclass" && item.mclass === "mrel")
 }
@@ -169,10 +177,14 @@ const isRel = item => {
  * (1) Suppress spacing when an author wraps an operator w/braces, as in {=}.
  * (2) Suppress spacing between two adjacent relations.
  */
-export const buildExpression = function(expression, style, semisimple = false) {
+export const buildExpression = function(
+  expression: AnyParseNode[],
+  style: Style,
+  semisimple = false
+): MathDomNode[] {
   if (!semisimple && expression.length === 1) {
     const group = buildGroup(expression[0], style);
-    if (group instanceof MathNode && group.type === "mo") {
+    if (isMathNodeOfType(group, "mo")) {
       // When TeX writers want to suppress spacing on an operator,
       // they often put the operator by itself inside braces.
       group.setAttribute("lspace", "0em");
@@ -181,9 +193,9 @@ export const buildExpression = function(expression, style, semisimple = false) {
     return [group];
   }
 
-  const groups = [];
-  const groupArray = [];
-  let lastGroup
+  const groups: MathDomNode[] = [];
+  const groupArray: MathDomNode[] = [];
+  let lastGroup: MathDomNode | undefined
   for (let i = 0; i < expression.length; i++) {
     groupArray.push(buildGroup(expression[i], style))
   }
@@ -193,36 +205,36 @@ export const buildExpression = function(expression, style, semisimple = false) {
 
     // Suppress spacing between adjacent relations
     if (i < expression.length - 1 && isRel(expression[i]) && isRel(expression[i + 1])) {
-      group.setAttribute("rspace", "0em")
+      (group as MathNode).setAttribute("rspace", "0em")
     }
     if (i > 0 && isRel(expression[i]) && isRel(expression[i - 1])) {
-      group.setAttribute("lspace", "0em")
+      (group as MathNode).setAttribute("lspace", "0em")
     }
 
     // Concatenate numbers
-    if (group.type === 'mn' && lastGroup && lastGroup.type === 'mn') {
+    if (isMathNodeOfType(group, "mn") && isMathNodeOfType(lastGroup, "mn")) {
       // Concatenate <mn>...</mn> followed by <mi>.</mi>
       lastGroup.children.push(...group.children)
       continue
-    } else if (isNumberPunctuation(group) && lastGroup && lastGroup.type === 'mn') {
+    } else if (isNumberPunctuation(group) && isMathNodeOfType(lastGroup, "mn")) {
       // Concatenate <mn>...</mn> followed by <mi>.</mi>
       lastGroup.children.push(...group.children)
       continue
-    } else if (lastGroup && lastGroup.type === "mn" && i < groupArray.length - 1 &&
-      groupArray[i + 1].type === "mn" && isComma(expression, i)) {
-      lastGroup.children.push(...group.children)
+    } else if (isMathNodeOfType(lastGroup, "mn") && i < groupArray.length - 1 &&
+      isMathNodeOfType(groupArray[i + 1], "mn") && isComma(expression, i)) {
+      lastGroup.children.push(...(group as MathNode).children)
       continue
-    } else if (group.type === 'mn' && isNumberPunctuation(lastGroup)) {
+    } else if (isMathNodeOfType(group, "mn") && isNumberPunctuation(lastGroup)) {
       // Concatenate <mi>.</mi> followed by <mn>...</mn>
       group.children = [...lastGroup.children, ...group.children];
       groups.pop()
-    } else if ((group.type === 'msup' || group.type === 'msub') &&
-        group.children.length >= 1 && lastGroup &&
-        (lastGroup.type === 'mn' || isNumberPunctuation(lastGroup))) {
+    } else if ((isMathNodeOfType(group, "msup") || isMathNodeOfType(group, "msub")) &&
+        group.children.length >= 1 &&
+        (isMathNodeOfType(lastGroup, "mn") || isNumberPunctuation(lastGroup))) {
       // Put preceding <mn>...</mn> or <mi>.</mi> inside base of
       // <msup><mn>...base...</mn>...exponent...</msup> (or <msub>)
       const base = group.children[0];
-      if (base instanceof MathNode && base.type === 'mn' && lastGroup) {
+      if (isMathNodeOfType(base, "mn")) {
         base.children = [...lastGroup.children, ...base.children];
         groups.pop()
       }
@@ -237,7 +249,11 @@ export const buildExpression = function(expression, style, semisimple = false) {
  * Equivalent to buildExpression, but wraps the elements in an <mrow>
  * if there's more than one.  Returns a single node instead of an array.
  */
-export const buildExpressionRow = function(expression, style, semisimple = false) {
+export const buildExpressionRow = function(
+  expression: AnyParseNode[],
+  style: Style,
+  semisimple = false
+): MathDomNode {
   return makeRow(buildExpression(expression, style, semisimple), semisimple);
 };
 
@@ -245,51 +261,64 @@ export const buildExpressionRow = function(expression, style, semisimple = false
  * Takes a group from the parser and calls the appropriate groupBuilders function
  * on it to produce a MathML node.
  */
-export const buildGroup = function(group, style) {
+export const buildGroup = function(
+  group: AnyParseNode | null | undefined,
+  style: Style
+): MathDomNode {
   if (!group) {
     return new mathMLTree.MathNode("mrow");
   }
 
-  if (groupBuilders[group.type]) {
+  const groupBuilder = groupBuilders[group.type]
+  if (groupBuilder) {
     // Call the groupBuilders function
-    const result = groupBuilders[group.type](group, style);
+    const result = groupBuilder(group, style);
     return result;
   } else {
     throw new ParseError("Got group of unknown type: '" + group.type + "'");
   }
 };
 
-const glue = _ => {
+const glue = (): MathNode => {
   return new mathMLTree.MathNode("mtd", [], [], { padding: "0", width: "50%" })
 }
 
-const labelContainers = ["mrow", "mtd", "mtable", "mtr"];
-const getLabel = parent => {
+const labelContainers: MathNodeType[] = ["mrow", "mtd", "mtable", "mtr"];
+const getLabel = (parent: { children: MathDomNode[] }): string | undefined => {
   for (const node of parent.children) {
-    if (node.type && labelContainers.includes(node.type)) {
-      if (node.classes && node.classes[0] === "tml-label") {
-        const label = node.label
-        return label
-      } else {
-        const label = getLabel(node)
-        if (label) { return label }
+    if (node instanceof MathNode) {
+      if (labelContainers.includes(node.type)) {
+        if (node.classes[0] === "tml-label") {
+          const label = node.label
+          return label
+        } else {
+          const label = getLabel(node)
+          if (label) { return label }
+        }
       }
-    } else if (!node.type) {
-      const label = getLabel(node)
+    } else {
+      // A node without a `type`, e.g. a DocumentFragment.
+      const label = getLabel(node as DocumentFragment)
       if (label) { return label }
     }
   }
 }
 
-const taggedExpression = (expression, tag, style, leqno) => {
-  tag = buildExpressionRow(tag[0].body, style)
-  tag = consolidateText(tag)  // tag is now an <mtext> element
-  tag.classes.push("tml-tag") // to be available for \ref
+const taggedExpression = (
+  expression: MathDomNode,
+  tag: AnyParseNode[],
+  style: Style,
+  leqno: boolean
+): MathNode => {
+  const tagNode = consolidateText(
+    buildExpressionRow((tag[0] as ParseNode<"text">).body, style)
+  ) as MathNode  // tag is now an <mtext> element
+  tagNode.classes.push("tml-tag") // to be available for \ref
 
-  const label = getLabel(expression) // from a \label{} function.
-  expression = new mathMLTree.MathNode("mtd", [expression])
-  const rowArray = [glue(), expression, glue()];
-  rowArray[leqno ? 0 : 2].children.push(tag)
+  const label = getLabel(expression as DocumentFragment) // from a \label{} function.
+  const mtd = new mathMLTree.MathNode("mtd", [expression])
+  const rowArray = [glue(), mtd, glue()];
+  rowArray[leqno ? 0 : 2].children.push(tagNode)
   const mtr = new mathMLTree.MathNode("mtr", rowArray, ["tml-tageqn"])
   if (label) { mtr.setAttribute("id", label) }
   const table = new mathMLTree.MathNode("mtable", [mtr])
@@ -302,24 +331,30 @@ const taggedExpression = (expression, tag, style, leqno) => {
  * Takes a full parse tree and settings and builds a MathML representation of
  * it.
  */
-export default function buildMathML(tree, texExpression, style, settings) {
+export default function buildMathML(
+  tree: AnyParseNode[],
+  texExpression: string,
+  style: Style,
+  settings: Settings
+): MathNode | AnchorNode {
   // Strip off outer tag wrapper for processing below.
-  let tag = null
-  if (tree.length === 1 && tree[0].type === "tag") {
-    tag = tree[0].tag
-    tree = tree[0].body
+  let tag: AnyParseNode[] | null = null
+  const first = tree[0]
+  if (tree.length === 1 && first.type === "tag") {
+    tag = first.tag
+    tree = first.body
   }
 
   const expression = buildExpression(tree, style)
 
-  if (expression.length === 1 && expression[0] instanceof AnchorNode) {
-    return expression[0]
+  const n1 = expression.length === 0 ? null : expression[0]
+  if (expression.length === 1 && n1 instanceof AnchorNode) {
+    return n1
   }
 
   const wrap = (settings.displayMode || settings.annotate) ? "none" : settings.wrap
 
-  const n1 = expression.length === 0 ? null : expression[0]
-  let wrapper = expression.length === 1 && tag === null && (n1 instanceof MathNode)
+  let wrapper: MathDomNode = expression.length === 1 && tag === null && (n1 instanceof MathNode)
       ? expression[0]
       : setLineBreaks(expression, wrap, settings.displayMode)
 

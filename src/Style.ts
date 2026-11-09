@@ -6,6 +6,17 @@
 
 const subOrSupLevel = [2, 2, 3, 3];
 
+export interface StyleData {
+  level: number;
+  color?: string;
+  font?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: string;
+  fontShape?: string;
+  maxSize: [number, number];
+}
+
 /**
  * This is the main Style class. It contains the current style.level, color, and font.
  *
@@ -13,33 +24,42 @@ const subOrSupLevel = [2, 2, 3, 3];
  * different properties, call a `.with*` method.
  */
 class Style {
-  constructor(data) {
-    // Style.level can be 0 | 1 | 2 | 3, which correspond to
-    //       displaystyle, textstyle, scriptstyle, and scriptscriptstyle.
-    // style.level usually does not directly set MathML's script level. MathML does that itself.
-    // However, Chromium does not stop shrinking after scriptscriptstyle, so we do explicitly
-    // set a scriptlevel attribute in those conditions.
-    // We also use style.level to track math style so that we can get the correct
-    // scriptlevel when needed in supsub.js, mathchoice.js, or for dimensions in em.
+  // Style.level can be 0 | 1 | 2 | 3, which correspond to
+  //       displaystyle, textstyle, scriptstyle, and scriptscriptstyle.
+  // style.level usually does not directly set MathML's script level. MathML does that itself.
+  // However, Chromium does not stop shrinking after scriptscriptstyle, so we do explicitly
+  // set a scriptlevel attribute in those conditions.
+  // We also use style.level to track math style so that we can get the correct
+  // scriptlevel when needed in supsub.js, mathchoice.js, or for dimensions in em.
+  level: number;
+  color: string | undefined;
+  // A font family applies to a group of fonts (i.e. SansSerif), while a font
+  // represents a specific font (i.e. SansSerif Bold).
+  // See: https://tex.stackexchange.com/questions/22350/difference-between-textrm-and-mathrm
+  font: string;
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: string;
+  fontShape: string;
+  maxSize: [number, number];
+
+  constructor(data: StyleData) {
     this.level = data.level;
-    this.color = data.color;  // string | void
-    // A font family applies to a group of fonts (i.e. SansSerif), while a font
-    // represents a specific font (i.e. SansSerif Bold).
-    // See: https://tex.stackexchange.com/questions/22350/difference-between-textrm-and-mathrm
-    this.font = data.font || "";                // string
-    this.fontFamily = data.fontFamily || "";    // string
-    this.fontSize = data.fontSize || 1.0;       // number
+    this.color = data.color;
+    this.font = data.font || "";
+    this.fontFamily = data.fontFamily || "";
+    this.fontSize = data.fontSize || 1.0;
     this.fontWeight = data.fontWeight || "";
     this.fontShape = data.fontShape || "";
-    this.maxSize = data.maxSize;                // [number, number]
+    this.maxSize = data.maxSize;
   }
 
   /**
    * Returns a new style object with the same properties as "this".  Properties
    * from "extension" will be copied to the new style object.
    */
-  extend(extension) {
-    const data = {
+  extend(extension: Partial<StyleData>): Style {
+    return new Style({
       level: this.level,
       color: this.color,
       font: this.font,
@@ -47,31 +67,24 @@ class Style {
       fontSize: this.fontSize,
       fontWeight: this.fontWeight,
       fontShape: this.fontShape,
-      maxSize: this.maxSize
-    };
-
-    for (const key in extension) {
-      if (Object.prototype.hasOwnProperty.call(extension, key)) {
-        data[key] = extension[key];
-      }
-    }
-
-    return new Style(data);
+      maxSize: this.maxSize,
+      ...extension
+    });
   }
 
-  withLevel(n) {
+  withLevel(n: number): Style {
     return this.extend({
       level: n
     });
   }
 
-  incrementLevel() {
+  incrementLevel(): Style {
     return this.extend({
       level: Math.min(this.level + 1, 3)
     });
   }
 
-  inSubOrSup() {
+  inSubOrSup(): Style {
     return this.extend({
       level: subOrSupLevel[this.level]
     })
@@ -80,7 +93,7 @@ class Style {
   /**
    * Create a new style object with the given color.
    */
-  withColor(color) {
+  withColor(color: string | undefined): Style {
     return this.extend({
       color: color
     });
@@ -88,9 +101,8 @@ class Style {
 
   /**
    * Creates a new style object with the given math font or old text font.
-   * @type {[type]}
    */
-  withFont(font) {
+  withFont(font: string): Style {
     return this.extend({
       font
     });
@@ -99,7 +111,7 @@ class Style {
   /**
    * Create a new style objects with the given fontFamily.
    */
-  withTextFontFamily(fontFamily) {
+  withTextFontFamily(fontFamily: string): Style {
     return this.extend({
       fontFamily,
       font: ""
@@ -109,7 +121,7 @@ class Style {
   /**
    * Creates a new style object with the given font size
    */
-  withFontSize(num) {
+  withFontSize(num: number): Style {
     return this.extend({
       fontSize: num
     });
@@ -118,7 +130,7 @@ class Style {
   /**
    * Creates a new style object with the given font weight
    */
-  withTextFontWeight(fontWeight) {
+  withTextFontWeight(fontWeight: string): Style {
     return this.extend({
       fontWeight,
       font: ""
@@ -128,7 +140,7 @@ class Style {
   /**
    * Creates a new style object with the given font weight
    */
-  withTextFontShape(fontShape) {
+  withTextFontShape(fontShape: string): Style {
     return this.extend({
       fontShape,
       font: ""
@@ -138,7 +150,7 @@ class Style {
   /**
    * Gets the CSS color of the current style object
    */
-  getColor() {
+  getColor(): string | undefined {
     return this.color;
   }
 }

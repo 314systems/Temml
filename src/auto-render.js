@@ -1,4 +1,4 @@
-import ParseError from "./ParseError.js"
+import ParseError from "./ParseError"
 import { postProcess } from "./postProcess.js";
 
 const findEndOfMath = function(delimiter, text, startIndex) {

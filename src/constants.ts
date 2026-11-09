@@ -22,4 +22,4 @@ export const StyleLevel = {
   TEXT: 1,
   SCRIPT: 2,
   SCRIPTSCRIPT: 3
-};
+} as const;

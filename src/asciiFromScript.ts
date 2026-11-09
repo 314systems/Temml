@@ -1,5 +1,5 @@
 // Used for Unicode input of calligraphic and script letters
-export const asciiFromScript = Object.freeze({
+export const asciiFromScript: Readonly<Record<string, string>> = Object.freeze({
   "\ud835\udc9c": "A",
   "\u212c": "B",
   "\ud835\udc9e": "C",

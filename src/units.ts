@@ -4,7 +4,14 @@
  */
 
 import ParseError from "./ParseError"
+import type Style from "./Style"
 import * as utils from "./utils"
+
+/** A dimension, as parsed by functions.js argType "size". */
+export interface Measurement {
+  number: number;
+  unit: string;
+}
 
 const ptPerUnit = {
   // Convert to CSS (Postscipt) points, not TeX points
@@ -27,7 +34,7 @@ const ptPerUnit = {
  * Determine whether the specified unit (either a string defining the unit
  * or a "size" parse node containing a unit field) is valid.
  */
-const validUnits = [
+const validUnits: readonly string[] = [
   "em",
   "ex",
   "mu",
@@ -45,14 +52,14 @@ const validUnits = [
   "sp"
 ]
 
-export const validUnit = function(unit) {
+export const validUnit = function(unit: string | { unit: string }): boolean {
   if (typeof unit !== "string") {
     unit = unit.unit
   }
-  return validUnits.indexOf(unit) > -1
+  return validUnits.includes(unit)
 }
 
-export const emScale = styleLevel => {
+export const emScale = (styleLevel: number): number => {
   const scriptLevel = Math.max(styleLevel - 1, 0)
   return [1, 0.7, 0.5][scriptLevel]
 };
@@ -61,7 +68,7 @@ export const emScale = styleLevel => {
  * Convert a "size" parse node (with numeric "number" and string "unit" fields,
  * as parsed by functions.js argType "size") into a CSS value.
  */
-export const calculateSize = function(sizeValue, style) {
+export const calculateSize = function(sizeValue: Measurement, style: Style): Measurement {
   let number = sizeValue.number
   if (style.maxSize[0] < 0 && number > 0) {
     return { number: 0, unit: "em" }

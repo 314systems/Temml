@@ -88,10 +88,10 @@ const definePreamble = function(expression, options) {
   if (!(typeof expression === "string" || expression instanceof String)) {
     throw new TypeError("Temml can only parse string typed expression")
   }
-  const parser = new Parser(expression, settings, true)
+  const parser = new Parser(expression, settings)
   // Blank out any \df@tag to avoid spurious "Duplicate \tag" errors
   delete parser.gullet.macros.current["\\df@tag"]
-  const macros = parser.parse()
+  const macros = parser.parsePreamble()
   return macros
 };
 

@@ -13,6 +13,8 @@
 
 import ParseError from "./ParseError";
 import SourceLocation from "./SourceLocation";
+import type { LexerInterface } from "./SourceLocation";
+import type Settings from "./Settings";
 import { Token } from "./Token";
 
 /* The following tokenRegex
@@ -59,28 +61,33 @@ const tokenRegexString =
   `|${controlSymbolRegexString})`; // \\, \', etc.
 
 /** Main Lexer class */
-export default class Lexer {
-  constructor(input, settings) {
+export default class Lexer implements LexerInterface {
+  input: string;
+  settings: Settings;
+  tokenRegex: RegExp;
+  // Category codes. The lexer only supports comment characters (14) for now.
+  // MacroExpander additionally distinguishes active (13).
+  catcodes: Record<string, number>;
+
+  constructor(input: string, settings: Settings) {
     // Separate accents from characters
     this.input = input;
     this.settings = settings;
     this.tokenRegex = new RegExp(tokenRegexString, 'g');
-    // Category codes. The lexer only supports comment characters (14) for now.
-    // MacroExpander additionally distinguishes active (13).
     this.catcodes = {
       "%": 14, // comment character
       "~": 13  // active character
     };
   }
 
-  setCatcode(char, code) {
+  setCatcode(char: string, code: number): void {
     this.catcodes[char] = code;
   }
 
   /**
    * This function lexes a single token.
    */
-  lex() {
+  lex(): Token {
     const input = this.input;
     const pos = this.tokenRegex.lastIndex;
     if (pos === input.length) {

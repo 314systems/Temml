@@ -1,5 +1,12 @@
 import * as mathMLTree from "./mathMLTree"
+import { isMathNodeOfType } from "./mathMLTree"
+import type { MathNode, TextNode } from "./mathMLTree"
 import { DocumentFragment } from "./tree"
+import type { MathDomNode } from "./tree"
+
+// MathNode and domTree.Span carry `attributes`; other nodes do not.
+const attributesOf = (node: MathDomNode): Record<string, string> | undefined =>
+  (node as { attributes?: Record<string, string> }).attributes
 
 /*
  * Neither Firefox nor Chrome support hard line breaks or soft line breaks.
@@ -26,19 +33,23 @@ import { DocumentFragment } from "./tree"
  * much of this module.
  */
 
-export default function setLineBreaks(expression, wrapMode, isDisplayMode) {
-  const mtrs = [];
-  let mrows = [];
-  let block = [];
+export default function setLineBreaks(
+  expression: MathDomNode[],
+  wrapMode: "none" | "tex" | "=",
+  isDisplayMode: boolean
+): MathNode | DocumentFragment {
+  const mtrs: MathNode[] = [];
+  let mrows: MathDomNode[] = [];
+  let block: MathDomNode[] = [];
   let numTopLevelEquals = 0
   let i = 0
   while (i < expression.length) {
     while (expression[i] instanceof DocumentFragment) {
-      expression.splice(i, 1, ...expression[i].children) // Expand the fragment.
+      // Expand the fragment.
+      expression.splice(i, 1, ...(expression[i] as DocumentFragment).children)
     }
     const node = expression[i];
-    if (node.attributes && node.attributes.linebreak &&
-      node.attributes.linebreak === "newline") {
+    if (attributesOf(node)?.linebreak === "newline") {
       // A hard line break. Create a <mtr> for the current block.
       if (block.length > 0) {
         mrows.push(new mathMLTree.MathNode("mrow", block))
@@ -53,10 +64,10 @@ export default function setLineBreaks(expression, wrapMode, isDisplayMode) {
       continue
     }
     block.push(node);
-    if (node.type && node.type === "mo" && node.children.length === 1 &&
-        !(node.attributes.form && node.attributes.form === "prefix") && // unary operators
+    if (isMathNodeOfType(node, "mo") && node.children.length === 1 &&
+        node.attributes.form !== "prefix" && // unary operators
         !Object.prototype.hasOwnProperty.call(node.attributes, "movablelimits")) {
-      const ch = node.children[0].text
+      const ch = (node.children[0] as TextNode).text
       if (wrapMode === "=" && ch === "=") {
         numTopLevelEquals += 1
         if (numTopLevelEquals > 1) {
@@ -72,9 +83,7 @@ export default function setLineBreaks(expression, wrapMode, isDisplayMode) {
         let glueIsFreeOfNobreak = true;
         if (
           !(
-            next &&
-            next.type === "mtext" &&
-            next.attributes.linebreak &&
+            isMathNodeOfType(next, "mtext") &&
             next.attributes.linebreak === "nobreak"
           )
         ) {
@@ -83,17 +92,12 @@ export default function setLineBreaks(expression, wrapMode, isDisplayMode) {
           for (let j = i + 1; j < expression.length; j++) {
             const nd = expression[j];
             if (
-              nd.type &&
-              nd.type === "mspace" &&
-              !(nd.attributes.linebreak && nd.attributes.linebreak === "newline")
+              isMathNodeOfType(nd, "mspace") &&
+              nd.attributes.linebreak !== "newline"
             ) {
               block.push(nd);
               i += 1;
-              if (
-                nd.attributes &&
-                nd.attributes.linebreak &&
-                nd.attributes.linebreak === "nobreak"
-              ) {
+              if (nd.attributes.linebreak === "nobreak") {
                 glueIsFreeOfNobreak = false;
               }
             } else {

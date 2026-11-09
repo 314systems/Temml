@@ -1,15 +1,18 @@
 import Parser from "./Parser"
 import ParseError from "./ParseError"
+import type { AnyParseNode } from "./parseNode"
+import type Settings from "./Settings"
 
 /**
  * Parses an expression using a Parser, then returns the parsed result.
  */
-const parseTree = function(toParse, settings) {
-  if (!(typeof toParse === "string" || toParse instanceof String)) {
+const parseTree = function(toParse: string, settings: Settings): AnyParseNode[] {
+  // Also accept String objects from JavaScript callers.
+  if (!(typeof toParse === "string" || (toParse as unknown) instanceof String)) {
     throw new TypeError("Temml can only parse string typed expression")
   }
-  let tree;
-  let parser;
+  let tree: AnyParseNode[];
+  let parser: Parser;
   try {
     parser = new Parser(toParse, settings)
     // Blank out any \df@tag to avoid spurious "Duplicate \tag" errors
@@ -17,7 +20,7 @@ const parseTree = function(toParse, settings) {
 
     tree = parser.parse()
   } catch (error) {
-    if (error.toString() === "ParseError:  Unmatched delimiter") {
+    if ((error as Error).toString() === "ParseError:  Unmatched delimiter") {
       // Abandon the attempt to wrap delimiter pairs in an <mrow>.
       // Try again, and put each delimiter into an <mo> element.
       settings.wrapDelimiterPairs = false;
@@ -30,24 +33,21 @@ const parseTree = function(toParse, settings) {
     }
   }
 
-  // LaTeX ignores a \tag placed outside an AMS environment.
-  if (!(tree.length > 0 &&  tree[0].type && tree[0].type === "array" && tree[0].addEqnNum)) {
-    // If the input used \tag, it will set the \df@tag macro to the tag.
-    // In this case, we separately parse the tag and wrap the tree.
-    if (parser.gullet.macros.get("\\df@tag")) {
-      if (!settings.displayMode) {
-        throw new ParseError("\\tag works only in display mode")
-      }
-      parser.gullet.feed("\\df@tag")
-      tree = [
-        {
-          type: "tag",
-          mode: "text",
-          body: tree,
-          tag: parser.parse()
-        }
-      ]
+  // If the input used \tag, it will set the \df@tag macro to the tag.
+  // In this case, we separately parse the tag and wrap the tree.
+  if (parser.gullet.macros.get("\\df@tag")) {
+    if (!settings.displayMode) {
+      throw new ParseError("\\tag works only in display mode")
     }
+    parser.gullet.feed("\\df@tag")
+    tree = [
+      {
+        type: "tag",
+        mode: "text",
+        body: tree,
+        tag: parser.parse()
+      }
+    ]
   }
 
   return tree

@@ -1,11 +1,6 @@
 import SourceLocation from "./SourceLocation";
 
 /**
- * Interface required to break circular dependency between Token, Lexer, and
- * ParseError.
- */
-
-/**
  * The resulting token returned from `lex`.
  *
  * It consists of the token text plus some position information.
@@ -19,10 +14,14 @@ import SourceLocation from "./SourceLocation";
  * lead to degraded error reporting, though.
  */
 export class Token {
-  constructor(
-    text, // the text of this token
-    loc
-  ) {
+  text: string; // the text of this token
+  loc: SourceLocation | null | undefined;
+  // Set by MacroExpander to mark tokens that must not be expanded.
+  noexpand?: boolean;
+  // Set by MacroExpander to mark \relax tokens produced by \noexpand.
+  treatAsRelax?: boolean;
+
+  constructor(text: string, loc?: SourceLocation | null) {
     this.text = text;
     this.loc = loc;
   }
@@ -32,9 +31,9 @@ export class Token {
    * the whole input range enclosed by these two.
    */
   range(
-    endToken, // last token of the range, inclusive
-    text // the text of the newly constructed token
-  ) {
+    endToken: Token, // last token of the range, inclusive
+    text: string     // the text of the newly constructed token
+  ): Token {
     return new Token(text, SourceLocation.range(this, endToken));
   }
 }

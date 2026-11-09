@@ -12,10 +12,13 @@ import ParseError from "./ParseError";
 import SourceLocation from "./SourceLocation";
 import Namespace from "./Namespace";
 import macros from "./macros";
+import type { MacroDefinition, MacroExpansion } from "./defineMacro";
+import type Settings from "./Settings";
+import type { Mode } from "./types";
 
 // List of commands that act like macros but aren't defined as a macro,
 // function, or symbol.  Used in `isDefined`.
-export const implicitCommands = {
+export const implicitCommands: Record<string, boolean> = {
   "^": true, // Parser.js
   _: true, // Parser.js
   "\\limits": true, // Parser.js
@@ -23,10 +26,17 @@ export const implicitCommands = {
 };
 
 export default class MacroExpander {
-  constructor(input, settings, mode) {
+  settings: Settings;
+  expansionCount: number;
+  lexer: Lexer;
+  macros: Namespace<MacroDefinition>;
+  mode: Mode;
+  stack: Token[];
+
+  constructor(input: string, settings: Settings, mode: Mode) {
     this.settings = settings;
     this.expansionCount = 0;
-    this.feed(input);
+    this.lexer = new Lexer(input, settings);
     // Make new global namespace
     this.macros = new Namespace(macros, settings.macros);
     this.mode = mode;
@@ -37,28 +47,28 @@ export default class MacroExpander {
    * Feed a new input string to the same MacroExpander
    * (with existing macros etc.).
    */
-  feed(input) {
+  feed(input: string): void {
     this.lexer = new Lexer(input, this.settings);
   }
 
   /**
    * Switches between "text" and "math" modes.
    */
-  switchMode(newMode) {
+  switchMode(newMode: Mode): void {
     this.mode = newMode;
   }
 
   /**
    * Start a new group nesting within all namespaces.
    */
-  beginGroup() {
+  beginGroup(): void {
     this.macros.beginGroup();
   }
 
   /**
    * End current group nesting within all namespaces.
    */
-  endGroup() {
+  endGroup(): void {
     this.macros.endGroup();
   }
 
@@ -66,7 +76,7 @@ export default class MacroExpander {
    * Returns the topmost token on the stack, without expanding it.
    * Similar in behavior to TeX's `\futurelet`.
    */
-  future() {
+  future(): Token {
     if (this.stack.length === 0) {
       this.pushToken(this.lexer.lex())
     }
@@ -76,23 +86,23 @@ export default class MacroExpander {
   /**
    * Remove and return the next unexpanded token.
    */
-  popToken() {
+  popToken(): Token {
     this.future(); // ensure non-empty stack
-    return this.stack.pop();
+    return this.stack.pop()!;
   }
 
   /**
    * Add a given token to the token stack.  In particular, this get be used
    * to put back a token returned from one of the other methods.
    */
-  pushToken(token) {
+  pushToken(token: Token): void {
     this.stack.push(token);
   }
 
   /**
    * Append an array of tokens to the token stack.
    */
-  pushTokens(tokens) {
+  pushTokens(tokens: Token[]): void {
     this.stack.push(...tokens);
   }
 
@@ -100,10 +110,10 @@ export default class MacroExpander {
    * Find an macro argument without expanding tokens and append the array of
    * tokens to the token stack. Uses Token as a container for the result.
    */
-  scanArgument(isOptional) {
-    let start;
-    let end;
-    let tokens;
+  scanArgument(isOptional: boolean): Token | null {
+    let start: Token;
+    let end: Token;
+    let tokens: Token[];
     if (isOptional) {
       this.consumeSpaces(); // \@ifnextchar gobbles any space following it
       if (this.future().text !== "[") {
@@ -125,7 +135,7 @@ export default class MacroExpander {
   /**
    * Consume all following space tokens, without expansion.
    */
-  consumeSpaces() {
+  consumeSpaces(): void {
     for (;;) {
       const token = this.future();
       if (token.text === " ") {
@@ -140,14 +150,14 @@ export default class MacroExpander {
    * Consume an argument from the token stream, and return the resulting array
    * of tokens and start/end token.
    */
-  consumeArg(delims) {
+  consumeArg(delims?: string[] | null): { tokens: Token[]; start: Token; end: Token } {
     // The argument for a delimited parameter is the shortest (possibly
     // empty) sequence of tokens with properly nested {...} groups that is
     // followed ... by this particular list of non-parameter tokens.
     // The argument for an undelimited parameter is the next nonblank
     // token, unless that token is ‘{’, when the argument will be the
     // entire {...} group that follows.
-    const tokens = [];
+    const tokens: Token[] = [];
     const isDelimited = delims && delims.length > 0;
     if (!isDelimited) {
       // Ignore spaces between arguments.  As the TeXbook says:
@@ -157,7 +167,7 @@ export default class MacroExpander {
       this.consumeSpaces();
     }
     const start = this.future();
-    let tok;
+    let tok: Token;
     let depth = 0;
     let match = 0;
     do {
@@ -206,7 +216,7 @@ export default class MacroExpander {
    * Consume the specified number of (delimited) arguments from the token
    * stream and return the resulting array of arguments.
    */
-  consumeArgs(numArgs, delimiters) {
+  consumeArgs(numArgs: number, delimiters?: string[][]): Token[][] {
     if (delimiters) {
       if (delimiters.length !== numArgs + 1) {
         throw new ParseError("The length of delimiters doesn't match the number of args!");
@@ -220,7 +230,7 @@ export default class MacroExpander {
       }
     }
 
-    const args = [];
+    const args: Token[][] = [];
     for (let i = 0; i < numArgs; i++) {
       args.push(this.consumeArg(delimiters && delimiters[i + 1]).tokens);
     }
@@ -246,7 +256,7 @@ export default class MacroExpander {
    * If expandableOnly, only expandable tokens are expanded and
    * an undefined control sequence results in an error.
    */
-  expandOnce(expandableOnly) {
+  expandOnce(expandableOnly?: boolean): number | false {
     const topToken = this.popToken();
     const name = topToken.text;
     const expansion = !topToken.noexpand ? this._getExpansion(name) : null;
@@ -298,7 +308,7 @@ export default class MacroExpander {
    * Similar in behavior to TeX's `\expandafter\futurelet`.
    * Equivalent to expandOnce() followed by future().
    */
-  expandAfterFuture() {
+  expandAfterFuture(): Token {
     this.expandOnce();
     return this.future();
   }
@@ -306,10 +316,10 @@ export default class MacroExpander {
   /**
    * Recursively expand first token, then return first non-expandable token.
    */
-  expandNextToken() {
+  expandNextToken(): Token {
     for (;;) {
       if (this.expandOnce() === false) { // fully expanded
-        const token = this.stack.pop();
+        const token = this.stack.pop()!;
         // The token after \noexpand is interpreted as if its meaning were ‘\relax’
         if (token.treatAsRelax) {
           token.text = "\\relax"
@@ -317,16 +327,13 @@ export default class MacroExpander {
         return token
       }
     }
-
-    // This pathway is impossible.
-    throw new Error(); // eslint-disable-line no-unreachable
   }
 
   /**
    * Fully expand the given macro name and return the resulting list of
    * tokens, or return `undefined` if no such macro is defined.
    */
-  expandMacro(name) {
+  expandMacro(name: string): Token[] | undefined {
     return this.macros.has(name) ? this.expandTokens([new Token(name)]) : undefined;
   }
 
@@ -335,14 +342,14 @@ export default class MacroExpander {
    * tokens.  Note that the input tokens are in reverse order, but the
    * output tokens are in forward order.
    */
-  expandTokens(tokens) {
-    const output = [];
+  expandTokens(tokens: Token[]): Token[] {
+    const output: Token[] = [];
     const oldStackLength = this.stack.length;
     this.pushTokens(tokens);
     while (this.stack.length > oldStackLength) {
       // Expand only expandable tokens
       if (this.expandOnce(true) === false) {  // fully expanded
-        const token = this.stack.pop();
+        const token = this.stack.pop()!;
         if (token.treatAsRelax) {
           // the expansion of \noexpand is the token itself
           token.noexpand = false;
@@ -358,7 +365,7 @@ export default class MacroExpander {
    * Fully expand the given macro name and return the result as a string,
    * or return `undefined` if no such macro is defined.
    */
-  expandMacroAsText(name) {
+  expandMacroAsText(name: string): string | undefined {
     const tokens = this.expandMacro(name);
     if (tokens) {
       return tokens.map((token) => token.text).join("");
@@ -371,7 +378,7 @@ export default class MacroExpander {
    * Returns the expanded macro as a reversed array of tokens and a macro
    * argument count.  Or returns `null` if no such macro.
    */
-  _getExpansion(name) {
+  _getExpansion(name: string): MacroExpansion | null | undefined {
     const definition = this.macros.get(name);
     if (definition == null) {
       // mainly checking for undefined here
@@ -395,7 +402,7 @@ export default class MacroExpander {
         }
       }
       const bodyLexer = new Lexer(expansion, this.settings);
-      const tokens = [];
+      const tokens: Token[] = [];
       let tok = bodyLexer.lex();
       while (tok.text !== "EOF") {
         tokens.push(tok);
@@ -415,23 +422,23 @@ export default class MacroExpander {
    * a function, a symbol, or one of the special commands listed in
    * `implicitCommands`.
    */
-  isDefined(name) {
+  isDefined(name: string): boolean {
     return (
       this.macros.has(name) ||
-      Object.prototype.hasOwnProperty.call(functions, name ) ||
-      Object.prototype.hasOwnProperty.call(symbols.math, name ) ||
-      Object.prototype.hasOwnProperty.call(symbols.text, name ) ||
-      Object.prototype.hasOwnProperty.call(implicitCommands, name )
+      Object.prototype.hasOwnProperty.call(functions, name) ||
+      Object.prototype.hasOwnProperty.call(symbols.math, name) ||
+      Object.prototype.hasOwnProperty.call(symbols.text, name) ||
+      Object.prototype.hasOwnProperty.call(implicitCommands, name)
     );
   }
 
   /**
    * Determine whether a command is expandable.
    */
-  isExpandable(name) {
+  isExpandable(name: string): boolean {
     const macro = this.macros.get(name);
     return macro != null
       ? typeof macro === "string" || typeof macro === "function" || !macro.unexpandable
-      : Object.prototype.hasOwnProperty.call(functions, name ) && !functions[name].primitive;
+      : Object.prototype.hasOwnProperty.call(functions, name) && !functions[name].primitive;
   }
 }

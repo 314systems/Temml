@@ -8,41 +8,39 @@
  * Similar functions for working with MathML nodes exist in mathMLTree.js.
  *
  */
+import type { CssStyle, VirtualNode } from "./tree";
 import * as utils from "./utils";
 
 /**
  * Create an HTML className based on a list of classes. In addition to joining
  * with spaces, we also remove empty classes.
  */
-export const createClass = function(classes) {
+export const createClass = function(classes: string[]): string {
   return classes.filter((cls) => cls).join(" ");
 };
 
-const initNode = function(classes, style) {
-  this.classes = classes || [];
-  this.attributes = {};
-  this.style = style || {};
-};
+interface HtmlElementData {
+  classes: string[];
+  attributes: Record<string, string>;
+  style: CssStyle;
+  children: VirtualNode[];
+}
 
 /**
  * Convert into an HTML node
  */
-const toNode = function(tagName) {
+const toNode = function(this: HtmlElementData, tagName: string): HTMLElement {
   const node = document.createElement(tagName);
 
   // Apply the class
   node.className = createClass(this.classes);
 
   // Apply inline styles
-  for (const style in this.style) {
-    if (Object.prototype.hasOwnProperty.call(this.style, style )) {
-      node.style[style] = this.style[style];
-    }
-  }
+  Object.assign(node.style, this.style);
 
   // Apply attributes
   for (const attr in this.attributes) {
-    if (Object.prototype.hasOwnProperty.call(this.attributes, attr )) {
+    if (Object.prototype.hasOwnProperty.call(this.attributes, attr)) {
       node.setAttribute(attr, this.attributes[attr]);
     }
   }
@@ -58,7 +56,7 @@ const toNode = function(tagName) {
 /**
  * Convert into an HTML markup string
  */
-const toMarkup = function(tagName) {
+const toMarkup = function(this: HtmlElementData, tagName: string): string {
   let markup = `<${tagName}`;
 
   // Add the class
@@ -70,7 +68,7 @@ const toMarkup = function(tagName) {
 
   // Add the styles, after hyphenation
   for (const style in this.style) {
-    if (Object.prototype.hasOwnProperty.call(this.style, style )) {
+    if (Object.prototype.hasOwnProperty.call(this.style, style)) {
       styles += `${utils.hyphenate(style)}:${this.style[style]};`;
     }
   }
@@ -81,7 +79,7 @@ const toMarkup = function(tagName) {
 
   // Add the attributes
   for (const attr in this.attributes) {
-    if (Object.prototype.hasOwnProperty.call(this.attributes, attr )) {
+    if (Object.prototype.hasOwnProperty.call(this.attributes, attr)) {
       markup += ` ${attr}="${utils.escape(this.attributes[attr])}"`;
     }
   }
@@ -103,46 +101,59 @@ const toMarkup = function(tagName) {
  * an inline style.
  *
  */
-export class Span {
-  constructor(classes, children, style) {
-    initNode.call(this, classes, style);
+export class Span implements HtmlElementData, VirtualNode {
+  classes: string[];
+  attributes: Record<string, string>;
+  style: CssStyle;
+  children: VirtualNode[];
+
+  constructor(classes?: string[] | null, children?: VirtualNode[] | null, style?: CssStyle | null) {
+    this.classes = classes || [];
+    this.attributes = {};
+    this.style = style || {};
     this.children = children || [];
   }
 
-  setAttribute(attribute, value) {
+  setAttribute(attribute: string, value: string): void {
     this.attributes[attribute] = value;
   }
 
-  toNode() {
+  toNode(): HTMLElement {
     return toNode.call(this, "span");
   }
 
-  toMarkup() {
+  toMarkup(): string {
     return toMarkup.call(this, "span");
   }
 }
 
-export class TextNode {
-  constructor(text) {
+export class TextNode implements VirtualNode {
+  text: string;
+
+  constructor(text: string) {
     this.text = text;
   }
-  toNode() {
+  toNode(): Text {
     return document.createTextNode(this.text);
   }
-  toMarkup() {
+  toMarkup(): string {
     return utils.escape(this.text);
   }
 }
 
 // Create an <a href="…"> node.
-export class AnchorNode {
-  constructor(href, classes, children) {
+export class AnchorNode implements VirtualNode {
+  href: string;
+  classes: string[];
+  children: VirtualNode[];
+
+  constructor(href: string, classes: string[], children?: VirtualNode[] | null) {
     this.href = href;
     this.classes = classes;
     this.children = children || [];
   }
 
-  toNode() {
+  toNode(): HTMLAnchorElement {
     const node = document.createElement("a")
     node.setAttribute("href", this.href)
     if (this.classes.length > 0) {
@@ -154,7 +165,7 @@ export class AnchorNode {
     return node
   }
 
-  toMarkup() {
+  toMarkup(): string {
     let markup = `<a href='${utils.escape(this.href)}'`
     if (this.classes.length > 0) {
       markup += ` class="${utils.escape(createClass(this.classes))}"`
@@ -171,41 +182,42 @@ export class AnchorNode {
 /*
  * This node represents an image embed (<img>) element.
  */
-export class Img {
-  constructor(src, alt, style) {
+export class Img implements VirtualNode {
+  src: string;
+  alt: string;
+  classes: string[];
+  style: CssStyle;
+
+  constructor(src: string, alt: string, style: CssStyle) {
     this.alt = alt;
     this.src = src;
     this.classes = ["mord"];
     this.style = style;
   }
 
-  hasClass(className) {
+  hasClass(className: string): boolean {
     return this.classes.includes(className);
   }
 
-  toNode() {
+  toNode(): HTMLImageElement {
     const node = document.createElement("img");
     node.src = this.src;
     node.alt = this.alt;
     node.className = "mord";
 
     // Apply inline styles
-    for (const style in this.style) {
-      if (Object.prototype.hasOwnProperty.call(this.style, style )) {
-        node.style[style] = this.style[style];
-      }
-    }
+    Object.assign(node.style, this.style);
 
     return node;
   }
 
-  toMarkup() {
+  toMarkup(): string {
     let markup = `<img src='${this.src}' alt='${this.alt}'`;
 
     // Add the styles, after hyphenation
     let styles = "";
     for (const style in this.style) {
-      if (Object.prototype.hasOwnProperty.call(this.style, style )) {
+      if (Object.prototype.hasOwnProperty.call(this.style, style)) {
         styles += `${utils.hyphenate(style)}:${this.style[style]};`;
       }
     }

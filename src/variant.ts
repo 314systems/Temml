@@ -1,7 +1,10 @@
+import type Style from "./Style"
+import type { SymbolParseNode } from "./parseNode"
+
 /**
  * Maps TeX font commands to "mathvariant" attribute in buildMathML.js
  */
-const fontMap = {
+const fontMap: Record<string, string> = {
   // styles
   mathbf: "bold",
   mathrm: "normal",
@@ -21,7 +24,7 @@ const fontMap = {
 /**
  * Returns the math variant as a string or null if none is required.
  */
-export const getVariant = function(group, style) {
+export const getVariant = function(group: SymbolParseNode, style: Style): string | null {
   // Handle font specifiers as best we can.
   // Chromium does not support the MathML mathvariant attribute.
   // So we'll use Unicode replacement characters instead.
@@ -60,7 +63,7 @@ export const getVariant = function(group, style) {
     case "mathit":
       return "italic"
     case "mathrm": {
-      const codePoint = group.text.codePointAt(0)
+      const codePoint = group.text.codePointAt(0) ?? 0
       // LaTeX \mathrm returns italic for Greek characters.
       return  (0x03ab < codePoint && codePoint < 0x03cf) ? "italic" : "normal"
     }

@@ -8,14 +8,23 @@
 
 import ParseError from "./ParseError";
 
-export default class Namespace {
+export type Mapping<Value> = Record<string, Value>;
+
+export default class Namespace<Value> {
+  current: Mapping<Value>;
+  builtins: Mapping<Value>;
+  undefStack: Array<Mapping<Value | undefined>>;
+
   /**
    * Both arguments are optional.  The first argument is an object of
    * built-in mappings which never change.  The second argument is an object
    * of initial (global-level) mappings, which will constantly change
    * according to any global/top-level `set`s done.
    */
-  constructor(builtins = Object.create(null), globalMacros = Object.create(null)) {
+  constructor(
+    builtins: Mapping<Value> = Object.create(null),
+    globalMacros: Mapping<Value> = Object.create(null)
+  ) {
     this.current = globalMacros;
     this.builtins = builtins;
     this.undefStack = [];
@@ -24,27 +33,28 @@ export default class Namespace {
   /**
    * Start a new nested group, affecting future local `set`s.
    */
-  beginGroup() {
+  beginGroup(): void {
     this.undefStack.push(Object.create(null));
   }
 
   /**
    * End current nested group, restoring values before the group began.
    */
-  endGroup() {
-    if (this.undefStack.length === 0) {
+  endGroup(): void {
+    const undefs = this.undefStack.pop();
+    if (undefs === undefined) {
       throw new ParseError(
         "Unbalanced namespace destruction: attempt " +
           "to pop global namespace; please report this as a bug"
       );
     }
-    const undefs = this.undefStack.pop();
     for (const undef in undefs) {
-      if (Object.prototype.hasOwnProperty.call(undefs, undef )) {
-        if (undefs[undef] === undefined) {
+      if (Object.prototype.hasOwnProperty.call(undefs, undef)) {
+        const value = undefs[undef];
+        if (value === undefined) {
           delete this.current[undef];
         } else {
-          this.current[undef] = undefs[undef];
+          this.current[undef] = value;
         }
       }
     }
@@ -54,9 +64,9 @@ export default class Namespace {
    * Detect whether `name` has a definition.  Equivalent to
    * `get(name) != null`.
    */
-  has(name) {
-    return Object.prototype.hasOwnProperty.call(this.current, name ) ||
-    Object.prototype.hasOwnProperty.call(this.builtins, name );
+  has(name: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this.current, name) ||
+    Object.prototype.hasOwnProperty.call(this.builtins, name);
   }
 
   /**
@@ -67,8 +77,8 @@ export default class Namespace {
    * to `false` in JavaScript.  Use `if (namespace.get(...) != null)` or
    * `if (namespace.has(...))`.
    */
-  get(name) {
-    if (Object.prototype.hasOwnProperty.call(this.current, name )) {
+  get(name: string): Value | undefined {
+    if (Object.prototype.hasOwnProperty.call(this.current, name)) {
       return this.current[name];
     } else {
       return this.builtins[name];
@@ -81,7 +91,7 @@ export default class Namespace {
    * operation to the undo stack.  Global set() may change the undo
    * operation at every level, so takes time linear in their number.
    */
-  set(name, value, global = false) {
+  set(name: string, value: Value, global = false): void {
     if (global) {
       // Global set is equivalent to setting in all groups.  Simulate this
       // by destroying any undos currently scheduled for this name,
@@ -98,7 +108,7 @@ export default class Namespace {
       // unless an undo is already in place, in which case that older
       // value is the correct one.
       const top = this.undefStack[this.undefStack.length - 1];
-      if (top && !Object.prototype.hasOwnProperty.call(top, name )) {
+      if (top && !Object.prototype.hasOwnProperty.call(top, name)) {
         top[name] = this.current[name];
       }
     }
