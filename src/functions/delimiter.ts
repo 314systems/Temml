@@ -5,9 +5,13 @@ import { assertNodeType, checkSymbolNodeType } from "../parseNode";
 
 import * as mml from "../buildMathML";
 import symbols from "../symbols";
+import type { AnyParseNode, ParseNode, SymbolParseNode } from "../parseNode";
+import type { MathNode } from "../mathMLTree";
+import type { MathDomNode } from "../tree";
+import type { Mode } from "../types";
 
 // Extra data needed for the delimiter handler down below
-export const delimiterSizes = {
+export const delimiterSizes: Record<string, { mclass: string; size: number }> = {
   "\\bigl": { mclass: "mopen", size: 1 },
   "\\Bigl": { mclass: "mopen", size: 2 },
   "\\biggl": { mclass: "mopen", size: 3 },
@@ -26,7 +30,7 @@ export const delimiterSizes = {
   "\\Bigg": { mclass: "mord", size: 4 }
 };
 
-export const leftToRight = {
+export const leftToRight: Record<string, string> = {
   "(": ")",
   "\\lparen": "\\rparen",
   "[": "]",
@@ -139,8 +143,8 @@ const delimiters = new Set([
 
 // Export isDelimiter for benefit of parser.
 const dels = new Set(["}", "\\left", "\\middle", "\\right"]);
-export const isDelimiter = str => str.length > 0 &&
-  (delimiters.has(str) || delimiterSizes[str] || dels.has(str));
+export const isDelimiter = (str: string): boolean => str.length > 0 &&
+  (delimiters.has(str) || !!delimiterSizes[str] || dels.has(str));
 
 // Metrics of the different sizes. Found by looking at TeX's output of
 // $\bigl| // \Bigl| \biggl| \Biggl| \showlists$
@@ -148,7 +152,7 @@ export const isDelimiter = str => str.length > 0 &&
 const sizeToMaxHeight = [0, 1.2, 1.8, 2.4, 3.0];
 
 // Delimiter functions
-function checkDelimiter(delim, context) {
+function checkDelimiter(delim: AnyParseNode, context: { funcName: string }): SymbolParseNode {
   if (delim.type === "ordgroup" && delim.body.length === 1) {
     delim = delim.body[0]; // Unwrap the braces
   }
@@ -169,7 +173,7 @@ function checkDelimiter(delim, context) {
 //                               /         \
 const needExplicitStretch = new Set(["\u002F", "\u005C", "\\backslash", "\u2216", "\\vert", "|"]);
 
-const makeFenceMo = (delim, mode, form, isStretchy) => {
+const makeFenceMo = (delim: string, mode: Mode, form: string, isStretchy: boolean): MathNode => {
   const text = delim === "." ? "" : delim;
   const node = new mathMLTree.MathNode("mo", [mml.makeText(text, mode)]);
   node.setAttribute("fence", "true");
@@ -205,7 +209,7 @@ defineFunction({
   handler: (context, args) => {
     const delim = checkDelimiter(args[0], context);
 
-    const delimNode = {
+    const delimNode: ParseNode<"delimsizing"> = {
       type: "delimsizing",
       mode: context.parser.mode,
       size: delimiterSizes[context.funcName].size,
@@ -226,7 +230,7 @@ defineFunction({
     }
   },
   mathmlBuilder: (group) => {
-    const children = [];
+    const children: MathDomNode[] = [];
     const delim = group.delim === "." ? "" : group.delim;
 
     children.push(mml.makeText(delim, group.mode));
@@ -253,7 +257,7 @@ defineFunction({
   }
 });
 
-function assertParsed(group) {
+function assertParsed(group: { body?: unknown }): void {
   if (!group.body) {
     throw new Error("Bug: The delim ParseNode wasn't fully parsed.");
   }
@@ -295,7 +299,11 @@ defineFunction({
       if (!symbols.math[middle]) {
         throw new ParseError(`Invalid delimiter '${middle}' after '\\middle'`);
       }
-      checkDelimiter({ type: "atom", mode: "math", text: middle }, { funcName: "\\middle" })
+      // A bare atom without a family, only to validate the delimiter.
+      checkDelimiter(
+        { type: "atom", mode: "math", text: middle } as ParseNode<"atom">,
+        { funcName: "\\middle" }
+      )
       body.push({ type: "middle", mode: "math", delim: middle })
       parser.consume()
       body = body.concat(parser.parseExpression(false, "\\right", true))
@@ -348,7 +356,7 @@ defineFunction({
         type: "textord",
         mode: "text",
         text: funcName,
-        loc: token.loc
+        loc: token!.loc
       }
     } else if (!parser.settings.wrapDelimiterPairs) {
       // Treat this token as an ordinary symbol.
@@ -356,7 +364,7 @@ defineFunction({
         type: "atom",
         mode: "math",
         family: "open",
-        loc: token.loc,
+        loc: token!.loc,
         text: funcName
       };
     }

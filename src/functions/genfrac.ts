@@ -5,11 +5,19 @@ import { assertNodeType } from "../parseNode";
 import { assert } from "../utils";
 import * as mml from "../buildMathML";
 import { calculateSize } from "../units";
+import type { Measurement } from "../units";
+import type { MathMLBuilder } from "../defineFunction";
+import type { MathNode } from "../mathMLTree";
+import type Style from "../Style";
+import type { MathDomNode } from "../tree";
+import type { StyleStr } from "../types";
 
-const stylArray = ["display", "text", "script", "scriptscript"];
-const scriptLevel = { auto: -1, display: 0, text: 0, script: 1, scriptscript: 2 };
+const stylArray: StyleStr[] = ["display", "text", "script", "scriptscript"];
+const scriptLevel: Record<StyleStr | "auto", number> = {
+  auto: -1, display: 0, text: 0, script: 1, scriptscript: 2
+};
 
-const adjustStyle = (functionSize, originalStyle) => {
+const adjustStyle = (functionSize: StyleStr | "auto", originalStyle: Style): Style => {
   // Figure out what style this fraction should be in based on the
   // function used
   let style = originalStyle;
@@ -32,14 +40,14 @@ const adjustStyle = (functionSize, originalStyle) => {
   return style;
 };
 
-const mathmlBuilder = (group, style) => {
+const mathmlBuilder: MathMLBuilder<"genfrac"> = (group, style) => {
   style = adjustStyle(group.scriptLevel, style)
 
   // Chromium (wrongly) continues to shrink fractions beyond scriptscriptlevel.
   // So we check for levels that Chromium shrinks too small.
   // If necessary, set an explicit fraction depth.
-  const numer = mml.buildGroup(group.numer, style)
-  const denom = mml.buildGroup(group.denom, style)
+  const numer = mml.buildGroup(group.numer, style) as MathNode
+  const denom = mml.buildGroup(group.denom, style) as MathNode
   if (style.level === 3) {
     numer.style.mathDepth = "2"
     numer.setAttribute("scriptlevel", "2")
@@ -47,17 +55,18 @@ const mathmlBuilder = (group, style) => {
     denom.setAttribute("scriptlevel", "2")
   }
 
-  let node = new mathMLTree.MathNode("mfrac", [numer, denom]);
+  const frac = new mathMLTree.MathNode("mfrac", [numer, denom]);
 
   if (!group.hasBarLine) {
-    node.setAttribute("linethickness", "0px");
+    frac.setAttribute("linethickness", "0px");
   } else if (group.barSize) {
     const ruleWidth = calculateSize(group.barSize, style);
-    node.setAttribute("linethickness", ruleWidth.number + ruleWidth.unit);
+    frac.setAttribute("linethickness", ruleWidth.number + ruleWidth.unit);
   }
 
+  let node: MathDomNode = frac
   if (group.leftDelim != null || group.rightDelim != null) {
-    const withDelims = [];
+    const withDelims: MathDomNode[] = [];
 
     if (group.leftDelim != null) {
       const leftOp = new mathMLTree.MathNode("mo", [
@@ -81,9 +90,10 @@ const mathmlBuilder = (group, style) => {
   }
 
   if (group.scriptLevel !== "auto") {
-    node = new mathMLTree.MathNode("mstyle", [node]);
-    node.setAttribute("displaystyle", String(group.scriptLevel === "display"));
-    node.setAttribute("scriptlevel", scriptLevel[group.scriptLevel]);
+    const mstyle = new mathMLTree.MathNode("mstyle", [node]);
+    mstyle.setAttribute("displaystyle", String(group.scriptLevel === "display"));
+    mstyle.setAttribute("scriptlevel", String(scriptLevel[group.scriptLevel]));
+    node = mstyle
   }
 
   return node;
@@ -111,9 +121,9 @@ defineFunction({
     const numer = args[0];
     const denom = args[1];
     let hasBarLine = false;
-    let leftDelim = null;
-    let rightDelim = null;
-    let scriptLevel = "auto";
+    let leftDelim: string | null = null;
+    let rightDelim: string | null = null;
+    let scriptLevel: StyleStr | "auto" = "auto";
 
     switch (funcName) {
       case "\\cfrac":
@@ -175,7 +185,7 @@ defineFunction({
     infix: true
   },
   handler({ parser, funcName, token }) {
-    let replaceWith;
+    let replaceWith: string;
     switch (funcName) {
       case "\\over":
         replaceWith = "\\frac";
@@ -204,8 +214,8 @@ defineFunction({
   }
 });
 
-const delimFromValue = function(delimString) {
-  let delim = null;
+const delimFromValue = function(delimString: string): string | null {
+  let delim: string | null = null;
   if (delimString.length > 0) {
     delim = delimString;
     delim = delim === "." ? null : delim;
@@ -237,8 +247,8 @@ defineFunction({
         : null;
 
     const barNode = assertNodeType(args[2], "size");
-    let hasBarLine;
-    let barSize = null;
+    let hasBarLine: boolean;
+    let barSize: Measurement | null = null;
     if (barNode.isBlank) {
       // \genfrac acts differently than \above.
       // \genfrac treats an empty size group as a signal to use a
@@ -250,7 +260,7 @@ defineFunction({
     }
 
     // Find out if we want displaystyle, textstyle, etc.
-    let scriptLevel = "auto";
+    let scriptLevel: StyleStr | "auto" = "auto";
     let styl = args[3];
     if (styl.type === "ordgroup") {
       if (styl.body.length > 0) {

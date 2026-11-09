@@ -3,10 +3,11 @@ import * as mathMLTree from "../mathMLTree";
 import { assertNodeType } from "../parseNode";
 import { colorFromSpec, validateColor } from "./color"
 import * as mml from "../buildMathML";
+import type { MathMLBuilder } from "../defineFunction";
 
 const boxTags = ["\\boxed", "\\fcolorbox", "\\colorbox"];
 
-const mathmlBuilder = (group, style) => {
+const mathmlBuilder: MathMLBuilder<"enclose"> = (group, style) => {
   const tag = boxTags.includes(group.label) ? "mrow" : "menclose"
   const node = new mathMLTree.MathNode(tag, [mml.buildGroup(group.body, style)])
   switch (group.label) {
@@ -92,7 +93,7 @@ defineFunction({
   },
   handler({ parser, funcName }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color
+    let color: string
     if (model) {
       const spec = assertNodeType(args[0], "raw").string
       color = colorFromSpec(model, spec)
@@ -122,8 +123,8 @@ defineFunction({
   },
   handler({ parser, funcName }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let borderColor
-    let backgroundColor
+    let borderColor: string
+    let backgroundColor: string
     if (model) {
       const borderSpec = assertNodeType(args[0], "raw").string
       const backgroundSpec = assertNodeType(args[0], "raw").string

@@ -3,6 +3,11 @@ import * as mathMLTree from "../mathMLTree"
 import { assertNodeType } from "../parseNode"
 import ParseError from "../ParseError"
 import * as mml from "../buildMathML"
+import { Token } from "../Token"
+import type { MacroDefinition, MacroExpansion } from "../defineMacro"
+import type { MathMLBuilder } from "../defineFunction"
+import type { MathNode } from "../mathMLTree"
+import type Namespace from "../Namespace"
 
 // Helpers
 const htmlRegEx = /^(#[a-f0-9]{3}|#?[a-f0-9]{6})$/i
@@ -10,7 +15,7 @@ const htmlOrNameRegEx = /^(#[a-f0-9]{3}|#?[a-f0-9]{6}|[a-z]+)$/i
 const RGBregEx = /^ *\d{1,3} *(?:, *\d{1,3} *){2}$/
 const rgbRegEx = /^ *[10](?:\.\d*)? *(?:, *[10](?:\.\d*)? *){2}$/
 const xcolorHtmlRegEx = /^[a-f0-9]{6}$/i
-const toHex = num => {
+const toHex = (num: number): string => {
   let str = num.toString(16)
   if (str.length === 1) { str = "0" + str }
   return str
@@ -20,7 +25,7 @@ const toHex = num => {
 // Table 4.1 (lower case) RGB values are taken from chroma and xcolor.dtx.
 // Table 4.2 (Capitalized) values were sampled, because Chroma contains a unreliable
 // conversion from cmyk to RGB. See https://tex.stackexchange.com/a/537274.
-const xcolors = JSON.parse(`{
+const xcolors: Record<string, string> = JSON.parse(`{
   "Apricot": "#ffb484",
   "Aquamarine": "#08b4bc",
   "Bittersweet": "#c84c14",
@@ -106,7 +111,7 @@ const xcolors = JSON.parse(`{
   "YellowOrange": "#ffa41c"
 }`)
 
-export const colorFromSpec = (model, spec) => {
+export const colorFromSpec = (model: string, spec: string): string => {
   let color = ""
   if (model === "HTML") {
     if (!htmlRegEx.test(spec)) {
@@ -132,7 +137,11 @@ export const colorFromSpec = (model, spec) => {
   return color
 }
 
-export const validateColor = (color, macros, token) => {
+export const validateColor = (
+  color: string,
+  macros: Namespace<MacroDefinition>,
+  token?: Token | null
+): string => {
   const macroName = `\\\\color@${color}` // from \defineColor.
   const match = htmlOrNameRegEx.exec(color);
   if (!match) { throw new ParseError("Invalid color: '" + color + "'", token) }
@@ -144,14 +153,14 @@ export const validateColor = (color, macros, token) => {
   } else if (color.charAt(0) === "#") {
     return color
   } else if (macros.has(macroName)) {
-    color = macros.get(macroName).tokens[0].text
+    color = (macros.get(macroName) as MacroExpansion).tokens[0].text
   } else if (xcolors[color]) {
     color = xcolors[color]
   }
   return color
 }
 
-const mathmlBuilder = (group, style) => {
+const mathmlBuilder: MathMLBuilder<"color"> = (group, style) => {
   // In LaTeX, color is not supposed to change the spacing of any node.
   // So instead of wrapping the group in an <mstyle>, we apply
   // the color individually to each node and return a document fragment.
@@ -160,7 +169,7 @@ const mathmlBuilder = (group, style) => {
     expr.push(new mathMLTree.MathNode("mrow"))
   }
   expr = expr.map(e => {
-    e.style.color = group.color
+    (e as MathNode).style.color = group.color
     return e
   })
   return mathMLTree.newDocumentFragment(expr)
@@ -177,7 +186,7 @@ defineFunction({
   },
   handler({ parser, token }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color
+    let color: string
     if (model) {
       const spec = assertNodeType(args[0], "raw").string
       color = colorFromSpec(model, spec)
@@ -207,7 +216,7 @@ defineFunction({
   },
   handler({ parser, breakOnTokenText, token }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color
+    let color: string
     if (model) {
       const spec = assertNodeType(args[0], "raw").string
       color = colorFromSpec(model, spec)
@@ -248,7 +257,7 @@ defineFunction({
     }
     const spec = assertNodeType(args[2], "raw").string
     const color = colorFromSpec(model, spec)
-    parser.gullet.macros.set(`\\\\color@${name}`, { tokens: [{ text: color }], numArgs: 0 })
+    parser.gullet.macros.set(`\\\\color@${name}`, { tokens: [new Token(color)], numArgs: 0 })
     return { type: "internal", mode: parser.mode }
   }
   // No mathmlBuilder. The point of \definecolor is to set a macro.

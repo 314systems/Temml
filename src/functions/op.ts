@@ -3,6 +3,9 @@ import defineFunction, { ordargument } from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import * as mml from "../buildMathML";
 import { isDelimiter } from "./delimiter"
+import type { MathMLBuilder } from "../defineFunction"
+import type { MathNode } from "../mathMLTree"
+import type { AnyParseNode } from "../parseNode"
 
 // Some helpers
 
@@ -17,20 +20,20 @@ export const ordTypes = ["textord", "mathord", "ordgroup", "close", "leftright",
 // NOTE: Unlike most `builders`s, this one handles not only "op", but also
 // "supsub" since some of them (like \int) can affect super/subscripting.
 
-const setSpacing = node => {
+const setSpacing = (node: MathNode): void => {
   // The user wrote a \mathop{…} function. Change spacing from default to OP spacing.
   // The most likely spacing for an OP is a thin space per TeXbook p170.
   node.attributes.lspace = "0.1667em"
   node.attributes.rspace = "0.1667em"
 }
 
-const mathmlBuilder = (group, style) => {
-  let node;
+const mathmlBuilder: MathMLBuilder<"op"> = (group, style) => {
+  let node: MathNode;
 
   if (group.symbol) {
     // This is a symbol. Just add the symbol.
-    node = new mathMLTree.MathNode("mo", [mml.makeText(group.name, group.mode)]);
-    if (noSuccessor.includes(group.name)) {
+    node = new mathMLTree.MathNode("mo", [mml.makeText(group.name!, group.mode)]);
+    if (noSuccessor.includes(group.name!)) {
       node.setAttribute("largeop", "false")
     } else {
       node.setAttribute("movablelimits", "false")
@@ -42,7 +45,7 @@ const mathmlBuilder = (group, style) => {
     if (group.fromMathOp) { setSpacing(node) }
   } else {
     // This is a text operator. Add all of the characters from the operator's name.
-    node = new mathMLTree.MathNode("mi", [new mathMLTree.TextNode(group.name.slice(1))]);
+    node = new mathMLTree.MathNode("mi", [new mathMLTree.TextNode(group.name!.slice(1))]);
 
     if (!group.parentIsSupSub) {
       // Append an invisible <mo>&ApplyFunction;</mo>.
@@ -67,7 +70,7 @@ const mathmlBuilder = (group, style) => {
   return node;
 };
 
-const singleCharBigOps = {
+const singleCharBigOps: Record<string, string> = {
   "\u220F": "\\prod",
   "\u2210": "\\coprod",
   "\u2211": "\\sum",
@@ -163,7 +166,8 @@ defineFunction({
     // It would be convienient to just wrap a <mo> around the argument.
     // But if the argument is a <mi> or <mord>, that would be invalid MathML.
     // In that case, we instead promote the text contents of the body to the parent.
-    const arr = (body.body) ? body.body : [body];
+    const bodyArray = (body as { body?: AnyParseNode[] }).body
+    const arr = (bodyArray) ? bodyArray : [body];
     const isSymbol = arr.length === 1 && ordAtomTypes.includes(arr[0].type)
     return {
       type: "op",
@@ -173,7 +177,7 @@ defineFunction({
       symbol: isSymbol,
       fromMathOp: true,
       stack: false,
-      name: isSymbol ? arr[0].text : null,
+      name: isSymbol ? (arr[0] as { text?: string }).text : null,
       body: isSymbol ? null : ordargument(body)
     };
   },
@@ -184,7 +188,7 @@ defineFunction({
 // displaystyle, and whether they are symbols and should grow in
 // displaystyle. These four groups cover the four possible choices.
 
-const singleCharIntegrals = {
+const singleCharIntegrals: Record<string, string> = {
   "\u222b": "\\int",
   "\u222c": "\\iint",
   "\u222d": "\\iiint",

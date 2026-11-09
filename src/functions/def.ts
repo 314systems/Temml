@@ -1,8 +1,10 @@
 import defineFunction from "../defineFunction";
 import ParseError from "../ParseError";
 import { assertNodeType } from "../parseNode";
+import type Parser from "../Parser";
+import type { Token } from "../Token";
 
-const globalMap = {
+const globalMap: Record<string, string> = {
   "\\global": "\\global",
   "\\long": "\\\\globallong",
   "\\\\globallong": "\\\\globallong",
@@ -14,7 +16,7 @@ const globalMap = {
   "\\futurelet": "\\\\globalfuture"
 }
 
-const checkControlSequence = (tok) => {
+const checkControlSequence = (tok: Token): string => {
   const name = tok.text;
   if (/^(?:[\\{}$&#^_]|EOF)$/.test(name)) {
     throw new ParseError("Expected a control sequence", tok);
@@ -22,7 +24,7 @@ const checkControlSequence = (tok) => {
   return name;
 };
 
-const getRHS = (parser) => {
+const getRHS = (parser: Parser): Token => {
   let tok = parser.gullet.popToken();
   if (tok.text === "=") {
     // consume optional equals
@@ -35,7 +37,7 @@ const getRHS = (parser) => {
   return tok;
 };
 
-const letCommand = (parser, name, tok, global) => {
+const letCommand = (parser: Parser, name: string, tok: Token, global: boolean): void => {
   let macro = parser.gullet.macros.get(tok.text);
   if (macro == null) {
     // don't expand it later even if a macro with the same name is defined
@@ -100,8 +102,8 @@ defineFunction({
     }
 
     let numArgs = 0;
-    let insert;
-    const delimiters = [[]];
+    let insert: Token | undefined;
+    const delimiters: string[][] = [[]];
     // <parameter text> contains no braces
     while (parser.gullet.future().text !== "{") {
       tok = parser.gullet.popToken();
@@ -212,7 +214,7 @@ defineFunction({
     primitive: true
   },
   handler({ parser, funcName }) {
-    let name
+    let name: string
     const tok = parser.gullet.popToken()
     if (tok.text === "{") {
       name = checkControlSequence(parser.gullet.popToken())
