@@ -20,7 +20,7 @@ import type { MathMLBuilder } from "../defineFunction";
 import type Namespace from "../Namespace";
 import type Parser from "../Parser";
 import type { AnyParseNode, ColSpec, ParseNode } from "../parseNode";
-import type { CssStyle, MathDomNode } from "../tree";
+import type { MathDomNode } from "../tree";
 import type { StyleStr } from "../types";
 import type { Measurement } from "../units";
 
@@ -325,8 +325,7 @@ const mathmlBuilder: MathMLBuilder<"array"> = function(group, style) {
     const numColumns = group.body[0].length
     // Fill out a short row with empty <mtd> elements.
     for (let k = 0; k < numColumns - rw.length; k++) {
-      // FIXME: This passes the Style object as the inline style of the cell.
-      row.push(new mathMLTree.MathNode("mtd", [], [], style as unknown as CssStyle))
+      row.push(new mathMLTree.MathNode("mtd", [], []))
     }
     if (tagIsPresent) {
       const tag = group.tags![i];

@@ -195,6 +195,11 @@ test("\\fcolorbox with a color model should use the second color as background",
   expect(markup).toContain("#FF0000")
 })
 
+test("Cells added to a short row of an array should have no inline style", () => {
+  const markup = temml.renderToString(r`\begin{matrix}a & b \\ c\end{matrix}`)
+  expect(markup).not.toContain("level:")
+})
+
 test("A missing sub- or superscript should be a ParseError", () => {
   expect(() => parse(`x^`, throwOnErrorSettings())).toThrow(temml.ParseError)
   expect(() => parse(`x_`, throwOnErrorSettings())).toThrow("Expected group after '_'")
