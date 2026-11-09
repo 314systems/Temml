@@ -1,4 +1,4 @@
-import temml from "../temml.js"
+import temml from "../temml"
 
 // The published bundles have mhchem, texvc and physics built in
 // (see utils/insertPlugins.js). The extensions call `temml.__defineMacro`

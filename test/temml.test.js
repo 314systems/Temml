@@ -1,5 +1,5 @@
 import { expect, test } from "vitest"
-import temml from "../temml.js"
+import temml from "../temml"
 import {
   build,
   displayMode,

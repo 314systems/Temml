@@ -17,5 +17,5 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["temml.d.ts", "src"]
+  "include": ["temml.ts", "src"]
 }

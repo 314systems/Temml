@@ -3,7 +3,6 @@
  * default settings.
  */
 
-import type { Options } from "../temml";
 import type { MacroMap } from "./defineMacro";
 import * as utils from "./utils";
 
@@ -19,6 +18,23 @@ export interface TrustContext {
 }
 
 type TrustSetting = boolean | ((context: TrustContext) => boolean);
+
+/** Options of the rendering functions. See README.md for their meaning. */
+export interface Options {
+  displayMode?: boolean;
+  annotate?: boolean;
+  leqno?: boolean;
+  throwOnError?: boolean;
+  errorColor?: string;
+  macros?: MacroMap;
+  wrap?: "none" | "tex" | "=";
+  xml?: boolean;
+  colorIsTextColor?: boolean;
+  strict?: boolean;
+  trust?: TrustSetting;
+  maxSize?: [number, number];
+  maxExpand?: number;
+}
 
 const FORBIDDEN_MACRO_KEYS = ["__proto__", "prototype", "constructor"];
 

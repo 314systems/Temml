@@ -9,6 +9,7 @@
 
 import ParseError from "./src/ParseError";
 import Settings from "./src/Settings";
+import type { Options } from "./src/Settings";
 
 import Parser from "./src/Parser";
 import parseTree from "./src/parseTree";
@@ -16,17 +17,27 @@ import buildMathML from "./src/buildMathML";
 import { StyleLevel } from "./src/constants";
 import Style from "./src/Style";
 import { Span, TextNode } from "./src/domTree";
+import type { AnchorNode } from "./src/domTree";
 import { defineSymbol } from "./src/symbols";
 import defineMacro from "./src/defineMacro";
+import type { MacroMap } from "./src/defineMacro";
+import type { MathNode } from "./src/mathMLTree";
+import type { AnyParseNode } from "./src/parseNode";
 import { postProcess, version } from "./src/postProcess";
 import { renderMathInElement } from "./src/auto-render"
 
+export type { Options, TrustContext } from "./src/Settings";
+export type { AutoRenderOptions } from "./src/auto-render";
+
 /**
- * @type {import('./temml').render}
  * Parse and build an expression, and place that expression in the DOM node
  * given.
  */
-let render = function(expression, baseNode, options = {}) {
+let render = function(
+  expression: string,
+  baseNode: HTMLElement | MathMLElement,
+  options: Options = {}
+): void {
   baseNode.textContent = "";
   const alreadyInMathElement = baseNode.tagName.toLowerCase() === "math"
   if (alreadyInMathElement) { options.wrap = "none" }
@@ -47,11 +58,12 @@ let render = function(expression, baseNode, options = {}) {
 // disable rendering.
 if (typeof document !== "undefined") {
   if (document.compatMode !== "CSS1Compat") {
-    typeof console !== "undefined" &&
+    if (typeof console !== "undefined") {
       console.warn(
         "Warning: Temml doesn't work in quirks mode. Make sure your " +
           "website has a suitable doctype."
       );
+    }
 
     render = function() {
       throw new ParseError("Temml doesn't work in quirks mode.");
@@ -60,32 +72,29 @@ if (typeof document !== "undefined") {
 }
 
 /**
- * @type {import('./temml').renderToString}
  * Parse and build an expression, and return the markup for that.
  */
-const renderToString = function(expression, options) {
+const renderToString = function(expression: string, options?: Options): string {
   const markup = renderToMathMLTree(expression, options).toMarkup();
   return markup;
 };
 
 /**
- * @type {import('./temml').generateParseTree}
  * Parse an expression and return the parse tree.
  */
-const generateParseTree = function(expression, options) {
+const generateParseTree = function(expression: string, options?: Options): AnyParseNode[] {
   const settings = new Settings(options);
   return parseTree(expression, settings);
 };
 
 /**
- * @type {import('./temml').definePreamble}
  * Take an expression which contains a preamble.
  * Parse it and return the macros.
  */
-const definePreamble = function(expression, options) {
+const definePreamble = function(expression: string, options?: Options): MacroMap {
   const settings = new Settings(options);
   settings.macros = Object.create(null);
-  if (!(typeof expression === "string" || expression instanceof String)) {
+  if (!(typeof expression === "string" || (expression as unknown) instanceof String)) {
     throw new TypeError("Temml can only parse string typed expression")
   }
   const parser = new Parser(expression, settings)
@@ -100,7 +109,7 @@ const definePreamble = function(expression, options) {
  * renders the invalid LaTeX as a span with hover title giving the Temml
  * error message.  Otherwise, simply throws the error.
  */
-const renderError = function(error, expression, options) {
+const renderError = function(error: unknown, expression: string, options: Settings): Span {
   if (options.throwOnError || !(error instanceof ParseError)) {
     throw error;
   }
@@ -111,11 +120,13 @@ const renderError = function(error, expression, options) {
 };
 
 /**
- * @type {import('./temml').renderToMathMLTree}
  * Generates and returns the Temml build tree. This is used for advanced
  * use cases (like rendering to custom output).
  */
-const renderToMathMLTree = function(expression, options) {
+const renderToMathMLTree = function(
+  expression: string,
+  options?: Options
+): MathNode | AnchorNode | Span {
   const settings = new Settings(options);
   try {
     const tree = parseTree(expression, settings);
@@ -129,7 +140,6 @@ const renderToMathMLTree = function(expression, options) {
   }
 };
 
-/** @type {import('./temml').default} */
 export default {
   /**
    * Current Temml version

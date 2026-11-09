@@ -1,7 +1,7 @@
 import ParseError from "./ParseError"
 import { postProcess } from "./postProcess";
 import type Temml from "../temml";
-import type { Options } from "../temml";
+import type { Options } from "./Settings";
 
 // Importing temml.js would be a circular dependency, so the global is used.
 declare const temml: typeof Temml;

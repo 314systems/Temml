@@ -8,4 +8,3 @@ for (const name of fs.readdirSync("assets")) {
   }
 }
 
-fs.copyFileSync("temml.d.ts", "dist/temml.d.ts");
