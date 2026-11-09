@@ -1,8 +1,5 @@
-/**
- * Inline styles, keyed by camelCase or hyphenated CSS property name. Some builders
- * copy a possibly undefined color into it.
- */
-export type CssStyle = Record<string, string | undefined>;
+/** Inline styles, keyed by camelCase or hyphenated CSS property name. */
+export type CssStyle = Record<string, string>;
 
 /** A node that can be rendered either to a DOM node or to markup. */
 export interface VirtualNode {

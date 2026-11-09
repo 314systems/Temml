@@ -1490,6 +1490,8 @@ test("A strike-through parser should be grouped more tightly than supsubs", () =
   expect(parse(r`\cancel x^2`)[0].type).toBe("supsub")
   expect(r`\cancelto{5}{4}`).toParse()
   expect(r`\cancelto{5}{4}`).toBuild()
+  // Without a color, \cancelto should not write one.
+  expect(temml.renderToString(r`\cancelto{5}{4}`)).not.toContain("undefined")
 })
 
 test("An actuarial angle parser should not fail in math mode", () => {
