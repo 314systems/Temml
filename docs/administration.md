@@ -23,7 +23,7 @@ Temml will never work in Internet Explorer.
 
 For use in the browser, you can download a zip file of Temml from the
 [releases page][] of the Temml repository. For server-side use, you can obtain
-Temml via CLI commands `npm install temml` or `yarn add temml`.
+Temml via CLI commands `npm install temml` or `pnpm add temml`.
 
 The minimum browser installation needs the following files. The `css` file and
 font file must be in the same folder.
