@@ -786,9 +786,7 @@ defineEnvironment({
       : [];
     const [arraystretch, arraycolsep] = arrayGaps(context.parser.gullet.macros)
     res.arraystretch = arraystretch
-    // TODO: This was `arraycolsep && !(arraycolsep === 6 && arraycolsep === "pt")`, which
-    // compares an object with a number and a string, so it is the same as below. It was
-    // likely meant to skip the default 6pt, but doing so would change matrix spacing.
+    // Apply \arraycolsep even at its default of 6pt, as {array} does.
     if (arraycolsep) {
       res.arraycolsep = arraycolsep
     }
