@@ -958,7 +958,7 @@ export default class Parser {
           nucleus
         );
       }
-      text = (unicodeSymbols as Record<string, string>)[text[0]] + text.slice(1);
+      text = unicodeSymbols[text[0]] + text.slice(1);
     }
     // Strip off any combining characters
     const match = this.mode === "math"
