@@ -68,7 +68,7 @@ defineFunction({
 
     const prescriptsNode = new mathMLTree.MathNode("mprescripts")
     const noneNode = new mathMLTree.MathNode("none")
-    let children = []
+    let children
 
     const preSub = buildGroup(group.prescripts.sub, style, noneNode)
     const preSup = buildGroup(group.prescripts.sup, style, noneNode)

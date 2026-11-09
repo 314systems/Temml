@@ -1,5 +1,3 @@
-import symbols from "./symbols";
-
 /**
  * Maps TeX font commands to "mathvariant" attribute in buildMathML.js
  */
@@ -58,7 +56,6 @@ export const getVariant = function(group, style) {
     return null
   }
 
-  const mode = group.mode;
   switch (font) {
     case "mathit":
       return "italic"
@@ -91,11 +88,6 @@ export const getVariant = function(group, style) {
       return "monospace"
     default:
       break
-  }
-
-  let text = group.text;
-  if (symbols[mode][text] && symbols[mode][text].replace) {
-    text = symbols[mode][text].replace
   }
 
   return Object.prototype.hasOwnProperty.call(fontMap, font) ? fontMap[font] : null

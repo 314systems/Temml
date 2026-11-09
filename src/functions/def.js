@@ -212,7 +212,7 @@ defineFunction({
     primitive: true
   },
   handler({ parser, funcName }) {
-    let name = ""
+    let name
     const tok = parser.gullet.popToken()
     if (tok.text === "{") {
       name = checkControlSequence(parser.gullet.popToken())
@@ -235,8 +235,8 @@ defineFunction({
 
     let numArgs = 0;
     if (parser.gullet.future().text === "[") {
+      parser.gullet.popToken();
       let tok = parser.gullet.popToken();
-      tok = parser.gullet.popToken();
       if (!/^[0-9]$/.test(tok.text)) {
         throw new ParseError(`Invalid number of arguments: "${tok.text}"`);
       }

@@ -21,11 +21,10 @@ defineFunction({
       // Optional [tb] argument is engaged.
       // ref: amsmath: \renewcommand{\smash}[1][tb]{%
       //               def\mb@t{\ht}\def\mb@b{\dp}\def\mb@tb{\ht\z@\z@\dp}%
-      let letter = "";
       for (let i = 0; i < tbArg.body.length; ++i) {
         const node = tbArg.body[i];
         // TODO: Write an AssertSymbolNode
-        letter = node.text;
+        const letter = node.text;
         if (letter === "t") {
           smashHeight = true;
         } else if (letter === "b") {

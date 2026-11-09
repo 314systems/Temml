@@ -92,7 +92,7 @@ defineFunction({
   },
   handler({ parser, funcName }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color = ""
+    let color
     if (model) {
       const spec = assertNodeType(args[0], "raw").string
       color = colorFromSpec(model, spec)
@@ -122,7 +122,7 @@ defineFunction({
   },
   handler({ parser, funcName }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let borderColor = ""
+    let borderColor
     let backgroundColor
     if (model) {
       const borderSpec = assertNodeType(args[0], "raw").string

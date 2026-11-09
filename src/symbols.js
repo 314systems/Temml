@@ -1047,7 +1047,7 @@ for (let i = 0; i < narrow.length; i++) {
 // The next loop loads wide (surrogate pair) characters.
 // We support some letters in the Unicode range U+1D400 to U+1D7FF,
 // Mathematical Alphanumeric Symbols.
-let wideChar = "";
+let wideChar;
 for (let i = 0; i < letters.length; i++) {
   // The hex numbers in the next line are a surrogate pair.
   // 0xD835 is the high surrogate for all letters in the range we support.

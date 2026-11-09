@@ -25,7 +25,6 @@ function mathmlBuilder(group, style) {
       node = new mathMLTree.MathNode("mi", inner);
     }
   } else {
-    node = new mathMLTree.MathNode("mrow", inner)
     if (group.mustPromote) {
       node = inner[0];
       node.type = "mo";

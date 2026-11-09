@@ -177,7 +177,7 @@ defineFunction({
   },
   handler({ parser, token }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color = ""
+    let color
     if (model) {
       const spec = assertNodeType(args[0], "raw").string
       color = colorFromSpec(model, spec)
@@ -207,7 +207,7 @@ defineFunction({
   },
   handler({ parser, breakOnTokenText, token }, args, optArgs) {
     const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color = ""
+    let color
     if (model) {
       const spec = assertNodeType(args[0], "raw").string
       color = colorFromSpec(model, spec)
