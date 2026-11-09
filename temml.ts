@@ -7,27 +7,27 @@
  * errors in the expression, or errors in javascript handling.
  */
 
-import ParseError from "./src/ParseError";
-import Settings from "./src/Settings";
-import type { Options } from "./src/Settings";
+import ParseError from './src/ParseError';
+import Settings from './src/Settings';
+import type { Options } from './src/Settings';
 
-import Parser from "./src/Parser";
-import parseTree from "./src/parseTree";
-import buildMathML from "./src/buildMathML";
-import { StyleLevel } from "./src/constants";
-import Style from "./src/Style";
-import { Span, TextNode } from "./src/domTree";
-import type { AnchorNode } from "./src/domTree";
-import { defineSymbol } from "./src/symbols";
-import defineMacro from "./src/defineMacro";
-import type { MacroMap } from "./src/defineMacro";
-import type { MathNode } from "./src/mathMLTree";
-import type { AnyParseNode } from "./src/parseNode";
-import { postProcess, version } from "./src/postProcess";
-import { renderMathInElement } from "./src/auto-render"
+import Parser from './src/Parser';
+import parseTree from './src/parseTree';
+import buildMathML from './src/buildMathML';
+import { StyleLevel } from './src/constants';
+import Style from './src/Style';
+import { Span, TextNode } from './src/domTree';
+import type { AnchorNode } from './src/domTree';
+import { defineSymbol } from './src/symbols';
+import defineMacro from './src/defineMacro';
+import type { MacroMap } from './src/defineMacro';
+import type { MathNode } from './src/mathMLTree';
+import type { AnyParseNode } from './src/parseNode';
+import { postProcess, version } from './src/postProcess';
+import { renderMathInElement } from './src/auto-render';
 
-export type { Options, TrustContext } from "./src/Settings";
-export type { AutoRenderOptions } from "./src/auto-render";
+export type { Options, TrustContext } from './src/Settings';
+export type { AutoRenderOptions } from './src/auto-render';
 
 /**
  * Parse and build an expression, and place that expression in the DOM node
@@ -36,32 +36,38 @@ export type { AutoRenderOptions } from "./src/auto-render";
 let render = (
   expression: string,
   baseNode: HTMLElement | MathMLElement,
-  options: Options = {}
+  options: Options = {},
 ): void => {
-  baseNode.textContent = "";
-  const alreadyInMathElement = baseNode.tagName.toLowerCase() === "math"
-  if (alreadyInMathElement) { options.wrap = "none" }
-  const math = renderToMathMLTree(expression, options)
+  baseNode.textContent = '';
+  const alreadyInMathElement = baseNode.tagName.toLowerCase() === 'math';
+  if (alreadyInMathElement) {
+    options.wrap = 'none';
+  }
+  const math = renderToMathMLTree(expression, options);
   if (alreadyInMathElement) {
     // The <math> element already exists. Populate it.
-    baseNode.textContent = ""
-    math.children.forEach(e => { baseNode.appendChild(e.toNode()) })
+    baseNode.textContent = '';
+    math.children.forEach((e) => {
+      baseNode.appendChild(e.toNode());
+    });
   } else if (math.children.length > 1) {
-    baseNode.textContent = ""
-    math.children.forEach(e => { baseNode.appendChild(e.toNode()) })
+    baseNode.textContent = '';
+    math.children.forEach((e) => {
+      baseNode.appendChild(e.toNode());
+    });
   } else {
-    baseNode.appendChild(math.toNode())
+    baseNode.appendChild(math.toNode());
   }
 };
 
 // Temml's styles don't work properly in quirks mode. Print out an error, and
 // disable rendering.
-if (typeof document !== "undefined") {
-  if (document.compatMode !== "CSS1Compat") {
-    if (typeof console !== "undefined") {
+if (typeof document !== 'undefined') {
+  if (document.compatMode !== 'CSS1Compat') {
+    if (typeof console !== 'undefined') {
       console.warn(
         "Warning: Temml doesn't work in quirks mode. Make sure your " +
-          "website has a suitable doctype."
+          'website has a suitable doctype.',
       );
     }
 
@@ -94,14 +100,14 @@ const generateParseTree = (expression: string, options?: Options): AnyParseNode[
 const definePreamble = (expression: string, options?: Options): MacroMap => {
   const settings = new Settings(options);
   settings.macros = Object.create(null);
-  if (!(typeof expression === "string" || (expression as unknown) instanceof String)) {
-    throw new TypeError("Temml can only parse string typed expression")
+  if (!(typeof expression === 'string' || (expression as unknown) instanceof String)) {
+    throw new TypeError('Temml can only parse string typed expression');
   }
-  const parser = new Parser(expression, settings)
+  const parser = new Parser(expression, settings);
   // Blank out any \df@tag to avoid spurious "Duplicate \tag" errors
-  delete parser.gullet.macros.current["\\df@tag"]
-  const macros = parser.parsePreamble()
-  return macros
+  delete parser.gullet.macros.current['\\df@tag'];
+  const macros = parser.parsePreamble();
+  return macros;
 };
 
 /**
@@ -113,9 +119,9 @@ const renderError = (error: unknown, expression: string, options: Settings): Spa
   if (options.throwOnError || !(error instanceof ParseError)) {
     throw error;
   }
-  const node = new Span(["temml-error"], [new TextNode(expression + "\n\n" + error.toString())]);
-  node.style.color = options.errorColor
-  node.style.whiteSpace = "pre-line"
+  const node = new Span(['temml-error'], [new TextNode(expression + '\n\n' + error.toString())]);
+  node.style.color = options.errorColor;
+  node.style.whiteSpace = 'pre-line';
   return node;
 };
 
@@ -125,14 +131,14 @@ const renderError = (error: unknown, expression: string, options: Settings): Spa
  */
 const renderToMathMLTree = (
   expression: string,
-  options?: Options
+  options?: Options,
 ): MathNode | AnchorNode | Span => {
   const settings = new Settings(options);
   try {
     const tree = parseTree(expression, settings);
     const style = new Style({
       level: settings.displayMode ? StyleLevel.DISPLAY : StyleLevel.TEXT,
-      maxSize: settings.maxSize
+      maxSize: settings.maxSize,
     });
     return buildMathML(tree, expression, style, settings);
   } catch (error) {
@@ -199,5 +205,5 @@ export default {
   /**
    * adds a new macro to builtin macro list
    */
-  __defineMacro: defineMacro
-}
+  __defineMacro: defineMacro,
+};

@@ -1,9 +1,9 @@
-import defineFunction from "../defineFunction";
-import * as mathMLTree from "../mathMLTree";
-import ParseError from "../ParseError"
-import { assertNodeType } from "../parseNode"
+import defineFunction from '../defineFunction';
+import * as mathMLTree from '../mathMLTree';
+import ParseError from '../ParseError';
+import { assertNodeType } from '../parseNode';
 
-const numRegEx = /^[0-9]$/
+const numRegEx = /^[0-9]$/;
 const unicodeNumSubs: Record<string, string> = {
   '0': '₀',
   '1': '₁',
@@ -14,8 +14,8 @@ const unicodeNumSubs: Record<string, string> = {
   '6': '₆',
   '7': '₇',
   '8': '₈',
-  '9': '₉'
-}
+  '9': '₉',
+};
 const unicodeNumSups: Record<string, string> = {
   '0': '⁰',
   '1': '¹',
@@ -26,44 +26,50 @@ const unicodeNumSups: Record<string, string> = {
   '6': '⁶',
   '7': '⁷',
   '8': '⁸',
-  '9': '⁹'
-}
+  '9': '⁹',
+};
 
 defineFunction({
-  type: "sfrac",
-  names: ["\\sfrac"],
+  type: 'sfrac',
+  names: ['\\sfrac'],
   props: {
     numArgs: 2,
     allowedInText: true,
-    allowedInMath: true
+    allowedInMath: true,
   },
   handler({ parser }, args) {
-    let numerator = ""
-    for (const node of assertNodeType(args[0], "ordgroup").body) {
-      if (node.type !== "textord" || !numRegEx.test(node.text)) {
-        throw new ParseError("Numerator must be an integer.", node)
+    let numerator = '';
+    for (const node of assertNodeType(args[0], 'ordgroup').body) {
+      if (node.type !== 'textord' || !numRegEx.test(node.text)) {
+        throw new ParseError('Numerator must be an integer.', node);
       }
-      numerator += node.text
+      numerator += node.text;
     }
-    let denominator = ""
-    for (const node of assertNodeType(args[1], "ordgroup").body) {
-      if (node.type !== "textord" || !numRegEx.test(node.text)) {
-        throw new ParseError("Denominator must be an integer.", node)
+    let denominator = '';
+    for (const node of assertNodeType(args[1], 'ordgroup').body) {
+      if (node.type !== 'textord' || !numRegEx.test(node.text)) {
+        throw new ParseError('Denominator must be an integer.', node);
       }
-      denominator += node.text
+      denominator += node.text;
     }
     return {
-      type: "sfrac",
+      type: 'sfrac',
       mode: parser.mode,
       numerator,
-      denominator
+      denominator,
     };
   },
   mathmlBuilder(group, style) {
-    const numerator = group.numerator.split('').map(c => unicodeNumSups[c]).join('')
-    const denominator = group.denominator.split('').map(c => unicodeNumSubs[c]).join('')
+    const numerator = group.numerator
+      .split('')
+      .map((c) => unicodeNumSups[c])
+      .join('');
+    const denominator = group.denominator
+      .split('')
+      .map((c) => unicodeNumSubs[c])
+      .join('');
     // Use a fraction slash.
-    const text = new mathMLTree.TextNode(numerator + "\u2044" + denominator)
-    return new mathMLTree.MathNode("mn", [text], ["special-fraction"])
-  }
+    const text = new mathMLTree.TextNode(numerator + '\u2044' + denominator);
+    return new mathMLTree.MathNode('mn', [text], ['special-fraction']);
+  },
 });

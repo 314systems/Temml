@@ -1,152 +1,158 @@
-import defineFunction, { ordargument } from "../defineFunction"
-import defineMacro from "../defineMacro";
-import * as mathMLTree from "../mathMLTree"
-import { spaceCharacter } from "./kern"
-import { ordTypes } from "./op"
-import { isDelimiter } from "./delimiter"
+import defineFunction, { ordargument } from '../defineFunction';
+import defineMacro from '../defineMacro';
+import * as mathMLTree from '../mathMLTree';
+import { spaceCharacter } from './kern';
+import { ordTypes } from './op';
+import { isDelimiter } from './delimiter';
 
-import * as mml from "../buildMathML"
-import { isMathNodeOfType } from "../mathMLTree"
-import type { MathNode, TextNode } from "../mathMLTree"
-import type { MathMLBuilder } from "../defineFunction"
+import * as mml from '../buildMathML';
+import { isMathNodeOfType } from '../mathMLTree';
+import type { MathNode, TextNode } from '../mathMLTree';
+import type { MathMLBuilder } from '../defineFunction';
 
 // NOTE: Unlike most builders, this one handles not only
 // "operatorname", but also  "supsub" since \operatorname* can
 // affect super/subscripting.
 
-const mathmlBuilder: MathMLBuilder<"operatorname"> = (group, style) => {
-  let expression = mml.buildExpression(group.body, style.withFont("mathrm"))
+const mathmlBuilder: MathMLBuilder<'operatorname'> = (group, style) => {
+  let expression = mml.buildExpression(group.body, style.withFont('mathrm'));
 
   // Is expression a string or has it something like a fraction?
   let isAllString = true; // default
   for (let i = 0; i < expression.length; i++) {
-    const item = expression[i]
+    const item = expression[i];
     if (item instanceof mathMLTree.MathNode) {
-      let node: MathNode = item
-      if ((node.type === "mrow" || node.type === "mpadded") && node.children.length === 1 &&
-          node.children[0] instanceof mathMLTree.MathNode) {
-        node = node.children[0]
-      } else if (node.type === "mrow" && node.children.length === 2 &&
-                 node.children[0] instanceof mathMLTree.MathNode &&
-                 node.children[1] instanceof mathMLTree.MathNode &&
-                 node.children[1].type === "mspace" && !node.children[1].attributes.width &&
-                 node.children[1].children.length === 0) {
+      let node: MathNode = item;
+      if (
+        (node.type === 'mrow' || node.type === 'mpadded') &&
+        node.children.length === 1 &&
+        node.children[0] instanceof mathMLTree.MathNode
+      ) {
+        node = node.children[0];
+      } else if (
+        node.type === 'mrow' &&
+        node.children.length === 2 &&
+        node.children[0] instanceof mathMLTree.MathNode &&
+        node.children[1] instanceof mathMLTree.MathNode &&
+        node.children[1].type === 'mspace' &&
+        !node.children[1].attributes.width &&
+        node.children[1].children.length === 0
+      ) {
         // This is a workaround for a Firefox bug that applies spacing to
         // an <mi> with mathvariant="normal".
         node = node.children[0] as MathNode;
       }
       switch (node.type) {
-        case "mi":
-        case "mn":
-        case "mtext":
+        case 'mi':
+        case 'mn':
+        case 'mtext':
           break; // Do nothing yet.
-        case "mspace":
+        case 'mspace':
           {
             if (node.attributes.width) {
-              const width = node.attributes.width.replace("em", "")
-              const ch = spaceCharacter(Number(width))
-              if (ch === "") {
-                isAllString = false
+              const width = node.attributes.width.replace('em', '');
+              const ch = spaceCharacter(Number(width));
+              if (ch === '') {
+                isAllString = false;
               } else {
-                expression[i] = new mathMLTree.MathNode("mtext", [new mathMLTree.TextNode(ch)])
+                expression[i] = new mathMLTree.MathNode('mtext', [new mathMLTree.TextNode(ch)]);
               }
             }
           }
-          break
-        case "mo": {
-          const child = node.children[0]
+          break;
+        case 'mo': {
+          const child = node.children[0];
           if (node.children.length === 1 && child instanceof mathMLTree.TextNode) {
-            child.text = child.text.replace(/\u2212/, "-").replace(/\u2217/, "*")
+            child.text = child.text.replace(/\u2212/, '-').replace(/\u2217/, '*');
           } else {
-            isAllString = false
+            isAllString = false;
           }
-          break
+          break;
         }
         default:
-          isAllString = false
+          isAllString = false;
       }
     } else {
-      isAllString = false
+      isAllString = false;
     }
   }
 
-  const only = expression.length === 1 ? expression[0] : undefined
+  const only = expression.length === 1 ? expression[0] : undefined;
   if (isAllString) {
     // Write a single TextNode instead of multiple nested tags.
-    const word = expression.map((node) => node.toText()).join("")
-    expression = [new mathMLTree.TextNode(word)]
+    const word = expression.map((node) => node.toText()).join('');
+    expression = [new mathMLTree.TextNode(word)];
   } else if (
-    (isMathNodeOfType(only, "mover") || isMathNodeOfType(only, "munder")) &&
-    (isMathNodeOfType(only.children[0], "mi") || isMathNodeOfType(only.children[0], "mtext"))
+    (isMathNodeOfType(only, 'mover') || isMathNodeOfType(only, 'munder')) &&
+    (isMathNodeOfType(only.children[0], 'mi') || isMathNodeOfType(only.children[0], 'mtext'))
   ) {
-    (only.children[0] as MathNode).type = "mi"
+    (only.children[0] as MathNode).type = 'mi';
     if (group.parentIsSupSub) {
-      return new mathMLTree.MathNode("mrow", expression)
+      return new mathMLTree.MathNode('mrow', expression);
     } else {
-      const operator = new mathMLTree.MathNode("mo", [mml.makeText("\u2061", "text")])
-      return mathMLTree.newDocumentFragment([only, operator])
+      const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u2061', 'text')]);
+      return mathMLTree.newDocumentFragment([only, operator]);
     }
   }
 
   let wrapper: MathNode;
   if (isAllString) {
-    wrapper = new mathMLTree.MathNode("mi", expression)
+    wrapper = new mathMLTree.MathNode('mi', expression);
     if ((expression[0] as TextNode).text.length === 1) {
-      wrapper.setAttribute("mathvariant", "normal")
+      wrapper.setAttribute('mathvariant', 'normal');
     }
   } else {
-    wrapper = new mathMLTree.MathNode("mrow", expression)
+    wrapper = new mathMLTree.MathNode('mrow', expression);
   }
 
   if (!group.parentIsSupSub) {
     // Append an <mo>&ApplyFunction;</mo>.
     // ref: https://www.w3.org/TR/REC-MathML/chap3_2.html#sec3.2.4
-    const operator = new mathMLTree.MathNode("mo", [mml.makeText("\u2061", "text")])
-    const fragment = [wrapper, operator]
+    const operator = new mathMLTree.MathNode('mo', [mml.makeText('\u2061', 'text')]);
+    const fragment = [wrapper, operator];
     if (group.needsLeadingSpace) {
       // LaTeX gives operator spacing, but a <mi> gets ord spacing.
       // So add a leading space.
-      const space = new mathMLTree.MathNode("mspace")
-      space.setAttribute("width", "0.1667em") // thin space.
-      fragment.unshift(space)
+      const space = new mathMLTree.MathNode('mspace');
+      space.setAttribute('width', '0.1667em'); // thin space.
+      fragment.unshift(space);
     }
     if (!group.isFollowedByDelimiter) {
-      const trail = new mathMLTree.MathNode("mspace")
-      trail.setAttribute("width", "0.1667em") // thin space.
-      fragment.push(trail)
+      const trail = new mathMLTree.MathNode('mspace');
+      trail.setAttribute('width', '0.1667em'); // thin space.
+      fragment.push(trail);
     }
-    return mathMLTree.newDocumentFragment(fragment)
+    return mathMLTree.newDocumentFragment(fragment);
   }
 
-  return wrapper
+  return wrapper;
 };
 
 // \operatorname
 // amsopn.dtx: \mathop{#1\kern\z@\operator@font#3}\newmcodes@
 defineFunction({
-  type: "operatorname",
-  names: ["\\operatorname@", "\\operatornamewithlimits"],
+  type: 'operatorname',
+  names: ['\\operatorname@', '\\operatornamewithlimits'],
   props: {
     numArgs: 1,
-    allowedInArgument: true
+    allowedInArgument: true,
   },
   handler: ({ parser, funcName }, args) => {
-    const body = args[0]
-    const prevAtomType = parser.prevAtomType
-    const next = parser.gullet.future().text
+    const body = args[0];
+    const prevAtomType = parser.prevAtomType;
+    const next = parser.gullet.future().text;
     return {
-      type: "operatorname",
+      type: 'operatorname',
       mode: parser.mode,
       body: ordargument(body),
-      alwaysHandleSupSub: (funcName === "\\operatornamewithlimits"),
+      alwaysHandleSupSub: funcName === '\\operatornamewithlimits',
       limits: false,
       parentIsSupSub: false,
       isFollowedByDelimiter: isDelimiter(next),
-      needsLeadingSpace: prevAtomType.length > 0 && ordTypes.includes(prevAtomType)
+      needsLeadingSpace: prevAtomType.length > 0 && ordTypes.includes(prevAtomType),
     };
   },
-  mathmlBuilder
+  mathmlBuilder,
 });
 
-defineMacro("\\operatorname",
-  "\\@ifstar\\operatornamewithlimits\\operatorname@");
+defineMacro('\\operatorname', '\\@ifstar\\operatornamewithlimits\\operatorname@');

@@ -1,121 +1,125 @@
-import defineFunction, { normalizeArgument } from "../defineFunction";
-import * as mathMLTree from "../mathMLTree";
-import { StyleLevel } from "../constants"
-import { assertNodeType } from "../parseNode";
-import { assert } from "../utils";
-import * as mml from "../buildMathML";
-import { calculateSize } from "../units";
-import type { Measurement } from "../units";
-import type { MathMLBuilder } from "../defineFunction";
-import type { MathNode } from "../mathMLTree";
-import type Style from "../Style";
-import type { MathDomNode } from "../tree";
-import type { StyleStr } from "../types";
+import defineFunction, { normalizeArgument } from '../defineFunction';
+import * as mathMLTree from '../mathMLTree';
+import { StyleLevel } from '../constants';
+import { assertNodeType } from '../parseNode';
+import { assert } from '../utils';
+import * as mml from '../buildMathML';
+import { calculateSize } from '../units';
+import type { Measurement } from '../units';
+import type { MathMLBuilder } from '../defineFunction';
+import type { MathNode } from '../mathMLTree';
+import type Style from '../Style';
+import type { MathDomNode } from '../tree';
+import type { StyleStr } from '../types';
 
-const stylArray: StyleStr[] = ["display", "text", "script", "scriptscript"];
-const scriptLevel: Record<StyleStr | "auto", number> = {
-  auto: -1, display: 0, text: 0, script: 1, scriptscript: 2
+const stylArray: StyleStr[] = ['display', 'text', 'script', 'scriptscript'];
+const scriptLevel: Record<StyleStr | 'auto', number> = {
+  auto: -1,
+  display: 0,
+  text: 0,
+  script: 1,
+  scriptscript: 2,
 };
 
-const adjustStyle = (functionSize: StyleStr | "auto", originalStyle: Style): Style => {
+const adjustStyle = (functionSize: StyleStr | 'auto', originalStyle: Style): Style => {
   // Figure out what style this fraction should be in based on the
   // function used
   let style = originalStyle;
-  if (functionSize === "display") {  //\tfrac or \cfrac
+  if (functionSize === 'display') {
+    //\tfrac or \cfrac
     // Get display style as a default.
     // If incoming style is sub/sup, use style.text() to get correct size.
     const newSize = style.level >= StyleLevel.SCRIPT ? StyleLevel.TEXT : StyleLevel.DISPLAY;
-    style = style.withLevel(newSize)
-  } else if (functionSize === "text" &&
-    style.level === StyleLevel.DISPLAY) {
+    style = style.withLevel(newSize);
+  } else if (functionSize === 'text' && style.level === StyleLevel.DISPLAY) {
     // We're in a \tfrac but incoming style is displaystyle, so:
     style = style.withLevel(StyleLevel.TEXT);
-  } else if (functionSize === "auto") {
-    style = style.incrementLevel()
-  } else if (functionSize === "script") {
+  } else if (functionSize === 'auto') {
+    style = style.incrementLevel();
+  } else if (functionSize === 'script') {
     style = style.withLevel(StyleLevel.SCRIPT);
-  } else if (functionSize === "scriptscript") {
-    style = style.withLevel(StyleLevel.SCRIPTSCRIPT)
+  } else if (functionSize === 'scriptscript') {
+    style = style.withLevel(StyleLevel.SCRIPTSCRIPT);
   }
   return style;
 };
 
-const mathmlBuilder: MathMLBuilder<"genfrac"> = (group, style) => {
-  style = adjustStyle(group.scriptLevel, style)
+const mathmlBuilder: MathMLBuilder<'genfrac'> = (group, style) => {
+  style = adjustStyle(group.scriptLevel, style);
 
   // Chromium (wrongly) continues to shrink fractions beyond scriptscriptlevel.
   // So we check for levels that Chromium shrinks too small.
   // If necessary, set an explicit fraction depth.
-  const numer = mml.buildGroup(group.numer, style) as MathNode
-  const denom = mml.buildGroup(group.denom, style) as MathNode
+  const numer = mml.buildGroup(group.numer, style) as MathNode;
+  const denom = mml.buildGroup(group.denom, style) as MathNode;
   if (style.level === 3) {
-    numer.style.mathDepth = "2"
-    numer.setAttribute("scriptlevel", "2")
-    denom.style.mathDepth = "2"
-    denom.setAttribute("scriptlevel", "2")
+    numer.style.mathDepth = '2';
+    numer.setAttribute('scriptlevel', '2');
+    denom.style.mathDepth = '2';
+    denom.setAttribute('scriptlevel', '2');
   }
 
-  const frac = new mathMLTree.MathNode("mfrac", [numer, denom]);
+  const frac = new mathMLTree.MathNode('mfrac', [numer, denom]);
 
   if (!group.hasBarLine) {
-    frac.setAttribute("linethickness", "0px");
+    frac.setAttribute('linethickness', '0px');
   } else if (group.barSize) {
     const ruleWidth = calculateSize(group.barSize, style);
-    frac.setAttribute("linethickness", ruleWidth.number + ruleWidth.unit);
+    frac.setAttribute('linethickness', ruleWidth.number + ruleWidth.unit);
   }
 
-  let node: MathDomNode = frac
+  let node: MathDomNode = frac;
   if (group.leftDelim != null || group.rightDelim != null) {
     const withDelims: MathDomNode[] = [];
 
     if (group.leftDelim != null) {
-      const leftOp = new mathMLTree.MathNode("mo", [
-        new mathMLTree.TextNode(group.leftDelim.replace("\\", ""))
+      const leftOp = new mathMLTree.MathNode('mo', [
+        new mathMLTree.TextNode(group.leftDelim.replace('\\', '')),
       ]);
-      leftOp.setAttribute("fence", "true");
+      leftOp.setAttribute('fence', 'true');
       withDelims.push(leftOp);
     }
 
     withDelims.push(node);
 
     if (group.rightDelim != null) {
-      const rightOp = new mathMLTree.MathNode("mo", [
-        new mathMLTree.TextNode(group.rightDelim.replace("\\", ""))
+      const rightOp = new mathMLTree.MathNode('mo', [
+        new mathMLTree.TextNode(group.rightDelim.replace('\\', '')),
       ]);
-      rightOp.setAttribute("fence", "true");
+      rightOp.setAttribute('fence', 'true');
       withDelims.push(rightOp);
     }
 
     node = mml.makeRow(withDelims);
   }
 
-  if (group.scriptLevel !== "auto") {
-    const mstyle = new mathMLTree.MathNode("mstyle", [node]);
-    mstyle.setAttribute("displaystyle", String(group.scriptLevel === "display"));
-    mstyle.setAttribute("scriptlevel", String(scriptLevel[group.scriptLevel]));
-    node = mstyle
+  if (group.scriptLevel !== 'auto') {
+    const mstyle = new mathMLTree.MathNode('mstyle', [node]);
+    mstyle.setAttribute('displaystyle', String(group.scriptLevel === 'display'));
+    mstyle.setAttribute('scriptlevel', String(scriptLevel[group.scriptLevel]));
+    node = mstyle;
   }
 
   return node;
 };
 
 defineFunction({
-  type: "genfrac",
+  type: 'genfrac',
   names: [
-    "\\cfrac",
-    "\\dfrac",
-    "\\frac",
-    "\\tfrac",
-    "\\dbinom",
-    "\\binom",
-    "\\tbinom",
-    "\\\\atopfrac", // can’t be entered directly
-    "\\\\bracefrac",
-    "\\\\brackfrac" // ditto
+    '\\cfrac',
+    '\\dfrac',
+    '\\frac',
+    '\\tfrac',
+    '\\dbinom',
+    '\\binom',
+    '\\tbinom',
+    '\\\\atopfrac', // can’t be entered directly
+    '\\\\bracefrac',
+    '\\\\brackfrac', // ditto
   ],
   props: {
     numArgs: 2,
-    allowedInArgument: true
+    allowedInArgument: true,
   },
   handler: ({ parser, funcName }, args) => {
     const numer = args[0];
@@ -123,44 +127,44 @@ defineFunction({
     let hasBarLine = false;
     let leftDelim: string | null = null;
     let rightDelim: string | null = null;
-    let scriptLevel: StyleStr | "auto" = "auto";
+    let scriptLevel: StyleStr | 'auto' = 'auto';
 
     switch (funcName) {
-      case "\\cfrac":
-      case "\\dfrac":
-      case "\\frac":
-      case "\\tfrac":
+      case '\\cfrac':
+      case '\\dfrac':
+      case '\\frac':
+      case '\\tfrac':
         hasBarLine = true;
         break;
-      case "\\\\atopfrac":
+      case '\\\\atopfrac':
         hasBarLine = false;
         break;
-      case "\\dbinom":
-      case "\\binom":
-      case "\\tbinom":
-        leftDelim = "(";
-        rightDelim = ")";
+      case '\\dbinom':
+      case '\\binom':
+      case '\\tbinom':
+        leftDelim = '(';
+        rightDelim = ')';
         break;
-      case "\\\\bracefrac":
-        leftDelim = "\\{";
-        rightDelim = "\\}";
+      case '\\\\bracefrac':
+        leftDelim = '\\{';
+        rightDelim = '\\}';
         break;
-      case "\\\\brackfrac":
-        leftDelim = "[";
-        rightDelim = "]";
+      case '\\\\brackfrac':
+        leftDelim = '[';
+        rightDelim = ']';
         break;
       default:
-        throw new Error("Unrecognized genfrac command");
+        throw new Error('Unrecognized genfrac command');
     }
 
-    if (funcName === "\\cfrac" || funcName.startsWith("\\d")) {
-      scriptLevel = "display";
-    } else if (funcName.startsWith("\\t")) {
-      scriptLevel = "text";
+    if (funcName === '\\cfrac' || funcName.startsWith('\\d')) {
+      scriptLevel = 'display';
+    } else if (funcName.startsWith('\\t')) {
+      scriptLevel = 'text';
     }
 
     return {
-      type: "genfrac",
+      type: 'genfrac',
       mode: parser.mode,
       continued: false,
       numer,
@@ -169,67 +173,67 @@ defineFunction({
       leftDelim,
       rightDelim,
       scriptLevel,
-      barSize: null
+      barSize: null,
     };
   },
-  mathmlBuilder
+  mathmlBuilder,
 });
 
 // Infix generalized fractions -- these are not rendered directly, but replaced
 // immediately by one of the variants above.
 defineFunction({
-  type: "infix",
-  names: ["\\over", "\\choose", "\\atop", "\\brace", "\\brack"],
+  type: 'infix',
+  names: ['\\over', '\\choose', '\\atop', '\\brace', '\\brack'],
   props: {
     numArgs: 0,
-    infix: true
+    infix: true,
   },
   handler({ parser, funcName, token }) {
     let replaceWith: string;
     switch (funcName) {
-      case "\\over":
-        replaceWith = "\\frac";
+      case '\\over':
+        replaceWith = '\\frac';
         break;
-      case "\\choose":
-        replaceWith = "\\binom";
+      case '\\choose':
+        replaceWith = '\\binom';
         break;
-      case "\\atop":
-        replaceWith = "\\\\atopfrac";
+      case '\\atop':
+        replaceWith = '\\\\atopfrac';
         break;
-      case "\\brace":
-        replaceWith = "\\\\bracefrac";
+      case '\\brace':
+        replaceWith = '\\\\bracefrac';
         break;
-      case "\\brack":
-        replaceWith = "\\\\brackfrac";
+      case '\\brack':
+        replaceWith = '\\\\brackfrac';
         break;
       default:
-        throw new Error("Unrecognized infix genfrac command");
+        throw new Error('Unrecognized infix genfrac command');
     }
     return {
-      type: "infix",
+      type: 'infix',
       mode: parser.mode,
       replaceWith,
-      token
+      token,
     };
-  }
+  },
 });
 
 const delimFromValue = (delimString: string): string | null => {
   let delim: string | null = null;
   if (delimString.length > 0) {
     delim = delimString;
-    delim = delim === "." ? null : delim;
+    delim = delim === '.' ? null : delim;
   }
   return delim;
 };
 
 defineFunction({
-  type: "genfrac",
-  names: ["\\genfrac"],
+  type: 'genfrac',
+  names: ['\\genfrac'],
   props: {
     numArgs: 6,
     allowedInArgument: true,
-    argTypes: ["math", "math", "size", "text", "math", "math"]
+    argTypes: ['math', 'math', 'size', 'text', 'math', 'math'],
   },
   handler({ parser }, args) {
     const numer = args[4];
@@ -237,16 +241,15 @@ defineFunction({
 
     // Look into the parse nodes to get the desired delimiters.
     const leftNode = normalizeArgument(args[0]);
-    const leftDelim = leftNode.type === "atom" && leftNode.family === "open"
-      ? delimFromValue(leftNode.text)
-      : null;
+    const leftDelim =
+      leftNode.type === 'atom' && leftNode.family === 'open' ? delimFromValue(leftNode.text) : null;
     const rightNode = normalizeArgument(args[1]);
     const rightDelim =
-      rightNode.type === "atom" && rightNode.family === "close"
+      rightNode.type === 'atom' && rightNode.family === 'close'
         ? delimFromValue(rightNode.text)
         : null;
 
-    const barNode = assertNodeType(args[2], "size");
+    const barNode = assertNodeType(args[2], 'size');
     let hasBarLine: boolean;
     let barSize: Measurement | null = null;
     if (barNode.isBlank) {
@@ -260,20 +263,20 @@ defineFunction({
     }
 
     // Find out if we want displaystyle, textstyle, etc.
-    let scriptLevel: StyleStr | "auto" = "auto";
+    let scriptLevel: StyleStr | 'auto' = 'auto';
     let styl = args[3];
-    if (styl.type === "ordgroup") {
+    if (styl.type === 'ordgroup') {
       if (styl.body.length > 0) {
-        const textOrd = assertNodeType(styl.body[0], "textord");
+        const textOrd = assertNodeType(styl.body[0], 'textord');
         scriptLevel = stylArray[Number(textOrd.text)];
       }
     } else {
-      styl = assertNodeType(styl, "textord");
+      styl = assertNodeType(styl, 'textord');
       scriptLevel = stylArray[Number(styl.text)];
     }
 
     return {
-      type: "genfrac",
+      type: 'genfrac',
       mode: parser.mode,
       numer,
       denom,
@@ -282,47 +285,47 @@ defineFunction({
       barSize,
       leftDelim,
       rightDelim,
-      scriptLevel
+      scriptLevel,
     };
   },
-  mathmlBuilder
+  mathmlBuilder,
 });
 
 // \above is an infix fraction that also defines a fraction bar size.
 defineFunction({
-  type: "infix",
-  names: ["\\above"],
+  type: 'infix',
+  names: ['\\above'],
   props: {
     numArgs: 1,
-    argTypes: ["size"],
-    infix: true
+    argTypes: ['size'],
+    infix: true,
   },
   handler({ parser, funcName, token }, args) {
     return {
-      type: "infix",
+      type: 'infix',
       mode: parser.mode,
-      replaceWith: "\\\\abovefrac",
-      barSize: assertNodeType(args[0], "size").value,
-      token
+      replaceWith: '\\\\abovefrac',
+      barSize: assertNodeType(args[0], 'size').value,
+      token,
     };
-  }
+  },
 });
 
 defineFunction({
-  type: "genfrac",
-  names: ["\\\\abovefrac"],
+  type: 'genfrac',
+  names: ['\\\\abovefrac'],
   props: {
     numArgs: 3,
-    argTypes: ["math", "size", "math"]
+    argTypes: ['math', 'size', 'math'],
   },
   handler: ({ parser, funcName }, args) => {
     const numer = args[0];
-    const barSize = assert(assertNodeType(args[1], "infix").barSize);
+    const barSize = assert(assertNodeType(args[1], 'infix').barSize);
     const denom = args[2];
 
     const hasBarLine = barSize.number > 0;
     return {
-      type: "genfrac",
+      type: 'genfrac',
       mode: parser.mode,
       numer,
       denom,
@@ -331,9 +334,9 @@ defineFunction({
       barSize,
       leftDelim: null,
       rightDelim: null,
-      scriptLevel: "auto"
+      scriptLevel: 'auto',
     };
   },
 
-  mathmlBuilder
+  mathmlBuilder,
 });

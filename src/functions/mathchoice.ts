@@ -1,18 +1,18 @@
-import defineFunction, { ordargument } from "../defineFunction";
-import { StyleLevel } from "../constants";
-import * as mml from "../buildMathML";
-import type { AnyParseNode, ParseNode } from "../parseNode";
-import type Style from "../Style";
+import defineFunction, { ordargument } from '../defineFunction';
+import { StyleLevel } from '../constants';
+import * as mml from '../buildMathML';
+import type { AnyParseNode, ParseNode } from '../parseNode';
+import type Style from '../Style';
 
-const chooseStyle = (group: ParseNode<"mathchoice">, style: Style): AnyParseNode[] => {
+const chooseStyle = (group: ParseNode<'mathchoice'>, style: Style): AnyParseNode[] => {
   switch (style.level) {
-    case StyleLevel.DISPLAY:       // 0
+    case StyleLevel.DISPLAY: // 0
       return group.display;
-    case StyleLevel.TEXT:          // 1
+    case StyleLevel.TEXT: // 1
       return group.text;
-    case StyleLevel.SCRIPT:        // 2
+    case StyleLevel.SCRIPT: // 2
       return group.script;
-    case StyleLevel.SCRIPTSCRIPT:  // 3
+    case StyleLevel.SCRIPTSCRIPT: // 3
       return group.scriptscript;
     default:
       return group.text;
@@ -20,24 +20,24 @@ const chooseStyle = (group: ParseNode<"mathchoice">, style: Style): AnyParseNode
 };
 
 defineFunction({
-  type: "mathchoice",
-  names: ["\\mathchoice"],
+  type: 'mathchoice',
+  names: ['\\mathchoice'],
   props: {
     numArgs: 4,
-    primitive: true
+    primitive: true,
   },
   handler: ({ parser }, args) => {
     return {
-      type: "mathchoice",
+      type: 'mathchoice',
       mode: parser.mode,
       display: ordargument(args[0]),
       text: ordargument(args[1]),
       script: ordargument(args[2]),
-      scriptscript: ordargument(args[3])
+      scriptscript: ordargument(args[3]),
     };
   },
   mathmlBuilder: (group, style) => {
     const body = chooseStyle(group, style);
     return mml.buildExpressionRow(body, style);
-  }
+  },
 });

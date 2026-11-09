@@ -46,11 +46,11 @@ class Style {
   constructor(data: StyleData) {
     this.level = data.level;
     this.color = data.color;
-    this.font = data.font || "";
-    this.fontFamily = data.fontFamily || "";
+    this.font = data.font || '';
+    this.fontFamily = data.fontFamily || '';
     this.fontSize = data.fontSize || 1.0;
-    this.fontWeight = data.fontWeight || "";
-    this.fontShape = data.fontShape || "";
+    this.fontWeight = data.fontWeight || '';
+    this.fontShape = data.fontShape || '';
     this.maxSize = data.maxSize;
   }
 
@@ -68,26 +68,26 @@ class Style {
       fontWeight: this.fontWeight,
       fontShape: this.fontShape,
       maxSize: this.maxSize,
-      ...extension
+      ...extension,
     });
   }
 
   withLevel(n: number): Style {
     return this.extend({
-      level: n
+      level: n,
     });
   }
 
   incrementLevel(): Style {
     return this.extend({
-      level: Math.min(this.level + 1, 3)
+      level: Math.min(this.level + 1, 3),
     });
   }
 
   inSubOrSup(): Style {
     return this.extend({
-      level: subOrSupLevel[this.level]
-    })
+      level: subOrSupLevel[this.level],
+    });
   }
 
   /**
@@ -95,7 +95,7 @@ class Style {
    */
   withColor(color: string | undefined): Style {
     return this.extend({
-      color: color
+      color: color,
     });
   }
 
@@ -104,7 +104,7 @@ class Style {
    */
   withFont(font: string): Style {
     return this.extend({
-      font
+      font,
     });
   }
 
@@ -114,7 +114,7 @@ class Style {
   withTextFontFamily(fontFamily: string): Style {
     return this.extend({
       fontFamily,
-      font: ""
+      font: '',
     });
   }
 
@@ -123,7 +123,7 @@ class Style {
    */
   withFontSize(num: number): Style {
     return this.extend({
-      fontSize: num
+      fontSize: num,
     });
   }
 
@@ -133,7 +133,7 @@ class Style {
   withTextFontWeight(fontWeight: string): Style {
     return this.extend({
       fontWeight,
-      font: ""
+      font: '',
     });
   }
 
@@ -143,7 +143,7 @@ class Style {
   withTextFontShape(fontShape: string): Style {
     return this.extend({
       fontShape,
-      font: ""
+      font: '',
     });
   }
 

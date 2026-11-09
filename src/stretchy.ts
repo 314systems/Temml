@@ -2,130 +2,134 @@
  * This file provides support for building horizontal stretchy elements.
  */
 
-import * as mathMLTree from "./mathMLTree"
-import type { MathNode } from "./mathMLTree"
-import type { AnyParseNode, ParseNode } from "./parseNode"
+import * as mathMLTree from './mathMLTree';
+import type { MathNode } from './mathMLTree';
+import type { AnyParseNode, ParseNode } from './parseNode';
 
 // TODO: Remove when Chromium stretches \widetilde & \widehat
 const estimatedWidth = (node: AnyParseNode): number => {
-  let width = 0
-  const body = (node as { body?: unknown }).body
+  let width = 0;
+  const body = (node as { body?: unknown }).body;
   if (body && Array.isArray(body)) {
     for (const item of body as AnyParseNode[]) {
-      width += estimatedWidth(item)
+      width += estimatedWidth(item);
     }
   } else if (body) {
-    width += estimatedWidth(body as AnyParseNode)
-  } else if (node.type === "supsub") {
-    width += estimatedWidth(node.base!)
-    if (node.sub) { width += 0.7 * estimatedWidth(node.sub) }
-    if (node.sup) { width += 0.7 * estimatedWidth(node.sup) }
-  } else if (node.type === "mathord" || node.type === "textord") {
+    width += estimatedWidth(body as AnyParseNode);
+  } else if (node.type === 'supsub') {
+    width += estimatedWidth(node.base!);
+    if (node.sub) {
+      width += 0.7 * estimatedWidth(node.sub);
+    }
+    if (node.sup) {
+      width += 0.7 * estimatedWidth(node.sup);
+    }
+  } else if (node.type === 'mathord' || node.type === 'textord') {
     for (const ch of node.text.split('')) {
-      const codePoint = ch.codePointAt(0)!
-      if ((0x60 < codePoint && codePoint < 0x7B) || (0x03B0 < codePoint && codePoint < 0x3CA)) {
-        width += 0.56 // lower case latin or greek. Use advance width of letter n
-      } else if (0x2F < codePoint && codePoint < 0x3A) {
-        width += 0.50 // numerals.
+      const codePoint = ch.codePointAt(0)!;
+      if ((0x60 < codePoint && codePoint < 0x7b) || (0x03b0 < codePoint && codePoint < 0x3ca)) {
+        width += 0.56; // lower case latin or greek. Use advance width of letter n
+      } else if (0x2f < codePoint && codePoint < 0x3a) {
+        width += 0.5; // numerals.
       } else {
-        width += 0.92 // advance width of letter M
+        width += 0.92; // advance width of letter M
       }
     }
   } else {
-    width += 1.0
+    width += 1.0;
   }
-  return width
-}
+  return width;
+};
 
 const stretchyCodePoint: Record<string, string> = {
-  widehat: "\u02c6", // Shorter than \u005e, which is appropriate for an accent.
-  widecheck: "ˇ",
-  widetilde: "~",
-  wideparen: "⏜", // \u23dc
-  utilde: "~",
-  overleftarrow: "\u2190",
-  underleftarrow: "\u2190",
-  xleftarrow: "\u2190",
-  overrightarrow: "\u2192",
-  underrightarrow: "\u2192",
-  xrightarrow: "\u2192",
-  underbrace: "\u23df",
-  overbrace: "\u23de",
-  overbracket: "\u23b4",
-  underbracket: "\u23b5",
-  overgroup: "\u23e0",
-  overparen: "⏜",
-  undergroup: "\u23e1",
-  underparen: "\u23dd",
-  overleftrightarrow: "\u2194",
-  underleftrightarrow: "\u2194",
-  xleftrightarrow: "\u2194",
-  Overrightarrow: "\u21d2",
-  xRightarrow: "\u21d2",
-  overleftharpoon: "\u21bc",
-  xleftharpoonup: "\u21bc",
-  overrightharpoon: "\u21c0",
-  xrightharpoonup: "\u21c0",
-  xLeftarrow: "\u21d0",
-  xLeftrightarrow: "\u21d4",
-  xhookleftarrow: "\u21a9",
-  xhookrightarrow: "\u21aa",
-  xmapsto: "\u21a6",
-  xrightharpoondown: "\u21c1",
-  xleftharpoondown: "\u21bd",
-  xtwoheadleftarrow: "\u219e",
-  xtwoheadrightarrow: "\u21a0",
-  xlongequal: "=",
-  xrightleftarrows: "\u21c4",
-  xtofrom: "\u21c4",
-  xleftrightharpoons: "\u21cb",
-  xrightleftharpoons: "\u21cc",
-  yields: "\u2192",
-  yieldsLeft: "\u2190",
-  mesomerism: "\u2194",
-  longrightharpoonup: "\u21c0",
-  longleftharpoondown: "\u21bd",
-  eqrightharpoonup: "\u21c0",
-  eqleftharpoondown: "\u21bd",
-  "\\cdrightarrow": "\u2192",
-  "\\cdleftarrow": "\u2190",
-  "\\cdlongequal": "=",
-  yieldsLeftRight: "\u21c4",
-  chemequilibrium: "\u21cc"
-}
+  widehat: '\u02c6', // Shorter than \u005e, which is appropriate for an accent.
+  widecheck: 'ˇ',
+  widetilde: '~',
+  wideparen: '⏜', // \u23dc
+  utilde: '~',
+  overleftarrow: '\u2190',
+  underleftarrow: '\u2190',
+  xleftarrow: '\u2190',
+  overrightarrow: '\u2192',
+  underrightarrow: '\u2192',
+  xrightarrow: '\u2192',
+  underbrace: '\u23df',
+  overbrace: '\u23de',
+  overbracket: '\u23b4',
+  underbracket: '\u23b5',
+  overgroup: '\u23e0',
+  overparen: '⏜',
+  undergroup: '\u23e1',
+  underparen: '\u23dd',
+  overleftrightarrow: '\u2194',
+  underleftrightarrow: '\u2194',
+  xleftrightarrow: '\u2194',
+  Overrightarrow: '\u21d2',
+  xRightarrow: '\u21d2',
+  overleftharpoon: '\u21bc',
+  xleftharpoonup: '\u21bc',
+  overrightharpoon: '\u21c0',
+  xrightharpoonup: '\u21c0',
+  xLeftarrow: '\u21d0',
+  xLeftrightarrow: '\u21d4',
+  xhookleftarrow: '\u21a9',
+  xhookrightarrow: '\u21aa',
+  xmapsto: '\u21a6',
+  xrightharpoondown: '\u21c1',
+  xleftharpoondown: '\u21bd',
+  xtwoheadleftarrow: '\u219e',
+  xtwoheadrightarrow: '\u21a0',
+  xlongequal: '=',
+  xrightleftarrows: '\u21c4',
+  xtofrom: '\u21c4',
+  xleftrightharpoons: '\u21cb',
+  xrightleftharpoons: '\u21cc',
+  yields: '\u2192',
+  yieldsLeft: '\u2190',
+  mesomerism: '\u2194',
+  longrightharpoonup: '\u21c0',
+  longleftharpoondown: '\u21bd',
+  eqrightharpoonup: '\u21c0',
+  eqleftharpoondown: '\u21bd',
+  '\\cdrightarrow': '\u2192',
+  '\\cdleftarrow': '\u2190',
+  '\\cdlongequal': '=',
+  yieldsLeftRight: '\u21c4',
+  chemequilibrium: '\u21cc',
+};
 
 export const mathMLnode = (label: string): MathNode => {
-  const child = new mathMLTree.TextNode(stretchyCodePoint[label.slice(1)])
-  const node = new mathMLTree.MathNode("mo", [child])
-  node.setAttribute("stretchy", "true")
-  return node
-}
+  const child = new mathMLTree.TextNode(stretchyCodePoint[label.slice(1)]);
+  const node = new mathMLTree.MathNode('mo', [child]);
+  node.setAttribute('stretchy', 'true');
+  return node;
+};
 
-const wideHats = ["\\widehat", "\\widecheck"];
+const wideHats = ['\\widehat', '\\widecheck'];
 
 // TODO: Remove if/when Chromium stretches \widetilde & \widehat
-export const accentNode = (group: ParseNode<"accent"> | ParseNode<"accentUnder">): MathNode => {
-  const mo = mathMLnode(group.label)
-  if (group.label.indexOf("tilde") > -1) {
-    const width = estimatedWidth(group.base)
+export const accentNode = (group: ParseNode<'accent'> | ParseNode<'accentUnder'>): MathNode => {
+  const mo = mathMLnode(group.label);
+  if (group.label.indexOf('tilde') > -1) {
+    const width = estimatedWidth(group.base);
     if (1 < width && width < 1.6) {
-      mo.classes.push("tml-tilde-2")
+      mo.classes.push('tml-tilde-2');
     } else if (1.6 <= width && width < 2.5) {
-      mo.classes.push("tml-tilde-3")
+      mo.classes.push('tml-tilde-3');
     } else if (2.5 <= width) {
-      mo.classes.push("tml-tilde-4")
+      mo.classes.push('tml-tilde-4');
     }
   } else if (wideHats.includes(group.label)) {
-    const width = estimatedWidth(group.base)
+    const width = estimatedWidth(group.base);
     if (0 < width && width <= 1) {
-      mo.classes.push("tml-hat-1")
+      mo.classes.push('tml-hat-1');
     } else if (1 < width && width < 1.6) {
-      mo.classes.push("tml-hat-2")
+      mo.classes.push('tml-hat-2');
     } else if (1.6 <= width && width < 2.5) {
-      mo.classes.push("tml-hat-3")
+      mo.classes.push('tml-hat-3');
     } else if (2.5 <= width) {
-      mo.classes.push("tml-hat-4")
+      mo.classes.push('tml-hat-4');
     }
   }
-  return mo
-}
+  return mo;
+};

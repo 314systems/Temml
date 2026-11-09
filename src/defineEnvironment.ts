@@ -1,8 +1,8 @@
-import { registerMathMLBuilder } from "./defineFunction";
-import type { MathMLBuilder } from "./defineFunction";
-import type Parser from "./Parser";
-import type { AnyParseNode, NodeType } from "./parseNode";
-import type { Mode } from "./types";
+import { registerMathMLBuilder } from './defineFunction';
+import type { MathMLBuilder } from './defineFunction';
+import type Parser from './Parser';
+import type { AnyParseNode, NodeType } from './parseNode';
+import type { Mode } from './types';
 
 /**
  * The context passed to an environment handler. See functions/environment.js.
@@ -23,7 +23,7 @@ export interface EnvContext {
 export type EnvHandler = (
   context: EnvContext,
   args: AnyParseNode[],
-  optArgs: Array<AnyParseNode | null | undefined>
+  optArgs: Array<AnyParseNode | null | undefined>,
 ) => AnyParseNode;
 
 /**
@@ -68,7 +68,7 @@ const defineEnvironment = <NODETYPE extends NodeType>({
   names,
   props,
   handler,
-  mathmlBuilder
+  mathmlBuilder,
 }: EnvSpec<NODETYPE>): void => {
   // Set default values of environments.
   const data: EnvSpecData = {
@@ -76,7 +76,7 @@ const defineEnvironment = <NODETYPE extends NodeType>({
     numArgs: props.numArgs ?? 0,
     allowedInText: false,
     numOptionalArgs: 0,
-    handler
+    handler,
   };
   for (let i = 0; i < names.length; ++i) {
     _environments[names[i]] = data;
@@ -84,6 +84,6 @@ const defineEnvironment = <NODETYPE extends NodeType>({
   if (mathmlBuilder) {
     registerMathMLBuilder(type, mathmlBuilder);
   }
-}
+};
 
-export default defineEnvironment
+export default defineEnvironment;

@@ -34,9 +34,6 @@ This extension isn't part of Temml proper, so the script needs to be included
 
 See [copy-tex.html][3] for an example.
 
-
 [1]: https://developer.mozilla.org/en-US/docs/Web/API/ClipboardEvent
-
 [2]: https://github.com/ronkok/Temml/tree/main/contrib/copy-tex/copy-tex.js
-
 [3]: https://temml.org/copy-tex.html

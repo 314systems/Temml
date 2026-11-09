@@ -1,16 +1,14 @@
-import { NON_ATOMS } from "./symbols";
-import type SourceLocation from "./SourceLocation";
-import type { Token } from "./Token";
-import type { Mode, StyleStr } from "./types";
-import type { Measurement } from "./units";
+import { NON_ATOMS } from './symbols';
+import type SourceLocation from './SourceLocation';
+import type { Token } from './Token';
+import type { Mode, StyleStr } from './types';
+import type { Measurement } from './units';
 
 /** Families of symbols that are parsed into an "atom" node. See symbols.js. */
-export type AtomFamily = "bin" | "close" | "inner" | "open" | "punct" | "rel";
+export type AtomFamily = 'bin' | 'close' | 'inner' | 'open' | 'punct' | 'rel';
 
 /** A column specification of an {array}-like environment. */
-export type ColSpec =
-  | { type: "align"; align: string }
-  | { type: "separator"; separator: string };
+export type ColSpec = { type: 'align'; align: string } | { type: 'separator'; separator: string };
 
 /** Sub- and superscripts attached to an operator or a \prescript base. */
 export interface Scripts {
@@ -24,44 +22,44 @@ export interface Scripts {
  */
 export interface ParseNodeTypes {
   // Nodes created directly by Parser.js
-  "ordgroup": {
+  ordgroup: {
     body: AnyParseNode[];
     semisimple?: boolean;
   };
-  "raw": {
+  raw: {
     string: string;
   };
-  "size": {
+  size: {
     value: Measurement;
     isBlank: boolean;
   };
-  "styling": {
+  styling: {
     scriptLevel: StyleStr;
     body: AnyParseNode[];
   };
-  "supsub": {
+  supsub: {
     base: AnyParseNode | null | undefined;
     sup?: AnyParseNode | null;
     sub?: AnyParseNode | null;
     stack?: boolean;
     isFollowedByDelimiter?: boolean;
   };
-  "tag": {
+  tag: {
     body: AnyParseNode[];
     tag: AnyParseNode[];
   };
-  "text": {
+  text: {
     body: AnyParseNode[];
     font?: string;
   };
-  "toggle": {
+  toggle: {
     body: AnyParseNode[];
     semisimple?: boolean;
   };
-  "url": {
+  url: {
     url: string;
   };
-  "verb": {
+  verb: {
     body: string;
     star: boolean;
   };
@@ -69,164 +67,164 @@ export interface ParseNodeTypes {
   // From symbol groups, constructed in Parser.js via `symbols` lookup.
   // (Some of these have "-token" suffix to distinguish them from existing
   // `ParseNode` types.)
-  "atom": {
+  atom: {
     family: AtomFamily;
     text: string;
     needsSpacing?: boolean;
   };
-  "mathord": {
+  mathord: {
     text: string;
   };
-  "spacing": {
+  spacing: {
     text: string;
   };
-  "textord": {
+  textord: {
     text: string;
   };
-  "accent-token": {
+  'accent-token': {
     text: string;
   };
-  "op-token": {
+  'op-token': {
     text: string;
   };
 
   // From functions.js and functions/*.js. See also "styling", "supsub", and
   // "text" above, which Parser.js creates as well.
-  "accent": {
+  accent: {
     label: string;
     isStretchy?: boolean;
     base: AnyParseNode;
   };
-  "accentUnder": {
+  accentUnder: {
     label: string;
     base: AnyParseNode;
   };
-  "cancelto": {
+  cancelto: {
     body: AnyParseNode;
     to: AnyParseNode;
     isCharacterBox: boolean;
   };
-  "color": {
+  color: {
     color: string;
     isTextColor?: boolean;
     body: AnyParseNode[];
   };
-  "cr": {
+  cr: {
     newLine: boolean;
     size: Measurement | null | undefined;
   };
-  "delimiter": {
+  delimiter: {
     body: AnyParseNode[];
     left: string;
     right: string;
   };
-  "delimsizing": {
+  delimsizing: {
     size: number;
     mclass: string;
     delim: string;
   };
-  "enclose": {
+  enclose: {
     label: string;
     backgroundColor?: string;
     borderColor?: string;
     body: AnyParseNode;
   };
-  "environment": {
+  environment: {
     name: string;
     nameGroup: AnyParseNode;
   };
-  "envTag": {
+  envTag: {
     body: AnyParseNode;
   };
-  "font": {
+  font: {
     font: string;
     body: AnyParseNode;
   };
-  "genfrac": {
+  genfrac: {
     continued: boolean;
     numer: AnyParseNode;
     denom: AnyParseNode;
     hasBarLine: boolean;
     leftDelim: string | null;
     rightDelim: string | null;
-    scriptLevel: StyleStr | "auto";
+    scriptLevel: StyleStr | 'auto';
     barSize: Measurement | null;
   };
-  "hbox": {
+  hbox: {
     body: AnyParseNode[];
   };
-  "horizBracket": {
+  horizBracket: {
     label: string;
     isOver: boolean;
     base: AnyParseNode;
   };
-  "hphantom": {
+  hphantom: {
     body: AnyParseNode;
   };
-  "html": {
+  html: {
     attributes: Record<string, string>;
     body: AnyParseNode[];
   };
-  "includegraphics": {
+  includegraphics: {
     alt: string;
     width: Measurement;
     height: Measurement;
     totalheight: Measurement;
     src: string;
   };
-  "infix": {
+  infix: {
     replaceWith: string;
     barSize?: Measurement;
     token: Token | null | undefined;
   };
-  "internal": Record<never, never>;
-  "kern": {
+  internal: Record<never, never>;
+  kern: {
     dimension: Measurement;
   };
-  "label": {
+  label: {
     string: string;
   };
-  "lap": {
+  lap: {
     alignment: string;
     body: AnyParseNode;
   };
-  "leftright": {
+  leftright: {
     body: AnyParseNode[];
     left: string;
     right: string;
     rightColor?: string;
     isStretchy?: boolean;
   };
-  "leftright-right": {
+  'leftright-right': {
     delim: string;
   };
-  "mathchoice": {
+  mathchoice: {
     display: AnyParseNode[];
     text: AnyParseNode[];
     script: AnyParseNode[];
     scriptscript: AnyParseNode[];
   };
-  "mclass": {
+  mclass: {
     mclass: string;
     body: AnyParseNode[];
     isCharacterBox: boolean;
     mustPromote?: boolean;
   };
-  "middle": {
+  middle: {
     delim: string;
   };
-  "multiscript": {
+  multiscript: {
     base: AnyParseNode;
     isSideset: boolean;
     prescripts: Scripts;
     postscripts: Scripts | null;
   };
-  "noTag": Record<never, never>;
-  "not": {
+  noTag: Record<never, never>;
+  not: {
     body: AnyParseNode[];
     isCharacterBox: boolean;
   };
-  "op": {
+  op: {
     limits: boolean;
     alwaysHandleSupSub?: boolean;
     suppressBaseShift?: boolean;
@@ -239,7 +237,7 @@ export interface ParseNodeTypes {
     isFollowedByDelimiter?: boolean;
     needsLeadingSpace?: boolean;
   };
-  "operatorname": {
+  operatorname: {
     body: AnyParseNode[];
     alwaysHandleSupSub: boolean;
     limits: boolean;
@@ -247,70 +245,70 @@ export interface ParseNodeTypes {
     isFollowedByDelimiter: boolean;
     needsLeadingSpace: boolean;
   };
-  "phantom": {
+  phantom: {
     body: AnyParseNode[];
   };
-  "pmb": {
+  pmb: {
     body: AnyParseNode[];
   };
-  "raise": {
+  raise: {
     dy: Measurement;
     body: AnyParseNode;
   };
-  "ref": {
+  ref: {
     funcName: string;
     string: string;
   };
-  "reflect": {
+  reflect: {
     body: AnyParseNode;
   };
-  "rule": {
+  rule: {
     shift: Measurement | null | undefined;
     width: Measurement;
     height: Measurement;
   };
-  "sfrac": {
+  sfrac: {
     numerator: string;
     denominator: string;
   };
-  "sizing": {
+  sizing: {
     funcName: string;
     body: AnyParseNode[];
   };
-  "smash": {
+  smash: {
     body: AnyParseNode;
     smashHeight: boolean;
     smashDepth: boolean;
   };
-  "sqrt": {
+  sqrt: {
     body: AnyParseNode;
     index?: AnyParseNode | null;
   };
-  "stackedArrow": {
+  stackedArrow: {
     name: string;
     body: AnyParseNode;
-    upperArrowBelow: ParseNode<"hphantom"> | null;
-    lowerArrowBody: ParseNode<"hphantom"> | null;
+    upperArrowBelow: ParseNode<'hphantom'> | null;
+    lowerArrowBody: ParseNode<'hphantom'> | null;
     below?: AnyParseNode | null;
   };
-  "tip": {
+  tip: {
     body: AnyParseNode;
     tip: AnyParseNode;
   };
-  "vcenter": {
+  vcenter: {
     body: AnyParseNode;
   };
-  "vphantom": {
+  vphantom: {
     body: AnyParseNode;
   };
-  "xArrow": {
+  xArrow: {
     name: string;
     body: AnyParseNode;
     below?: AnyParseNode | null;
   };
 
   // From environments.js and environments/*.js
-  "array": {
+  array: {
     body: AnyParseNode[][]; // List of rows in the (2D) array.
     cols?: ColSpec[];
     rowGaps?: Array<Measurement | null>;
@@ -324,11 +322,11 @@ export interface ParseNodeTypes {
     arraystretch?: number | null;
     arraycolsep?: Measurement | null;
   };
-  "cdlabel": {
+  cdlabel: {
     side: string;
     label: AnyParseNode;
   };
-  "cdlabelparent": {
+  cdlabelparent: {
     fragment: AnyParseNode;
   };
 }
@@ -347,12 +345,12 @@ export type AnyParseNode = { [TYPE in NodeType]: ParseNode<TYPE> }[NodeType];
 
 /** Parse nodes built from symbols, i.e. nodes with a `text` field. See symbols.js. */
 export type SymbolParseNode =
-  | ParseNode<"atom">
-  | ParseNode<"accent-token">
-  | ParseNode<"mathord">
-  | ParseNode<"op-token">
-  | ParseNode<"spacing">
-  | ParseNode<"textord">;
+  | ParseNode<'atom'>
+  | ParseNode<'accent-token'>
+  | ParseNode<'mathord'>
+  | ParseNode<'op-token'>
+  | ParseNode<'spacing'>
+  | ParseNode<'textord'>;
 
 /**
  * Asserts that the node is of the given type and returns it with stricter
@@ -360,16 +358,16 @@ export type SymbolParseNode =
  */
 export const assertNodeType = <NODETYPE extends NodeType>(
   node: AnyParseNode | null | undefined,
-  type: NODETYPE
+  type: NODETYPE,
 ): ParseNode<NODETYPE> => {
   if (!node || node.type !== type) {
     throw new Error(
       `Expected node of type ${type}, but got ` +
-        (node ? `node of type ${node.type}` : String(node))
+        (node ? `node of type ${node.type}` : String(node)),
     );
   }
   return node as ParseNode<NODETYPE>;
-}
+};
 
 /**
  * Returns the node more strictly typed iff it is of the given type. Otherwise,
@@ -380,22 +378,24 @@ export const assertSymbolNodeType = (node: AnyParseNode | null | undefined): Sym
   if (!typedNode) {
     throw new Error(
       `Expected node of symbol group type, but got ` +
-        (node ? `node of type ${node.type}` : String(node))
+        (node ? `node of type ${node.type}` : String(node)),
     );
   }
   return typedNode;
-}
+};
 
 /**
  * Returns the node more strictly typed iff it is of the given type. Otherwise,
  * returns null.
  */
 export const checkSymbolNodeType = (
-  node: AnyParseNode | null | undefined
+  node: AnyParseNode | null | undefined,
 ): SymbolParseNode | null => {
-  if (node && (node.type === "atom" || node.type === "delimiter" ||
-      Object.hasOwn(NON_ATOMS, node.type))) {
+  if (
+    node &&
+    (node.type === 'atom' || node.type === 'delimiter' || Object.hasOwn(NON_ATOMS, node.type))
+  ) {
     return node as SymbolParseNode;
   }
   return null;
-}
+};

@@ -1,38 +1,38 @@
-import defineFunction from "../defineFunction";
-import * as mathMLTree from "../mathMLTree";
+import defineFunction from '../defineFunction';
+import * as mathMLTree from '../mathMLTree';
 
 defineFunction({
-  type: "envTag",
-  names: ["\\env@tag"],
+  type: 'envTag',
+  names: ['\\env@tag'],
   props: {
     numArgs: 1,
-    argTypes: ["math"]
+    argTypes: ['math'],
   },
   handler({ parser }, args) {
     return {
-      type: "envTag",
+      type: 'envTag',
       mode: parser.mode,
-      body: args[0]
+      body: args[0],
     };
   },
   mathmlBuilder(group, style) {
-    return new mathMLTree.MathNode("mrow");
-  }
+    return new mathMLTree.MathNode('mrow');
+  },
 });
 
 defineFunction({
-  type: "noTag",
-  names: ["\\env@notag"],
+  type: 'noTag',
+  names: ['\\env@notag'],
   props: {
-    numArgs: 0
+    numArgs: 0,
   },
   handler({ parser }) {
     return {
-      type: "noTag",
-      mode: parser.mode
+      type: 'noTag',
+      mode: parser.mode,
     };
   },
   mathmlBuilder(group, style) {
-    return new mathMLTree.MathNode("mrow");
-  }
+    return new mathMLTree.MathNode('mrow');
+  },
 });

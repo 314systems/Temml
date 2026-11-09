@@ -1,29 +1,29 @@
-import defineFunction from "../defineFunction";
-import { wrapWithMstyle } from "../mathMLTree"
-import * as mml from "../buildMathML";
-import type { StyleStr } from "../types";
+import defineFunction from '../defineFunction';
+import { wrapWithMstyle } from '../mathMLTree';
+import * as mml from '../buildMathML';
+import type { StyleStr } from '../types';
 
 const styleMap: Record<StyleStr, number> = {
   display: 0,
   text: 1,
   script: 2,
-  scriptscript: 3
+  scriptscript: 3,
 };
 
 const styleAttributes: Record<StyleStr, [string, string]> = {
-  display: ["0", "true"],
-  text: ["0", "false"],
-  script: ["1", "false"],
-  scriptscript: ["2", "false"]
+  display: ['0', 'true'],
+  text: ['0', 'false'],
+  script: ['1', 'false'],
+  scriptscript: ['2', 'false'],
 };
 
 defineFunction({
-  type: "styling",
-  names: ["\\displaystyle", "\\textstyle", "\\scriptstyle", "\\scriptscriptstyle"],
+  type: 'styling',
+  names: ['\\displaystyle', '\\textstyle', '\\scriptstyle', '\\scriptscriptstyle'],
   props: {
     numArgs: 0,
     allowedInText: true,
-    primitive: true
+    primitive: true,
   },
   handler({ breakOnTokenText, funcName, parser }, args) {
     // parse out the implicit body
@@ -31,12 +31,12 @@ defineFunction({
 
     const scriptLevel = funcName.slice(1, funcName.length - 5) as StyleStr;
     return {
-      type: "styling",
+      type: 'styling',
       mode: parser.mode,
       // Figure out what scriptLevel to use by pulling out the scriptLevel from
       // the function name
       scriptLevel,
-      body
+      body,
     };
   },
   mathmlBuilder(group, style) {
@@ -46,14 +46,14 @@ defineFunction({
     // It just tracks the style level, in case we need to know it for supsub or mathchoice.
     const inner = mml.buildExpression(group.body, newStyle);
     // Wrap with an <mstyle> element.
-    const node = wrapWithMstyle(inner)
+    const node = wrapWithMstyle(inner);
 
     const attr = styleAttributes[group.scriptLevel];
 
     // Here is where we set the MathML script level.
-    node.setAttribute("scriptlevel", attr[0]);
-    node.setAttribute("displaystyle", attr[1]);
+    node.setAttribute('scriptlevel', attr[0]);
+    node.setAttribute('displaystyle', attr[1]);
 
     return node;
-  }
+  },
 });

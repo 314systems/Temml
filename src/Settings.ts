@@ -3,8 +3,8 @@
  * default settings.
  */
 
-import type { MacroMap } from "./defineMacro";
-import * as utils from "./utils";
+import type { MacroMap } from './defineMacro';
+import * as utils from './utils';
 
 /**
  * The argument passed to a `trust` function. See html.js and
@@ -27,7 +27,7 @@ export interface Options {
   throwOnError?: boolean;
   errorColor?: string;
   macros?: MacroMap;
-  wrap?: "none" | "tex" | "=";
+  wrap?: 'none' | 'tex' | '=';
   xml?: boolean;
   colorIsTextColor?: boolean;
   strict?: boolean;
@@ -36,7 +36,7 @@ export interface Options {
   maxExpand?: number;
 }
 
-const FORBIDDEN_MACRO_KEYS = ["__proto__", "prototype", "constructor"];
+const FORBIDDEN_MACRO_KEYS = ['__proto__', 'prototype', 'constructor'];
 
 // Sanitize a user-supplied macros object: strip its prototype (so later
 // bracket-notation writes, e.g. from \gdef, can never reach Object.prototype)
@@ -46,7 +46,7 @@ const FORBIDDEN_MACRO_KEYS = ["__proto__", "prototype", "constructor"];
 // \gdef'd macros across multiple render calls that pass the same options
 // object.
 const sanitizeMacros = (macros: unknown): MacroMap => {
-  if (macros == null || typeof macros !== "object") {
+  if (macros == null || typeof macros !== 'object') {
     return Object.create(null);
   }
   for (const key of FORBIDDEN_MACRO_KEYS) {
@@ -67,7 +67,7 @@ export default class Settings {
   throwOnError: boolean;
   errorColor: string;
   macros: MacroMap;
-  wrap: "none" | "tex" | "=";
+  wrap: 'none' | 'tex' | '=';
   xml: boolean;
   colorIsTextColor: boolean;
   strict: boolean;
@@ -79,24 +79,20 @@ export default class Settings {
   constructor(options?: Options | null) {
     // allow null options
     const opts: Options = options || {};
-    this.displayMode = utils.deflt(opts, "displayMode", false);
-    this.annotate = utils.deflt(opts, "annotate", false)
-    this.leqno = utils.deflt(opts, "leqno", false);
-    this.throwOnError = utils.deflt(opts, "throwOnError", false);
-    this.errorColor = utils.deflt(opts, "errorColor", "#b22222");
-    this.macros = sanitizeMacros(
-      Object.hasOwn(opts, "macros") ? opts.macros : undefined
-    );
-    this.wrap = utils.deflt(opts, "wrap", "none")
-    this.xml = utils.deflt(opts, "xml", false);
-    this.colorIsTextColor = utils.deflt(opts, "colorIsTextColor", false);
-    this.strict = utils.deflt(opts, "strict", false);
-    this.trust = utils.deflt(opts, "trust", false);  // trust context. See html.js.
-    const maxSize = Object.hasOwn(opts, "maxSize")
-      ? opts.maxSize
-      : undefined;
-    this.maxSize = Array.isArray(maxSize) ? maxSize : [Infinity, Infinity]
-    this.maxExpand = Math.max(0, utils.deflt(opts, "maxExpand", 1000));
+    this.displayMode = utils.deflt(opts, 'displayMode', false);
+    this.annotate = utils.deflt(opts, 'annotate', false);
+    this.leqno = utils.deflt(opts, 'leqno', false);
+    this.throwOnError = utils.deflt(opts, 'throwOnError', false);
+    this.errorColor = utils.deflt(opts, 'errorColor', '#b22222');
+    this.macros = sanitizeMacros(Object.hasOwn(opts, 'macros') ? opts.macros : undefined);
+    this.wrap = utils.deflt(opts, 'wrap', 'none');
+    this.xml = utils.deflt(opts, 'xml', false);
+    this.colorIsTextColor = utils.deflt(opts, 'colorIsTextColor', false);
+    this.strict = utils.deflt(opts, 'strict', false);
+    this.trust = utils.deflt(opts, 'trust', false); // trust context. See html.js.
+    const maxSize = Object.hasOwn(opts, 'maxSize') ? opts.maxSize : undefined;
+    this.maxSize = Array.isArray(maxSize) ? maxSize : [Infinity, Infinity];
+    this.maxExpand = Math.max(0, utils.deflt(opts, 'maxExpand', 1000));
     this.wrapDelimiterPairs = true;
   }
 
@@ -112,11 +108,11 @@ export default class Settings {
     if (context.url && !context.protocol) {
       const protocol = utils.protocolFromUrl(context.url);
       if (protocol == null) {
-        return false
+        return false;
       }
-      context.protocol = protocol
+      context.protocol = protocol;
     }
-    const trust = typeof this.trust === "function" ? this.trust(context) : this.trust;
+    const trust = typeof this.trust === 'function' ? this.trust(context) : this.trust;
     return Boolean(trust);
   }
 }

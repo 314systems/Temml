@@ -1,124 +1,50 @@
-import globals from "globals";
-import js from "@eslint/js";
-import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
+import globals from 'globals';
+import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
 import unicorn from 'eslint-plugin-unicorn';
 
-export default defineConfig([{
-  ignores: ["contrib/auto-render/test/*.js", "src/autocorrect.js"]
-}, js.configs.recommended, {
-  languageOptions: {
-    globals: {
-      ...globals.node,
-      ...globals.browser,
-      BigInt: true
-    },
-
-    ecmaVersion: "latest",
-    sourceType: "module"
+export default defineConfig([
+  {
+    ignores: ['contrib/auto-render/test/*.js', 'src/autocorrect.js'],
   },
+  js.configs.recommended,
+  {
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+        BigInt: true,
+      },
 
-  rules: {
-    "arrow-spacing": 2,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    }
+  },
+  {
+    files: ['**/*.ts'],
+    extends: [tseslint.configs.recommended],
 
-    "brace-style": [2, "1tbs", {
-      allowSingleLine: true
-    }],
+    rules: {
+      // TypeScript checks these itself, or handles them better.
+      'no-undef': 0,
+      'no-dupe-class-members': 0,
+      'no-unused-vars': 0,
 
-    camelcase: [2, {
-      properties: "never"
-    }],
-
-    "comma-dangle": [2, "never"],
-
-    "comma-spacing": [2, {
-      before: false,
-      after: true
-    }],
-
-    "constructor-super": 2,
-    curly: 2,
-    "eol-last": 2,
-    eqeqeq: [2, "allow-null"],
-    "guard-for-in": 2,
-    indent: "off",
-
-    "indent-legacy": [2, 2, {
-      SwitchCase: 1
-    }],
-
-    "keyword-spacing": 2,
-    "linebreak-style": [2, "unix"],
-
-    "max-len": [2, 100, 4, {
-      ignoreUrls: true,
-      ignoreRegExpLiterals: true
-    }],
-
-    "new-cap": 2,
-    "no-alert": 2,
-    "no-array-constructor": 2,
-    "no-console": 2,
-    "no-const-assign": 2,
-    "no-debugger": 2,
-    "no-dupe-class-members": 2,
-    "no-dupe-keys": 2,
-    "no-extra-bind": 2,
-    "no-misleading-character-class": 0,
-    "no-new": 2,
-    "no-new-func": 2,
-    "no-new-object": 2,
-    "no-spaced-func": 2,
-    "no-this-before-super": 2,
-    "no-throw-literal": 2,
-    "no-trailing-spaces": 2,
-    "no-undef": 2,
-    "no-unexpected-multiline": 2,
-    "no-unreachable": 2,
-
-    "no-unused-vars": [2, {
-      args: "none",
-      varsIgnorePattern: "^_*$"
-    }],
-
-    "no-useless-call": 2,
-    "no-var": 2,
-    "no-with": 2,
-    "object-curly-spacing": [2, "always"],
-    "one-var": [2, "never"],
-    "prefer-const": 2,
-    "prefer-object-has-own": 2,
-    "prefer-spread": 0,
-    semi: 0,
-    "space-before-blocks": 2,
-    "space-before-function-paren": [2, "never"],
-    "space-infix-ops": 2,
-    "space-unary-ops": 2,
-    "prefer-template": 0,
-    "arrow-parens": 0,
-    "prefer-arrow-callback": 0,
-    "valid-jsdoc": 0,
-    "require-jsdoc": 0
-  }
-}, {
-  files: ["**/*.ts"],
-  extends: [tseslint.configs.recommended],
-
-  rules: {
-    // TypeScript checks these itself, or handles them better.
-    "no-undef": 0,
-    "no-dupe-class-members": 0,
-    "no-unused-vars": 0,
-
-    "@typescript-eslint/no-unused-vars": [2, {
-      args: "none",
-      varsIgnorePattern: "^_*$"
-    }]
-  }
-}, {
-  extends: [unicorn.configs.unopinionated],
-  rules: {
-    'unicorn/number-literal-case': 'off',
-    'unicorn/prefer-ternary': 'off'
-  }
-}]);
+      '@typescript-eslint/no-unused-vars': [
+        2,
+        {
+          args: 'none',
+          varsIgnorePattern: '^_*$',
+        },
+      ],
+    },
+  },
+  {
+    extends: [unicorn.configs.unopinionated],
+    rules: {
+      'unicorn/number-literal-case': 'off',
+      'unicorn/prefer-ternary': 'off',
+    },
+  },
+]);

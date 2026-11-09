@@ -1,12 +1,12 @@
-import type MacroExpander from "./MacroExpander";
-import type { Token } from "./Token";
+import type MacroExpander from './MacroExpander';
+import type { Token } from './Token';
 
 /** The result of expanding a macro. See MacroExpander#_getExpansion. */
 export interface MacroExpansion {
-  tokens: Token[];        // In reverse order, to fit with a stack.
+  tokens: Token[]; // In reverse order, to fit with a stack.
   numArgs: number;
   delimiters?: string[][]; // Delimiters of the arguments, see \def.
-  unexpandable?: boolean;  // Used in \let.
+  unexpandable?: boolean; // Used in \let.
 }
 
 /**
@@ -31,6 +31,6 @@ export const _macros: MacroMap = Object.create(null);
 // This function might one day accept an additional argument and do more things.
 const defineMacro = (name: string, body: MacroDefinition): void => {
   _macros[name] = body;
-}
+};
 
-export default defineMacro
+export default defineMacro;

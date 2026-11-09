@@ -2,16 +2,16 @@
 // whose purpose is to generate `unicodeSymbols` for Parser.js
 // In this way, only this module, and not the distribution/browser,
 // needs String's normalize function.
-import accents from "./unicodeAccents";
+import accents from './unicodeAccents';
 
 const result: Record<string, string> = {};
 const letters =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-  "αβγδεϵζηθϑικλμνξοπϖρϱςστυφϕχψωΓΔΘΛΞΠΣΥΦΨΩ";
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+  'αβγδεϵζηθϑικλμνξοπϖρϱςστυφϕχψωΓΔΘΛΞΠΣΥΦΨΩ';
 for (const letter of letters) {
   for (const accent of Object.getOwnPropertyNames(accents)) {
     const combined = letter + accent;
-    const normalized = combined.normalize("NFC");
+    const normalized = combined.normalize('NFC');
     if (normalized.length === 1) {
       result[normalized] = combined;
     }
@@ -20,7 +20,7 @@ for (const letter of letters) {
         continue;
       }
       const combined2 = combined + accent2;
-      const normalized2 = combined2.normalize("NFC");
+      const normalized2 = combined2.normalize('NFC');
       if (normalized2.length === 1) {
         result[normalized2] = combined2;
       }

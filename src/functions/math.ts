@@ -1,40 +1,40 @@
-import defineFunction from "../defineFunction";
-import ParseError from "../ParseError";
+import defineFunction from '../defineFunction';
+import ParseError from '../ParseError';
 
 // Switching from text mode back to math mode
 defineFunction({
-  type: "ordgroup",
-  names: ["\\(", "$"],
+  type: 'ordgroup',
+  names: ['\\(', '$'],
   props: {
     numArgs: 0,
     allowedInText: true,
-    allowedInMath: false
+    allowedInMath: false,
   },
   handler({ funcName, parser }, args) {
     const outerMode = parser.mode;
-    parser.switchMode("math");
-    const close = funcName === "\\(" ? "\\)" : "$";
+    parser.switchMode('math');
+    const close = funcName === '\\(' ? '\\)' : '$';
     const body = parser.parseExpression(false, close);
     parser.expect(close);
     parser.switchMode(outerMode);
     return {
-      type: "ordgroup",
+      type: 'ordgroup',
       mode: parser.mode,
-      body
+      body,
     };
-  }
+  },
 });
 
 // Check for extra closing math delimiters
 defineFunction({
-  type: "text", // Doesn't matter what this is.
-  names: ["\\)", "\\]"],
+  type: 'text', // Doesn't matter what this is.
+  names: ['\\)', '\\]'],
   props: {
     numArgs: 0,
     allowedInText: true,
-    allowedInMath: false
+    allowedInMath: false,
   },
   handler(context) {
     throw new ParseError(`Mismatched ${context.funcName}`);
-  }
+  },
 });

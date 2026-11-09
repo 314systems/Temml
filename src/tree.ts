@@ -45,7 +45,7 @@ export class DocumentFragment implements MathDomNode {
 
   /** Convert the fragment into HTML markup. */
   toMarkup(): string {
-    let markup = "";
+    let markup = '';
 
     // Simply concatenate the markup for the children together.
     for (let i = 0; i < this.children.length; i++) {
@@ -60,6 +60,6 @@ export class DocumentFragment implements MathDomNode {
    * MathDomNode's only.
    */
   toText(): string {
-    return this.children.map((child) => child.toText()).join("");
+    return this.children.map((child) => child.toText()).join('');
   }
 }

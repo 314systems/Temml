@@ -1,98 +1,98 @@
-import defineFunction from "../defineFunction";
-import * as mathMLTree from "../mathMLTree";
-import * as mml from "../buildMathML";
-import { assertSymbolNodeType } from "../parseNode";
-import ParseError from "../ParseError";
-import type { MathNode } from "../mathMLTree";
-import type Parser from "../Parser";
-import type { AnyParseNode, ParseNode } from "../parseNode";
+import defineFunction from '../defineFunction';
+import * as mathMLTree from '../mathMLTree';
+import * as mml from '../buildMathML';
+import { assertSymbolNodeType } from '../parseNode';
+import ParseError from '../ParseError';
+import type { MathNode } from '../mathMLTree';
+import type Parser from '../Parser';
+import type { AnyParseNode, ParseNode } from '../parseNode';
 
 const cdArrowFunctionName: Record<string, string> = {
-  ">": "\\\\cdrightarrow",
-  "<": "\\\\cdleftarrow",
-  "=": "\\\\cdlongequal",
-  A: "\\uparrow",
-  V: "\\downarrow",
-  "|": "\\Vert",
-  ".": "no arrow"
+  '>': '\\\\cdrightarrow',
+  '<': '\\\\cdleftarrow',
+  '=': '\\\\cdlongequal',
+  A: '\\uparrow',
+  V: '\\downarrow',
+  '|': '\\Vert',
+  '.': 'no arrow',
 };
 
-const newCell = (): ParseNode<"styling"> => {
+const newCell = (): ParseNode<'styling'> => {
   // Create an empty cell, to be filled below with parse nodes.
-  return { type: "styling", body: [], mode: "math", scriptLevel: "display" };
+  return { type: 'styling', body: [], mode: 'math', scriptLevel: 'display' };
 };
 
 const isStartOfArrow = (node: AnyParseNode): boolean => {
-  return node.type === "textord" && node.text === "@";
+  return node.type === 'textord' && node.text === '@';
 };
 
 const isLabelEnd = (node: AnyParseNode, endChar: string): boolean => {
-  return (node.type === "mathord" || node.type === "atom") && node.text === endChar;
+  return (node.type === 'mathord' || node.type === 'atom') && node.text === endChar;
 };
 
 const cdArrow = (
   arrowChar: string,
-  labels: ParseNode<"ordgroup">[],
-  parser: Parser
+  labels: ParseNode<'ordgroup'>[],
+  parser: Parser,
 ): AnyParseNode => {
   // Return a parse tree of an arrow and its labels.
   // This acts in a way similar to a macro expansion.
   const funcName = cdArrowFunctionName[arrowChar];
   switch (funcName) {
-    case "\\\\cdrightarrow":
-    case "\\\\cdleftarrow":
+    case '\\\\cdrightarrow':
+    case '\\\\cdleftarrow':
       return parser.callFunction(funcName, [labels[0]], [labels[1]]);
-    case "\\uparrow":
-    case "\\downarrow": {
-      const leftLabel = parser.callFunction("\\\\cdleft", [labels[0]], []);
-      const bareArrow: ParseNode<"atom"> = {
-        type: "atom",
+    case '\\uparrow':
+    case '\\downarrow': {
+      const leftLabel = parser.callFunction('\\\\cdleft', [labels[0]], []);
+      const bareArrow: ParseNode<'atom'> = {
+        type: 'atom',
         text: funcName,
-        mode: "math",
-        family: "rel"
+        mode: 'math',
+        family: 'rel',
       };
-      const sizedArrow = parser.callFunction("\\Big", [bareArrow], []);
-      const rightLabel = parser.callFunction("\\\\cdright", [labels[1]], []);
-      const arrowGroup: ParseNode<"ordgroup"> = {
-        type: "ordgroup",
-        mode: "math",
+      const sizedArrow = parser.callFunction('\\Big', [bareArrow], []);
+      const rightLabel = parser.callFunction('\\\\cdright', [labels[1]], []);
+      const arrowGroup: ParseNode<'ordgroup'> = {
+        type: 'ordgroup',
+        mode: 'math',
         body: [leftLabel, sizedArrow, rightLabel],
-        semisimple: true
+        semisimple: true,
       };
-      return parser.callFunction("\\\\cdparent", [arrowGroup], []);
+      return parser.callFunction('\\\\cdparent', [arrowGroup], []);
     }
-    case "\\\\cdlongequal":
-      return parser.callFunction("\\\\cdlongequal", [], []);
-    case "\\Vert": {
-      const arrow: ParseNode<"textord"> = { type: "textord", text: "\\Vert", mode: "math" };
-      return parser.callFunction("\\Big", [arrow], []);
+    case '\\\\cdlongequal':
+      return parser.callFunction('\\\\cdlongequal', [], []);
+    case '\\Vert': {
+      const arrow: ParseNode<'textord'> = { type: 'textord', text: '\\Vert', mode: 'math' };
+      return parser.callFunction('\\Big', [arrow], []);
     }
     default:
-      return { type: "textord", text: " ", mode: "math" };
+      return { type: 'textord', text: ' ', mode: 'math' };
   }
-}
+};
 
-export const parseCD = (parser: Parser): ParseNode<"array"> => {
+export const parseCD = (parser: Parser): ParseNode<'array'> => {
   // Get the array's parse nodes with \\ temporarily mapped to \cr.
   const parsedRows: AnyParseNode[][] = [];
   parser.gullet.beginGroup();
-  parser.gullet.macros.set("\\cr", "\\\\\\relax");
+  parser.gullet.macros.set('\\cr', '\\\\\\relax');
   parser.gullet.beginGroup();
   while (true) {
     // Get the parse nodes for the next row.
-    parsedRows.push(parser.parseExpression(false, "\\\\"));
+    parsedRows.push(parser.parseExpression(false, '\\\\'));
     parser.gullet.endGroup();
     parser.gullet.beginGroup();
     const next = parser.fetch().text;
-    if (next === "&" || next === "\\\\") {
+    if (next === '&' || next === '\\\\') {
       parser.consume();
-    } else if (next === "\\end") {
+    } else if (next === '\\end') {
       if (parsedRows[parsedRows.length - 1].length === 0) {
         parsedRows.pop(); // final row ended in \\
       }
       break;
     } else {
-      throw new ParseError("Expected \\\\ or \\cr or \\end", parser.nextToken);
+      throw new ParseError('Expected \\\\ or \\cr or \\end', parser.nextToken);
     }
   }
 
@@ -121,15 +121,15 @@ export const parseCD = (parser: Parser): ParseNode<"array"> => {
         const arrowChar = assertSymbolNodeType(rowNodes[j]).text;
 
         // Create two empty label nodes. We may or may not use them.
-        const labels: ParseNode<"ordgroup">[] = new Array(2);
-        labels[0] = { type: "ordgroup", mode: "math", body: [] };
-        labels[1] = { type: "ordgroup", mode: "math", body: [] };
+        const labels: ParseNode<'ordgroup'>[] = new Array(2);
+        labels[0] = { type: 'ordgroup', mode: 'math', body: [] };
+        labels[1] = { type: 'ordgroup', mode: 'math', body: [] };
 
         // Process the arrow.
-        if ("=|.".indexOf(arrowChar) > -1) {
+        if ('=|.'.indexOf(arrowChar) > -1) {
           // Three "arrows", ``@=`, `@|`, and `@.`, do not take labels.
           // Do nothing here.
-        } else if ("<>AV".indexOf(arrowChar) > -1) {
+        } else if ('<>AV'.indexOf(arrowChar) > -1) {
           // Four arrows, `@>>>`, `@<<<`, `@AAA`, and `@VVV`, each take
           // two optional labels. E.g. the right-point arrow syntax is
           // really:  @>{optional label}>{optional label}>
@@ -144,8 +144,8 @@ export const parseCD = (parser: Parser): ParseNode<"array"> => {
               }
               if (isStartOfArrow(rowNodes[k])) {
                 throw new ParseError(
-                  "Missing a " + arrowChar + " character to complete a CD arrow.",
-                  rowNodes[k]
+                  'Missing a ' + arrowChar + ' character to complete a CD arrow.',
+                  rowNodes[k],
                 );
               }
 
@@ -154,8 +154,8 @@ export const parseCD = (parser: Parser): ParseNode<"array"> => {
             if (inLabel) {
               // isLabelEnd never returned a true.
               throw new ParseError(
-                "Missing a " + arrowChar + " character to complete a CD arrow.",
-                rowNodes[j]
+                'Missing a ' + arrowChar + ' character to complete a CD arrow.',
+                rowNodes[j],
               );
             }
           }
@@ -186,7 +186,7 @@ export const parseCD = (parser: Parser): ParseNode<"array"> => {
     row = [];
     body.push(row);
   }
-  body.pop()
+  body.pop();
 
   // End row group
   parser.gullet.endGroup();
@@ -194,16 +194,16 @@ export const parseCD = (parser: Parser): ParseNode<"array"> => {
   parser.gullet.endGroup();
 
   return {
-    type: "array",
-    mode: "math",
+    type: 'array',
+    mode: 'math',
     body,
     tags: null,
-    labels: new Array(body.length + 1).fill(""),
-    envClasses: ["jot", "cd"],
+    labels: new Array(body.length + 1).fill(''),
+    envClasses: ['jot', 'cd'],
     cols: [],
-    hLinesBeforeRow: new Array(body.length + 1).fill([])
+    hLinesBeforeRow: new Array(body.length + 1).fill([]),
   };
-}
+};
 
 // The functions below are not available for general use.
 // They are here only for internal use by the {CD} environment in placing labels
@@ -213,55 +213,55 @@ export const parseCD = (parser: Parser): ParseNode<"array"> => {
 // the functionality that already exists for extensible arrows.
 
 defineFunction({
-  type: "cdlabel",
-  names: ["\\\\cdleft", "\\\\cdright"],
+  type: 'cdlabel',
+  names: ['\\\\cdleft', '\\\\cdright'],
   props: {
-    numArgs: 1
+    numArgs: 1,
   },
   handler({ parser, funcName }, args) {
     return {
-      type: "cdlabel",
+      type: 'cdlabel',
       mode: parser.mode,
       side: funcName.slice(4),
-      label: args[0]
+      label: args[0],
     };
   },
   mathmlBuilder(group, style) {
-    if ((group.label as ParseNode<"ordgroup">).body.length === 0) {
-      return new mathMLTree.MathNode("mrow")  // empty label
+    if ((group.label as ParseNode<'ordgroup'>).body.length === 0) {
+      return new mathMLTree.MathNode('mrow'); // empty label
     }
     // Abuse an <mtable> to create vertically centered content.
-    const mrow = mml.buildGroup(group.label, style) as MathNode
-    if (group.side === "left") {
-      mrow.classes.push("tml-shift-left")
+    const mrow = mml.buildGroup(group.label, style) as MathNode;
+    if (group.side === 'left') {
+      mrow.classes.push('tml-shift-left');
     }
-    const mtd = new mathMLTree.MathNode("mtd", [mrow])
-    mtd.style.padding = "0"
-    const mtr = new mathMLTree.MathNode("mtr", [mtd])
-    const mtable = new mathMLTree.MathNode("mtable", [mtr])
-    const label = new mathMLTree.MathNode("mpadded", [mtable])
+    const mtd = new mathMLTree.MathNode('mtd', [mrow]);
+    mtd.style.padding = '0';
+    const mtr = new mathMLTree.MathNode('mtr', [mtd]);
+    const mtable = new mathMLTree.MathNode('mtable', [mtr]);
+    const label = new mathMLTree.MathNode('mpadded', [mtable]);
     // Set the label width to zero so that the arrow will be centered under the corner cell.
-    label.setAttribute("width", "0.1px") // Don't use 0. WebKit would hide it.
-    label.setAttribute("displaystyle", "false")
-    label.setAttribute("scriptlevel", "1")
+    label.setAttribute('width', '0.1px'); // Don't use 0. WebKit would hide it.
+    label.setAttribute('displaystyle', 'false');
+    label.setAttribute('scriptlevel', '1');
     return label;
-  }
+  },
 });
 
 defineFunction({
-  type: "cdlabelparent",
-  names: ["\\\\cdparent"],
+  type: 'cdlabelparent',
+  names: ['\\\\cdparent'],
   props: {
-    numArgs: 1
+    numArgs: 1,
   },
   handler({ parser }, args) {
     return {
-      type: "cdlabelparent",
+      type: 'cdlabelparent',
       mode: parser.mode,
-      fragment: args[0]
+      fragment: args[0],
     };
   },
   mathmlBuilder(group, style) {
-    return new mathMLTree.MathNode("mrow", [mml.buildGroup(group.fragment, style)]);
-  }
+    return new mathMLTree.MathNode('mrow', [mml.buildGroup(group.fragment, style)]);
+  },
 });

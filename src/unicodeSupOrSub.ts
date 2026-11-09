@@ -1,6 +1,6 @@
 // Helpers for Parser.js handling of Unicode (sub|super)script characters.
 
-export const unicodeSubRegEx = /^[₊₋₌₍₎₀₁₂₃₄₅₆₇₈₉ₐₑₕᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓᵦᵧᵨᵩᵪ]/
+export const unicodeSubRegEx = /^[₊₋₌₍₎₀₁₂₃₄₅₆₇₈₉ₐₑₕᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓᵦᵧᵨᵩᵪ]/;
 
 export const uSubsAndSups: Readonly<Record<string, string>> = Object.freeze({
   '₊': '+',
@@ -104,5 +104,5 @@ export const uSubsAndSups: Readonly<Record<string, string>> = Object.freeze({
   '\u1D5F': 'δ',
   '\u1D60': '\u03d5',
   '\u1D61': 'χ',
-  '\u1DBF': 'θ'
-})
+  '\u1DBF': 'θ',
+});

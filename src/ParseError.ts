@@ -1,4 +1,4 @@
-import type { LocSource } from "./SourceLocation";
+import type { LocSource } from './SourceLocation';
 
 /**
  * This is the ParseError class, which is the main error thrown by Temml
@@ -12,10 +12,10 @@ class ParseError extends Error {
   position: number | undefined;
 
   constructor(
-    message: string,                // The error message
-    token?: LocSource | null        // An object providing position information
+    message: string, // The error message
+    token?: LocSource | null, // An object providing position information
   ) {
-    let error = " " + message;
+    let error = ' ' + message;
     let start: number | undefined;
 
     const loc = token && token.loc;
@@ -29,24 +29,24 @@ class ParseError extends Error {
       start = loc.start;
       const end = loc.end;
       if (start === input.length) {
-        error += " at end of input: ";
+        error += ' at end of input: ';
       } else {
-        error += " at position " + (start + 1) + ": \n";
+        error += ' at position ' + (start + 1) + ': \n';
       }
 
       // Underline token in question using combining underscores
-      const underlined = input.slice(start, end).replace(/[^]/g, "$&\u0332");
+      const underlined = input.slice(start, end).replace(/[^]/g, '$&\u0332');
 
       // Extract some context from the input and add it to the error
       let left;
       if (start > 15) {
-        left = "…" + input.slice(start - 15, start);
+        left = '…' + input.slice(start - 15, start);
       } else {
         left = input.slice(0, start);
       }
       let right;
       if (end + 15 < input.length) {
-        right = input.slice(end, end + 15) + "…";
+        right = input.slice(end, end + 15) + '…';
       } else {
         right = input.slice(end);
       }
@@ -54,7 +54,7 @@ class ParseError extends Error {
     }
 
     super(error);
-    this.name = "ParseError";
+    this.name = 'ParseError';
     this.position = start;
   }
 }

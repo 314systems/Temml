@@ -11,11 +11,11 @@
  * kinds.
  */
 
-import ParseError from "./ParseError";
-import SourceLocation from "./SourceLocation";
-import type { LexerInterface } from "./SourceLocation";
-import type Settings from "./Settings";
-import { Token } from "./Token";
+import ParseError from './ParseError';
+import SourceLocation from './SourceLocation';
+import type { LexerInterface } from './SourceLocation';
+import type Settings from './Settings';
+import { Token } from './Token';
 
 /* The following tokenRegex
  * - matches typical whitespace (but not NBSP etc.) using its first two groups
@@ -41,22 +41,22 @@ import { Token } from "./Token";
  * If there is no matching function or symbol definition, the Parser will
  * still reject the input.
  */
-const spaceRegexString = "[ \r\n\t]";
-const controlWordRegexString = "\\\\[a-zA-Z@]+";
-const controlSymbolRegexString = "\\\\[^\uD800-\uDFFF]";
-const controlWordWhitespaceRegexString = `(${controlWordRegexString})${spaceRegexString}*`
-const controlSpaceRegexString = "\\\\(\n|[ \r\t]+\n?)[ \r\t]*";
-const combiningDiacriticalMarkString = "[\u0300-\u036f]";
+const spaceRegexString = '[ \r\n\t]';
+const controlWordRegexString = '\\\\[a-zA-Z@]+';
+const controlSymbolRegexString = '\\\\[^\uD800-\uDFFF]';
+const controlWordWhitespaceRegexString = `(${controlWordRegexString})${spaceRegexString}*`;
+const controlSpaceRegexString = '\\\\(\n|[ \r\t]+\n?)[ \r\t]*';
+const combiningDiacriticalMarkString = '[\u0300-\u036f]';
 export const combiningDiacriticalMarksEndRegex = new RegExp(`${combiningDiacriticalMarkString}+$`);
 const tokenRegexString =
   `(${spaceRegexString}+)|` + // whitespace
-  `${controlSpaceRegexString}|` +  // whitespace
-  "([!-\\[\\]-\u2027\u202A-\uD7FF\uF900-\uFFFF]" + // single codepoint
+  `${controlSpaceRegexString}|` + // whitespace
+  '([!-\\[\\]-\u2027\u202A-\uD7FF\uF900-\uFFFF]' + // single codepoint
   `${combiningDiacriticalMarkString}*` + // ...plus accents
-  "|[\uD800-\uDBFF][\uDC00-\uDFFF]" + // surrogate pair
+  '|[\uD800-\uDBFF][\uDC00-\uDFFF]' + // surrogate pair
   `${combiningDiacriticalMarkString}*` + // ...plus accents
-  "|\\\\verb\\*([^]).*?\\4" + // \verb*
-  "|\\\\verb([^*a-zA-Z]).*?\\5" + // \verb unstarred
+  '|\\\\verb\\*([^]).*?\\4' + // \verb*
+  '|\\\\verb([^*a-zA-Z]).*?\\5' + // \verb unstarred
   `|${controlWordWhitespaceRegexString}` + // \macroName + spaces
   `|${controlSymbolRegexString})`; // \\, \', etc.
 
@@ -75,8 +75,8 @@ export default class Lexer implements LexerInterface {
     this.settings = settings;
     this.tokenRegex = new RegExp(tokenRegexString, 'g');
     this.catcodes = {
-      "%": 14, // comment character
-      "~": 13  // active character
+      '%': 14, // comment character
+      '~': 13, // active character
     };
   }
 
@@ -91,25 +91,27 @@ export default class Lexer implements LexerInterface {
     const input = this.input;
     const pos = this.tokenRegex.lastIndex;
     if (pos === input.length) {
-      return new Token("EOF", new SourceLocation(this, pos, pos));
+      return new Token('EOF', new SourceLocation(this, pos, pos));
     }
     const match = this.tokenRegex.exec(input);
     if (match === null || match.index !== pos) {
       throw new ParseError(
         `Unexpected character: '${input[pos]}'`,
-        new Token(input[pos], new SourceLocation(this, pos, pos + 1))
+        new Token(input[pos], new SourceLocation(this, pos, pos + 1)),
       );
     }
-    const text = match[6] || match[3] || (match[2] ? "\\ " : " ")
+    const text = match[6] || match[3] || (match[2] ? '\\ ' : ' ');
 
     if (this.catcodes[text] === 14) {
       // comment character
-      const nlIndex = input.indexOf("\n", this.tokenRegex.lastIndex);
+      const nlIndex = input.indexOf('\n', this.tokenRegex.lastIndex);
       if (nlIndex === -1) {
         this.tokenRegex.lastIndex = input.length; // EOF
         if (this.settings.strict) {
-          throw new ParseError("% comment has no terminating newline; LaTeX would " +
-              "fail because of commenting the end of math mode")
+          throw new ParseError(
+            '% comment has no terminating newline; LaTeX would ' +
+              'fail because of commenting the end of math mode',
+          );
         }
       } else {
         this.tokenRegex.lastIndex = nlIndex + 1;

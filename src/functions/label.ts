@@ -1,30 +1,30 @@
-import defineFunction from "../defineFunction";
-import * as mathMLTree from "../mathMLTree";
-import { assertNodeType } from "../parseNode";
+import defineFunction from '../defineFunction';
+import * as mathMLTree from '../mathMLTree';
+import { assertNodeType } from '../parseNode';
 
 // Limit valid characters to a small set, for safety.
-export const invalidIdRegEx = /[^A-Za-z_0-9-]/g
+export const invalidIdRegEx = /[^A-Za-z_0-9-]/g;
 
 defineFunction({
-  type: "label",
-  names: ["\\label"],
+  type: 'label',
+  names: ['\\label'],
   props: {
     numArgs: 1,
-    argTypes: ["raw"]
+    argTypes: ['raw'],
   },
   handler({ parser }, args) {
     return {
-      type: "label",
+      type: 'label',
       mode: parser.mode,
-      string: assertNodeType(args[0], "raw").string.replace(invalidIdRegEx, "")
+      string: assertNodeType(args[0], 'raw').string.replace(invalidIdRegEx, ''),
     };
   },
   mathmlBuilder(group, style) {
     // Return a no-width, no-ink element with an HTML id.
-    const node = new mathMLTree.MathNode("mrow", [], ["tml-label"])
+    const node = new mathMLTree.MathNode('mrow', [], ['tml-label']);
     if (group.string.length > 0) {
-      node.setLabel(group.string)
+      node.setLabel(group.string);
     }
-    return node
-  }
+    return node;
+  },
 });

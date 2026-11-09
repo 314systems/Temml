@@ -1,33 +1,33 @@
-import defineFunction from "../defineFunction";
-import * as mathMLTree from "../mathMLTree";
-import * as stretchy from "../stretchy";
-import * as mml from "../buildMathML";
-import type { MathMLBuilder } from "../defineFunction";
+import defineFunction from '../defineFunction';
+import * as mathMLTree from '../mathMLTree';
+import * as stretchy from '../stretchy';
+import * as mml from '../buildMathML';
+import type { MathMLBuilder } from '../defineFunction';
 
-const mathmlBuilder: MathMLBuilder<"horizBracket"> = (group, style) => {
+const mathmlBuilder: MathMLBuilder<'horizBracket'> = (group, style) => {
   const accentNode = stretchy.mathMLnode(group.label);
-  accentNode.style["math-depth"] = "0"
-  return new mathMLTree.MathNode(group.isOver ? "mover" : "munder", [
+  accentNode.style['math-depth'] = '0';
+  return new mathMLTree.MathNode(group.isOver ? 'mover' : 'munder', [
     mml.buildGroup(group.base, style),
-    accentNode
+    accentNode,
   ]);
 };
 
 // Horizontal stretchy brackets
 defineFunction({
-  type: "horizBracket",
-  names: ["\\overbrace", "\\underbrace", "\\overbracket", "\\underbracket"],
+  type: 'horizBracket',
+  names: ['\\overbrace', '\\underbrace', '\\overbracket', '\\underbracket'],
   props: {
-    numArgs: 1
+    numArgs: 1,
   },
   handler({ parser, funcName }, args) {
     return {
-      type: "horizBracket",
+      type: 'horizBracket',
       mode: parser.mode,
       label: funcName,
       isOver: /^\\over/.test(funcName),
-      base: args[0]
+      base: args[0],
     };
   },
-  mathmlBuilder
+  mathmlBuilder,
 });

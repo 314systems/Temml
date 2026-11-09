@@ -2,19 +2,8 @@
   "name": "temml",
   "version": "0.14.0",
   "description": "TeX to MathML conversion in JavaScript.",
-  "main": "dist/temml.js",
-  "engines": {
-    "node": ">=18.13.0"
-  },
-  "exports": {
-    ".": {
-      "require": "./dist/temml.cjs",
-      "import": "./dist/temml.mjs",
-      "types": "./dist/temml.d.ts"
-    },
-    "./*": "./*"
-  },
   "homepage": "https://temml.org",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ronkok/Temml.git"
@@ -25,18 +14,14 @@
     "contrib/",
     "dist/"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@typescript/native": "npm:typescript@7.0.2",
-    "eslint": "^10.14.0",
-    "eslint-plugin-unicorn": "^79.0.0",
-    "globals": "^17.14.0",
-    "rolldown": "^1.2.15",
-    "rolldown-plugin-dts": "^0.30.0",
-    "typescript": "npm:@typescript/typescript6@6.0.2",
-    "typescript-eslint": "^8.72.1",
-    "vitest": "^5.1.0"
+  "main": "dist/temml.js",
+  "exports": {
+    ".": {
+      "require": "./dist/temml.cjs",
+      "import": "./dist/temml.mjs",
+      "types": "./dist/temml.d.ts"
+    },
+    "./*": "./*"
   },
   "scripts": {
     "lint": "eslint temml.ts src",
@@ -45,7 +30,22 @@
     "test:watch": "vitest",
     "test": "pnpm lint && pnpm typecheck && pnpm unit-test",
     "build": "rolldown --config ./utils/rolldown.config.mjs && node utils/insertPlugins.js && node utils/copyfiles.js",
-    "dist": "pnpm build"
+    "dist": "pnpm build",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.14.0",
+    "eslint-plugin-unicorn": "^79.0.0",
+    "globals": "^17.14.0",
+    "oxfmt": "^0.77.0",
+    "rolldown": "^1.2.15",
+    "rolldown-plugin-dts": "^0.30.0",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
   },
   "devEngines": {
     "packageManager": {
@@ -53,5 +53,8 @@
       "version": ">=12.0.0 <13.0.0",
       "onFail": "download"
     }
+  },
+  "engines": {
+    "node": ">=18.13.0"
   }
 }

@@ -1,17 +1,17 @@
-import defineFunction from "../defineFunction"
+import defineFunction from '../defineFunction';
 
 defineFunction({
-  type: "internal",
-  names: ["\\relax"],
+  type: 'internal',
+  names: ['\\relax'],
   props: {
     numArgs: 0,
     allowedInText: true,
-    allowedInArgument: true
+    allowedInArgument: true,
   },
   handler({ parser }) {
     return {
-      type: "internal",
-      mode: parser.mode
+      type: 'internal',
+      mode: parser.mode,
     };
-  }
-})
+  },
+});

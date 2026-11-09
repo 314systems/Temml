@@ -6,7 +6,7 @@
  * `set` takes time proportional to the depth of group nesting.
  */
 
-import ParseError from "./ParseError";
+import ParseError from './ParseError';
 
 export type Mapping<Value> = Record<string, Value>;
 
@@ -23,7 +23,7 @@ export default class Namespace<Value> {
    */
   constructor(
     builtins: Mapping<Value> = Object.create(null),
-    globalMacros: Mapping<Value> = Object.create(null)
+    globalMacros: Mapping<Value> = Object.create(null),
   ) {
     this.current = globalMacros;
     this.builtins = builtins;
@@ -44,8 +44,8 @@ export default class Namespace<Value> {
     const undefs = this.undefStack.pop();
     if (undefs === undefined) {
       throw new ParseError(
-        "Unbalanced namespace destruction: attempt " +
-          "to pop global namespace; please report this as a bug"
+        'Unbalanced namespace destruction: attempt ' +
+          'to pop global namespace; please report this as a bug',
       );
     }
     for (const undef in undefs) {
@@ -65,8 +65,7 @@ export default class Namespace<Value> {
    * `get(name) != null`.
    */
   has(name: string): boolean {
-    return Object.hasOwn(this.current, name) ||
-    Object.hasOwn(this.builtins, name);
+    return Object.hasOwn(this.current, name) || Object.hasOwn(this.builtins, name);
   }
 
   /**

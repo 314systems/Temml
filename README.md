@@ -1,4 +1,4 @@
-*Temml* is a LaTeX-to-[MathML Core](https://w3c.github.io/mathml-core/) JavaScript conversion utility. It is built to be lightweight.
+_Temml_ is a LaTeX-to-[MathML Core](https://w3c.github.io/mathml-core/) JavaScript conversion utility. It is built to be lightweight.
 
 This fork maintains the library without the upstream website. Documentation and
 demo links below refer to the upstream project.
@@ -17,11 +17,11 @@ Stylesheets, fonts, and accompanying license files are kept in `assets/`.
 Unit tests in `test/` load the built library from `dist/`.
 
 | Library       | Minified JavaScript + CSS |
-|:--------------|:-------------------------:|
-| Temml         |         173 KB            |
-| MathJax 2.7.5 |         338 KB            |
-| KaTeX         |         280 KB            |
-| TeXZilla      |         168 KB            |
+| :------------ | :-----------------------: |
+| Temml         |          173 KB           |
+| MathJax 2.7.5 |          338 KB           |
+| KaTeX         |          280 KB           |
+| TeXZilla      |          168 KB           |
 
 As a futher advantage, Temml can use local system fonts. The minimum Temml installation serves a font file that is only 10kb. Sadly, Chromium has some rendering bugs when using system fonts. It works better with the Latin Modern font, a 380 KB file.
 
@@ -33,11 +33,11 @@ Temml's demonstration page is at https://temml.org/
 
 Documentation can be found at:
 
-* [Installation](https://temml.org/docs/en/administration.html)
+- [Installation](https://temml.org/docs/en/administration.html)
 
-* LaTeX function support, [sorted into logical groups](https://temml.org/docs/en/supported.html).
+- LaTeX function support, [sorted into logical groups](https://temml.org/docs/en/supported.html).
 
-* LaTeX function support, [sorted alphabetically](https://temml.org/docs/en/support_table.html).
+- LaTeX function support, [sorted alphabetically](https://temml.org/docs/en/support_table.html).
 
 ### Acknowledgements
 

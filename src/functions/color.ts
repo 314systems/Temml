@@ -1,25 +1,27 @@
-import defineFunction, { ordargument } from "../defineFunction"
-import * as mathMLTree from "../mathMLTree"
-import { assertNodeType } from "../parseNode"
-import ParseError from "../ParseError"
-import * as mml from "../buildMathML"
-import { Token } from "../Token"
-import type { MacroDefinition, MacroExpansion } from "../defineMacro"
-import type { MathMLBuilder } from "../defineFunction"
-import type { MathNode } from "../mathMLTree"
-import type Namespace from "../Namespace"
+import defineFunction, { ordargument } from '../defineFunction';
+import * as mathMLTree from '../mathMLTree';
+import { assertNodeType } from '../parseNode';
+import ParseError from '../ParseError';
+import * as mml from '../buildMathML';
+import { Token } from '../Token';
+import type { MacroDefinition, MacroExpansion } from '../defineMacro';
+import type { MathMLBuilder } from '../defineFunction';
+import type { MathNode } from '../mathMLTree';
+import type Namespace from '../Namespace';
 
 // Helpers
-const htmlRegEx = /^(#[a-f0-9]{3}|#?[a-f0-9]{6})$/i
-const htmlOrNameRegEx = /^(#[a-f0-9]{3}|#?[a-f0-9]{6}|[a-z]+)$/i
-const RGBregEx = /^ *\d{1,3} *(?:, *\d{1,3} *){2}$/
-const rgbRegEx = /^ *[10](?:\.\d*)? *(?:, *[10](?:\.\d*)? *){2}$/
-const xcolorHtmlRegEx = /^[a-f0-9]{6}$/i
+const htmlRegEx = /^(#[a-f0-9]{3}|#?[a-f0-9]{6})$/i;
+const htmlOrNameRegEx = /^(#[a-f0-9]{3}|#?[a-f0-9]{6}|[a-z]+)$/i;
+const RGBregEx = /^ *\d{1,3} *(?:, *\d{1,3} *){2}$/;
+const rgbRegEx = /^ *[10](?:\.\d*)? *(?:, *[10](?:\.\d*)? *){2}$/;
+const xcolorHtmlRegEx = /^[a-f0-9]{6}$/i;
 const toHex = (num: number): string => {
-  let str = num.toString(16)
-  if (str.length === 1) { str = "0" + str }
-  return str
-}
+  let str = num.toString(16);
+  if (str.length === 1) {
+    str = '0' + str;
+  }
+  return str;
+};
 
 // Colors from Tables 4.1 and 4.2 of the xcolor package.
 // Table 4.1 (lower case) RGB values are taken from chroma and xcolor.dtx.
@@ -109,156 +111,164 @@ const xcolors: Record<string, string> = JSON.parse(`{
   "Yellow": "#fff404",
   "YellowGreen": "#98cc6c",
   "YellowOrange": "#ffa41c"
-}`)
+}`);
 
 export const colorFromSpec = (model: string, spec: string): string => {
-  let color = ""
-  if (model === "HTML") {
+  let color = '';
+  if (model === 'HTML') {
     if (!htmlRegEx.test(spec)) {
-      throw new ParseError("Invalid HTML input.")
+      throw new ParseError('Invalid HTML input.');
     }
-    color = spec
-  } else if (model === "RGB") {
+    color = spec;
+  } else if (model === 'RGB') {
     if (!RGBregEx.test(spec)) {
-      throw new ParseError("Invalid RGB input.")
+      throw new ParseError('Invalid RGB input.');
     }
-    spec.split(",").map(e => { color += toHex(Number(e.trim())) })
+    spec.split(',').map((e) => {
+      color += toHex(Number(e.trim()));
+    });
   } else {
     if (!rgbRegEx.test(spec)) {
-      throw new ParseError("Invalid rbg input.")
+      throw new ParseError('Invalid rbg input.');
     }
-    spec.split(",").map(e => {
-      const num = Number(e.trim())
-      if (num > 1) { throw new ParseError("Color rgb input must be < 1.") }
-      color += toHex(Number((num * 255).toFixed(0)))
-    })
+    spec.split(',').map((e) => {
+      const num = Number(e.trim());
+      if (num > 1) {
+        throw new ParseError('Color rgb input must be < 1.');
+      }
+      color += toHex(Number((num * 255).toFixed(0)));
+    });
   }
-  if (color.charAt(0) !== "#") { color = "#" + color }
-  return color
-}
+  if (color.charAt(0) !== '#') {
+    color = '#' + color;
+  }
+  return color;
+};
 
 export const validateColor = (
   color: string,
   macros: Namespace<MacroDefinition>,
-  token?: Token | null
+  token?: Token | null,
 ): string => {
-  const macroName = `\\\\color@${color}` // from \defineColor.
+  const macroName = `\\\\color@${color}`; // from \defineColor.
   const match = htmlOrNameRegEx.exec(color);
-  if (!match) { throw new ParseError("Invalid color: '" + color + "'", token) }
+  if (!match) {
+    throw new ParseError("Invalid color: '" + color + "'", token);
+  }
   // We allow a 6-digit HTML color spec without a leading "#".
   // This follows the xcolor package's HTML color model.
   // Predefined color names are all missed by this RegEx pattern.
   if (xcolorHtmlRegEx.test(color)) {
-    return "#" + color
-  } else if (color.charAt(0) === "#") {
-    return color
+    return '#' + color;
+  } else if (color.charAt(0) === '#') {
+    return color;
   } else if (macros.has(macroName)) {
-    color = (macros.get(macroName) as MacroExpansion).tokens[0].text
+    color = (macros.get(macroName) as MacroExpansion).tokens[0].text;
   } else if (xcolors[color]) {
-    color = xcolors[color]
+    color = xcolors[color];
   }
-  return color
-}
+  return color;
+};
 
-const mathmlBuilder: MathMLBuilder<"color"> = (group, style) => {
+const mathmlBuilder: MathMLBuilder<'color'> = (group, style) => {
   // In LaTeX, color is not supposed to change the spacing of any node.
   // So instead of wrapping the group in an <mstyle>, we apply
   // the color individually to each node and return a document fragment.
-  let expr = mml.buildExpression(group.body, style.withColor(group.color))
+  let expr = mml.buildExpression(group.body, style.withColor(group.color));
   if (expr.length === 0) {
-    expr.push(new mathMLTree.MathNode("mrow"))
+    expr.push(new mathMLTree.MathNode('mrow'));
   }
-  expr = expr.map(e => {
-    (e as MathNode).style.color = group.color
-    return e
-  })
-  return mathMLTree.newDocumentFragment(expr)
-}
+  expr = expr.map((e) => {
+    (e as MathNode).style.color = group.color;
+    return e;
+  });
+  return mathMLTree.newDocumentFragment(expr);
+};
 
 defineFunction({
-  type: "color",
-  names: ["\\textcolor"],
+  type: 'color',
+  names: ['\\textcolor'],
   props: {
     numArgs: 2,
     numOptionalArgs: 1,
     allowedInText: true,
-    argTypes: ["raw", "raw", "original"]
+    argTypes: ['raw', 'raw', 'original'],
   },
   handler({ parser, token }, args, optArgs) {
-    const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color: string
+    const model = optArgs[0] && assertNodeType(optArgs[0], 'raw').string;
+    let color: string;
     if (model) {
-      const spec = assertNodeType(args[0], "raw").string
-      color = colorFromSpec(model, spec)
+      const spec = assertNodeType(args[0], 'raw').string;
+      color = colorFromSpec(model, spec);
     } else {
-      color = validateColor(assertNodeType(args[0], "raw").string, parser.gullet.macros, token)
+      color = validateColor(assertNodeType(args[0], 'raw').string, parser.gullet.macros, token);
     }
     const body = args[1];
     return {
-      type: "color",
+      type: 'color',
       mode: parser.mode,
       color,
       isTextColor: true,
-      body: ordargument(body)
-    }
+      body: ordargument(body),
+    };
   },
-  mathmlBuilder
-})
+  mathmlBuilder,
+});
 
 defineFunction({
-  type: "color",
-  names: ["\\color"],
+  type: 'color',
+  names: ['\\color'],
   props: {
     numArgs: 1,
     numOptionalArgs: 1,
     allowedInText: true,
-    argTypes: ["raw", "raw"]
+    argTypes: ['raw', 'raw'],
   },
   handler({ parser, breakOnTokenText, token }, args, optArgs) {
-    const model = optArgs[0] && assertNodeType(optArgs[0], "raw").string
-    let color: string
+    const model = optArgs[0] && assertNodeType(optArgs[0], 'raw').string;
+    let color: string;
     if (model) {
-      const spec = assertNodeType(args[0], "raw").string
-      color = colorFromSpec(model, spec)
+      const spec = assertNodeType(args[0], 'raw').string;
+      color = colorFromSpec(model, spec);
     } else {
-      color = validateColor(assertNodeType(args[0], "raw").string, parser.gullet.macros, token)
+      color = validateColor(assertNodeType(args[0], 'raw').string, parser.gullet.macros, token);
     }
 
     // Parse out the implicit body that should be colored.
-    const body = parser.parseExpression(true, breakOnTokenText, true)
+    const body = parser.parseExpression(true, breakOnTokenText, true);
 
     return {
-      type: "color",
+      type: 'color',
       mode: parser.mode,
       color,
       isTextColor: false,
-      body
-    }
+      body,
+    };
   },
-  mathmlBuilder
-})
+  mathmlBuilder,
+});
 
 defineFunction({
-  type: "color",
-  names: ["\\definecolor"],
+  type: 'color',
+  names: ['\\definecolor'],
   props: {
     numArgs: 3,
     allowedInText: true,
-    argTypes: ["raw", "raw", "raw"]
+    argTypes: ['raw', 'raw', 'raw'],
   },
   handler({ parser, funcName, token }, args) {
-    const name = assertNodeType(args[0], "raw").string
+    const name = assertNodeType(args[0], 'raw').string;
     if (!/^[A-Za-z]+$/.test(name)) {
-      throw new ParseError("Color name must be latin letters.", token)
+      throw new ParseError('Color name must be latin letters.', token);
     }
-    const model = assertNodeType(args[1], "raw").string
-    if (!["HTML", "RGB", "rgb"].includes(model)) {
-      throw new ParseError("Color model must be HTML, RGB, or rgb.", token)
+    const model = assertNodeType(args[1], 'raw').string;
+    if (!['HTML', 'RGB', 'rgb'].includes(model)) {
+      throw new ParseError('Color model must be HTML, RGB, or rgb.', token);
     }
-    const spec = assertNodeType(args[2], "raw").string
-    const color = colorFromSpec(model, spec)
-    parser.gullet.macros.set(`\\\\color@${name}`, { tokens: [new Token(color)], numArgs: 0 })
-    return { type: "internal", mode: parser.mode }
-  }
+    const spec = assertNodeType(args[2], 'raw').string;
+    const color = colorFromSpec(model, spec);
+    parser.gullet.macros.set(`\\\\color@${name}`, { tokens: [new Token(color)], numArgs: 0 });
+    return { type: 'internal', mode: parser.mode };
+  },
   // No mathmlBuilder. The point of \definecolor is to set a macro.
-})
+});

@@ -1,27 +1,27 @@
-import defineFunction from "../defineFunction";
-import { AnchorNode } from "../domTree";
-import { invalidIdRegEx } from "./label";
-import { assertNodeType } from "../parseNode";
+import defineFunction from '../defineFunction';
+import { AnchorNode } from '../domTree';
+import { invalidIdRegEx } from './label';
+import { assertNodeType } from '../parseNode';
 
 defineFunction({
-  type: "ref",
-  names: ["\\ref", "\\eqref"],
+  type: 'ref',
+  names: ['\\ref', '\\eqref'],
   props: {
     numArgs: 1,
-    argTypes: ["raw"]
+    argTypes: ['raw'],
   },
   handler({ parser, funcName }, args) {
     return {
-      type: "ref",
+      type: 'ref',
       mode: parser.mode,
       funcName,
-      string: assertNodeType(args[0], "raw").string.replace(invalidIdRegEx, "")
+      string: assertNodeType(args[0], 'raw').string.replace(invalidIdRegEx, ''),
     };
   },
   mathmlBuilder(group, style) {
     // Create an empty <a> node. Set a class and an href attribute.
     // The post-processor will populate with the target's tag or equation number.
-    const classes = group.funcName === "\\ref" ? ["tml-ref"] : ["tml-ref", "tml-eqref"]
-    return new AnchorNode("#" + group.string, classes, null)
-  }
+    const classes = group.funcName === '\\ref' ? ['tml-ref'] : ['tml-ref', 'tml-eqref'];
+    return new AnchorNode('#' + group.string, classes, null);
+  },
 });

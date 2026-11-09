@@ -1,24 +1,24 @@
-import type { AnyParseNode, ParseNode } from "../parseNode"
+import type { AnyParseNode, ParseNode } from '../parseNode';
 
-const ordGroup = (body: AnyParseNode[]): ParseNode<"ordgroup"> => {
+const ordGroup = (body: AnyParseNode[]): ParseNode<'ordgroup'> => {
   return {
-    "type": "ordgroup",
-    "mode": "math",
-    "body": body,
-    "semisimple": true
-  }
-}
+    type: 'ordgroup',
+    mode: 'math',
+    body: body,
+    semisimple: true,
+  };
+};
 
 const phantom = (
   body: AnyParseNode[],
-  type: "hphantom" | "vphantom"
-): ParseNode<"hphantom"> | ParseNode<"vphantom"> => {
+  type: 'hphantom' | 'vphantom',
+): ParseNode<'hphantom'> | ParseNode<'vphantom'> => {
   return {
-    "type": type,
-    "mode": "math",
-    "body": ordGroup(body)
-  }
-}
+    type: type,
+    mode: 'math',
+    body: ordGroup(body),
+  };
+};
 
 /*
  * A helper for \bordermatrix.
@@ -40,107 +40,107 @@ const phantom = (
  */
 
 export const bordermatrixParseTree = (
-  matrix: ParseNode<"array">,
-  delimiters?: string[]
-): ParseNode<"ordgroup"> => {
-  const body = matrix.body
-  body[0].shift() // dispose of top left cell
+  matrix: ParseNode<'array'>,
+  delimiters?: string[],
+): ParseNode<'ordgroup'> => {
+  const body = matrix.body;
+  body[0].shift(); // dispose of top left cell
 
   // Create an array for the left column
-  const leftColumnBody: AnyParseNode[][] = new Array(body.length - 1).fill(undefined).map(() => [])
+  const leftColumnBody: AnyParseNode[][] = new Array(body.length - 1).fill(undefined).map(() => []);
   for (let i = 1; i < body.length; i++) {
     // The visible part of the cell
-    leftColumnBody[i - 1].push(body[i].shift()!)
+    leftColumnBody[i - 1].push(body[i].shift()!);
     // A vphantom with contents from the pmatrix, to set minimum cell height
     const phantomBody: AnyParseNode[] = [];
     for (let j = 0; j < body[i].length; j++) {
-      phantomBody.push(body[i][j])
+      phantomBody.push(body[i][j]);
     }
-    leftColumnBody[i - 1].push(phantom(phantomBody, "vphantom"))
+    leftColumnBody[i - 1].push(phantom(phantomBody, 'vphantom'));
   }
 
   // Create an array for the top row
-  const topRowBody: AnyParseNode[][] = new Array(body.length).fill(undefined).map(() => [])
+  const topRowBody: AnyParseNode[][] = new Array(body.length).fill(undefined).map(() => []);
   for (let j = 0; j < body[0].length; j++) {
-    topRowBody[0].push(body[0][j])
+    topRowBody[0].push(body[0][j]);
   }
   // Copy the rest of the pmatrix, but squashed via \hphantom
   for (let i = 1; i < body.length; i++) {
     for (let j = 0; j < body[0].length; j++) {
-      topRowBody[i].push(phantom((body[i][j] as ParseNode<"ordgroup">).body, "hphantom"))
+      topRowBody[i].push(phantom((body[i][j] as ParseNode<'ordgroup'>).body, 'hphantom'));
     }
   }
 
   // Squash the top row of the main {pmatrix}
   for (let j = 0; j < body[0].length; j++) {
-    body[0][j] = phantom((body[0][j] as ParseNode<"ordgroup">).body, "hphantom")
+    body[0][j] = phantom((body[0][j] as ParseNode<'ordgroup'>).body, 'hphantom');
   }
 
   // Now wrap the arrays in the proper parse nodes.
 
-  const leftColumn: ParseNode<"array"> = {
-    type: "array",
-    mode: "math",
+  const leftColumn: ParseNode<'array'> = {
+    type: 'array',
+    mode: 'math',
     body: leftColumnBody,
-    cols: [{ type: "align", align: "c" }],
+    cols: [{ type: 'align', align: 'c' }],
     rowGaps: new Array(leftColumnBody.length - 1).fill(null),
     hLinesBeforeRow: new Array(leftColumnBody.length + 1).fill(undefined).map(() => []),
     envClasses: [],
-    scriptLevel: "text",
+    scriptLevel: 'text',
     arraystretch: 1,
-    labels: new Array(leftColumnBody.length).fill(""),
-    arraycolsep: { "number": 0.04, unit: "em" }
-  }
+    labels: new Array(leftColumnBody.length).fill(''),
+    arraycolsep: { number: 0.04, unit: 'em' },
+  };
 
-  const topRow: ParseNode<"array"> = {
-    type: "array",
-    mode: "math",
+  const topRow: ParseNode<'array'> = {
+    type: 'array',
+    mode: 'math',
     body: topRowBody,
-    cols: new Array(topRowBody.length).fill({ type: "align", align: "c" }),
+    cols: new Array(topRowBody.length).fill({ type: 'align', align: 'c' }),
     rowGaps: new Array(topRowBody.length - 1).fill(null),
     hLinesBeforeRow: new Array(topRowBody.length + 1).fill(undefined).map(() => []),
     envClasses: [],
-    scriptLevel: "text",
+    scriptLevel: 'text',
     arraystretch: 1,
-    labels: new Array(topRowBody.length).fill(""),
-    arraycolsep: null
-  }
+    labels: new Array(topRowBody.length).fill(''),
+    arraycolsep: null,
+  };
 
-  const topWrapper: ParseNode<"styling"> = {
-    type: "styling",
-    mode: "math",
-    scriptLevel: "text", // Must set this explicitly.
-    body: [topRow]       // Default level is "script".
-  }
+  const topWrapper: ParseNode<'styling'> = {
+    type: 'styling',
+    mode: 'math',
+    scriptLevel: 'text', // Must set this explicitly.
+    body: [topRow], // Default level is "script".
+  };
 
-  const container: ParseNode<"leftright"> = {
-    type: "leftright",
-    mode: "math",
+  const container: ParseNode<'leftright'> = {
+    type: 'leftright',
+    mode: 'math',
     body: [matrix],
-    left: delimiters ? delimiters[0] : "(",
-    right: delimiters ? delimiters[1] : ")",
-    rightColor: undefined
-  }
+    left: delimiters ? delimiters[0] : '(',
+    right: delimiters ? delimiters[1] : ')',
+    rightColor: undefined,
+  };
 
-  const base: ParseNode<"op"> = {
-    type: "op",   // The base of a TeX \overset
-    mode: "math",
+  const base: ParseNode<'op'> = {
+    type: 'op', // The base of a TeX \overset
+    mode: 'math',
     limits: true,
     alwaysHandleSupSub: true,
     parentIsSupSub: true,
     symbol: false,
     suppressBaseShift: true,
-    body: [container]
-  }
+    body: [container],
+  };
 
-  const mover: ParseNode<"supsub"> = {
-    type: "supsub",  // We're using the MathML equivalent
-    mode: "math",    // of TeX \overset.
+  const mover: ParseNode<'supsub'> = {
+    type: 'supsub', // We're using the MathML equivalent
+    mode: 'math', // of TeX \overset.
     stack: true,
-    base: base,      // That keeps the {pmatrix} aligned with
+    base: base, // That keeps the {pmatrix} aligned with
     sup: topWrapper, // the math centerline.
-    sub: null
-  }
+    sub: null,
+  };
 
-  return ordGroup([leftColumn, mover])
-}
+  return ordGroup([leftColumn, mover]);
+};

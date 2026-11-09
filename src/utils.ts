@@ -3,7 +3,7 @@
  * files.
  */
 
-import type { AnyParseNode } from "./parseNode";
+import type { AnyParseNode } from './parseNode';
 
 /**
  * Look up `key` on a user-supplied `options` object and return its value, or
@@ -15,28 +15,28 @@ import type { AnyParseNode } from "./parseNode";
 export const deflt = <T extends object, K extends keyof T, D>(
   options: T,
   key: K,
-  defaultIfUndefined: D
+  defaultIfUndefined: D,
 ): Exclude<T[K], undefined> | D => {
   if (!Object.hasOwn(options, key)) {
     return defaultIfUndefined;
   }
   const setting = options[key];
-  return setting === undefined ? defaultIfUndefined : setting as Exclude<T[K], undefined>;
+  return setting === undefined ? defaultIfUndefined : (setting as Exclude<T[K], undefined>);
 };
 
 // hyphenate and escape adapted from Facebook's React under Apache 2 license
 
 const uppercase = /([A-Z])/g;
 export const hyphenate = (str: string): string => {
-  return str.replace(uppercase, "-$1").toLowerCase();
+  return str.replace(uppercase, '-$1').toLowerCase();
 };
 
 const ESCAPE_LOOKUP: Record<string, string> = {
-  "&": "&amp;",
-  ">": "&gt;",
-  "<": "&lt;",
-  '"': "&quot;",
-  "'": "&#x27;"
+  '&': '&amp;',
+  '>': '&gt;',
+  '<': '&lt;',
+  '"': '&quot;',
+  "'": '&#x27;',
 };
 
 const ESCAPE_REGEX = /[&><"']/g;
@@ -46,7 +46,7 @@ const ESCAPE_REGEX = /[&><"']/g;
  */
 export const escape = (text: unknown): string => {
   return String(text).replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
-}
+};
 
 /**
  * Sometimes we want to pull out the innermost element of a group. In most
@@ -54,19 +54,19 @@ export const escape = (text: unknown): string => {
  * a single element, we want to pull that out.
  */
 export const getBaseElem = (group: AnyParseNode): AnyParseNode => {
-  if (group.type === "ordgroup") {
+  if (group.type === 'ordgroup') {
     if (group.body.length === 1) {
       return getBaseElem(group.body[0]);
     } else {
       return group;
     }
-  } else if (group.type === "color") {
+  } else if (group.type === 'color') {
     if (group.body.length === 1) {
       return getBaseElem(group.body[0]);
     } else {
       return group;
     }
-  } else if (group.type === "font") {
+  } else if (group.type === 'font') {
     return getBaseElem(group.body);
   } else {
     return group;
@@ -82,12 +82,12 @@ export const isCharacterBox = (group: AnyParseNode): boolean => {
   const baseElem = getBaseElem(group);
 
   // These are all the types of groups which hold single characters
-  return baseElem.type === "mathord" || baseElem.type === "textord" || baseElem.type === "atom"
+  return baseElem.type === 'mathord' || baseElem.type === 'textord' || baseElem.type === 'atom';
 };
 
 export const assert = <T>(value: T): NonNullable<T> => {
   if (!value) {
-    throw new Error("Expected non-null, but got " + String(value));
+    throw new Error('Expected non-null, but got ' + String(value));
   }
   return value;
 };
@@ -104,10 +104,10 @@ export const protocolFromUrl = (url: string): string | null => {
   // eslint-disable-next-line no-control-regex
   const protocol = /^[\x00-\x20]*([^\\/#?]*?)(:|&#0*58|&#x0*3a|&colon)/i.exec(url);
   if (!protocol) {
-    return "_relative";
+    return '_relative';
   }
   // Reject weird colons
-  if (protocol[2] !== ":") {
+  if (protocol[2] !== ':') {
     return null;
   }
   // Reject invalid characters in scheme according to
@@ -130,4 +130,4 @@ export const round = (n: number): number => {
 };
 
 // Identify short letters. Used for accents and \cancelto.
-export const smalls = "acegıȷmnopqrsuvwxyzαγεηικμνοπρςστυχωϕ𝐚𝐜𝐞𝐠𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐮𝐯𝐰𝐱𝐲𝐳"
+export const smalls = 'acegıȷmnopqrsuvwxyzαγεηικμνοπρςστυχωϕ𝐚𝐜𝐞𝐠𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐮𝐯𝐰𝐱𝐲𝐳';

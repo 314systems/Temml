@@ -8,15 +8,15 @@
  * Similar functions for working with MathML nodes exist in mathMLTree.js.
  *
  */
-import type { CssStyle, MathDomNode, VirtualNode } from "./tree";
-import * as utils from "./utils";
+import type { CssStyle, MathDomNode, VirtualNode } from './tree';
+import * as utils from './utils';
 
 /**
  * Create an HTML className based on a list of classes. In addition to joining
  * with spaces, we also remove empty classes.
  */
 export const createClass = (classes: string[]): string => {
-  return classes.filter((cls) => cls).join(" ");
+  return classes.filter((cls) => cls).join(' ');
 };
 
 interface HtmlElementData {
@@ -29,7 +29,7 @@ interface HtmlElementData {
 /**
  * Convert into an HTML node
  */
-const toNode = function(this: HtmlElementData, tagName: string): HTMLElement {
+const toNode = function (this: HtmlElementData, tagName: string): HTMLElement {
   const node = document.createElement(tagName);
 
   // Apply the class
@@ -56,7 +56,7 @@ const toNode = function(this: HtmlElementData, tagName: string): HTMLElement {
 /**
  * Convert into an HTML markup string
  */
-const toMarkup = function(this: HtmlElementData, tagName: string): string {
+const toMarkup = function (this: HtmlElementData, tagName: string): string {
   let markup = `<${tagName}`;
 
   // Add the class
@@ -64,7 +64,7 @@ const toMarkup = function(this: HtmlElementData, tagName: string): string {
     markup += ` class="${utils.escape(createClass(this.classes))}"`;
   }
 
-  let styles = "";
+  let styles = '';
 
   // Add the styles, after hyphenation
   for (const style in this.style) {
@@ -84,7 +84,7 @@ const toMarkup = function(this: HtmlElementData, tagName: string): string {
     }
   }
 
-  markup += ">";
+  markup += '>';
 
   // Add the markup of the children, also as markup
   for (let i = 0; i < this.children.length; i++) {
@@ -119,17 +119,17 @@ export class Span implements HtmlElementData, MathDomNode {
   }
 
   toNode(): HTMLElement {
-    return toNode.call(this, "span");
+    return toNode.call(this, 'span');
   }
 
   toMarkup(): string {
-    return toMarkup.call(this, "span");
+    return toMarkup.call(this, 'span');
   }
 
   // A <span> placed in the MathML tree, e.g. for an equation number, holds no
   // text until postProcess fills it in.
   toText(): string {
-    return ""
+    return '';
   }
 }
 
@@ -160,33 +160,33 @@ export class AnchorNode implements MathDomNode {
   }
 
   toNode(): HTMLAnchorElement {
-    const node = document.createElement("a")
-    node.setAttribute("href", this.href)
+    const node = document.createElement('a');
+    node.setAttribute('href', this.href);
     if (this.classes.length > 0) {
-      node.className = createClass(this.classes)
+      node.className = createClass(this.classes);
     }
     for (let i = 0; i < this.children.length; i++) {
       node.appendChild(this.children[i].toNode());
     }
-    return node
+    return node;
   }
 
   toMarkup(): string {
-    let markup = `<a href='${utils.escape(this.href)}'`
+    let markup = `<a href='${utils.escape(this.href)}'`;
     if (this.classes.length > 0) {
-      markup += ` class="${utils.escape(createClass(this.classes))}"`
+      markup += ` class="${utils.escape(createClass(this.classes))}"`;
     }
-    markup += ">"
+    markup += '>';
     for (let i = 0; i < this.children.length; i++) {
       markup += this.children[i].toMarkup();
     }
-    markup += "</a>"
-    return markup
+    markup += '</a>';
+    return markup;
   }
 
   // An anchor for \ref holds no text until postProcess fills it in.
   toText(): string {
-    return ""
+    return '';
   }
 }
 
@@ -202,7 +202,7 @@ export class Img implements MathDomNode {
   constructor(src: string, alt: string, style: CssStyle) {
     this.alt = alt;
     this.src = src;
-    this.classes = ["mord"];
+    this.classes = ['mord'];
     this.style = style;
   }
 
@@ -211,10 +211,10 @@ export class Img implements MathDomNode {
   }
 
   toNode(): HTMLImageElement {
-    const node = document.createElement("img");
+    const node = document.createElement('img');
     node.src = this.src;
     node.alt = this.alt;
-    node.className = "mord";
+    node.className = 'mord';
 
     // Apply inline styles
     Object.assign(node.style, this.style);
@@ -226,7 +226,7 @@ export class Img implements MathDomNode {
     let markup = `<img src='${this.src}' alt='${this.alt}'`;
 
     // Add the styles, after hyphenation
-    let styles = "";
+    let styles = '';
     for (const style in this.style) {
       if (Object.hasOwn(this.style, style)) {
         styles += `${utils.hyphenate(style)}:${this.style[style]};`;
@@ -236,11 +236,11 @@ export class Img implements MathDomNode {
       markup += ` style="${utils.escape(styles)}"`;
     }
 
-    markup += ">";
+    markup += '>';
     return markup;
   }
 
   toText(): string {
-    return ""
+    return '';
   }
 }

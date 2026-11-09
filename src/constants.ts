@@ -13,7 +13,7 @@ export const metrics = {
   doubleRuleSep: [0.3, 0.3, 0.3],
 
   // The width of separator lines in {array} environments.
-  arrayRuleWidth: [0.06, 0.06, 0.04]
+  arrayRuleWidth: [0.06, 0.06, 0.04],
 };
 
 // Math style is not quite the same thing as script level.
@@ -21,5 +21,5 @@ export const StyleLevel = {
   DISPLAY: 0,
   TEXT: 1,
   SCRIPT: 2,
-  SCRIPTSCRIPT: 3
+  SCRIPTSCRIPT: 3,
 } as const;

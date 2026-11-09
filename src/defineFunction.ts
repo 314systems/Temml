@@ -1,9 +1,9 @@
-import type Parser from "./Parser";
-import type { AnyParseNode, NodeType, ParseNode } from "./parseNode";
-import type Style from "./Style";
-import type { Token } from "./Token";
-import type { MathDomNode } from "./tree";
-import type { ArgType } from "./types";
+import type Parser from './Parser';
+import type { AnyParseNode, NodeType, ParseNode } from './parseNode';
+import type Style from './Style';
+import type { Token } from './Token';
+import type { MathDomNode } from './tree';
+import type { ArgType } from './types';
 
 /** The context passed to a function handler. See Parser#callFunction. */
 export interface FunctionContext {
@@ -21,13 +21,13 @@ export interface FunctionContext {
 export type FunctionHandler = (
   context: FunctionContext,
   args: AnyParseNode[],
-  optArgs: Array<AnyParseNode | null | undefined>
+  optArgs: Array<AnyParseNode | null | undefined>,
 ) => AnyParseNode;
 
 /** Builds the MathML of a parse node of the given type. */
 export type MathMLBuilder<NODETYPE extends NodeType> = (
   group: ParseNode<NODETYPE>,
-  style: Style
+  style: Style,
 ) => MathDomNode;
 
 export interface FunctionPropSpec {
@@ -115,13 +115,13 @@ type AnyMathMLBuilder = (group: AnyParseNode, style: Style) => MathDomNode;
  * `functions.js` just exports this same dictionary again and makes it public.
  * `Parser.js` requires this dictionary.
  */
-export const _functions: Record<string, FunctionSpecData> = {}
+export const _functions: Record<string, FunctionSpecData> = {};
 
 /**
  * All MathML builders. Should be only used in the `define*` and the `build*ML`
  * functions.
  */
-export const _mathmlGroupBuilders: Partial<Record<NodeType, AnyMathMLBuilder>> = {}
+export const _mathmlGroupBuilders: Partial<Record<NodeType, AnyMathMLBuilder>> = {};
 
 /**
  * Register a MathML builder. Each builder only ever receives nodes of its own
@@ -129,17 +129,17 @@ export const _mathmlGroupBuilders: Partial<Record<NodeType, AnyMathMLBuilder>> =
  */
 export const registerMathMLBuilder = <NODETYPE extends NodeType>(
   type: NODETYPE,
-  mathmlBuilder: MathMLBuilder<NODETYPE>
+  mathmlBuilder: MathMLBuilder<NODETYPE>,
 ): void => {
-  _mathmlGroupBuilders[type] = mathmlBuilder as unknown as AnyMathMLBuilder
-}
+  _mathmlGroupBuilders[type] = mathmlBuilder as unknown as AnyMathMLBuilder;
+};
 
 const defineFunction = <NODETYPE extends NodeType>({
   type,
   names,
   props,
   handler,
-  mathmlBuilder
+  mathmlBuilder,
 }: FunctionSpec<NODETYPE>): void => {
   // Set default values of functions
   const data: FunctionSpecData = {
@@ -152,17 +152,17 @@ const defineFunction = <NODETYPE extends NodeType>({
     numOptionalArgs: props.numOptionalArgs ?? 0,
     infix: !!props.infix,
     primitive: !!props.primitive,
-    handler
-  }
+    handler,
+  };
   for (let i = 0; i < names.length; ++i) {
-    _functions[names[i]] = data
+    _functions[names[i]] = data;
   }
   if (mathmlBuilder) {
-    registerMathMLBuilder(type, mathmlBuilder)
+    registerMathMLBuilder(type, mathmlBuilder);
   }
-}
+};
 
-export default defineFunction
+export default defineFunction;
 
 /**
  * Use this to register only the MathML builder for a function(e.g.
@@ -171,7 +171,7 @@ export default defineFunction
  */
 export const defineFunctionBuilders = <NODETYPE extends NodeType>({
   type,
-  mathmlBuilder
+  mathmlBuilder,
 }: {
   type: NODETYPE;
   mathmlBuilder?: MathMLBuilder<NODETYPE>;
@@ -181,18 +181,18 @@ export const defineFunctionBuilders = <NODETYPE extends NodeType>({
     names: [],
     props: { numArgs: 0 },
     handler() {
-      throw new Error("Should never be called.")
+      throw new Error('Should never be called.');
     },
-    mathmlBuilder
-  })
-}
+    mathmlBuilder,
+  });
+};
 
 export const normalizeArgument = (arg: AnyParseNode): AnyParseNode => {
-  return arg.type === "ordgroup" && arg.body.length === 1 ? arg.body[0] : arg
-}
+  return arg.type === 'ordgroup' && arg.body.length === 1 ? arg.body[0] : arg;
+};
 
 // Since the corresponding buildMathML function expects a
 // list of elements, we normalize for different kinds of arguments
 export const ordargument = (arg: AnyParseNode): AnyParseNode[] => {
-  return arg.type === "ordgroup" ? arg.body : [arg]
-}
+  return arg.type === 'ordgroup' ? arg.body : [arg];
+};

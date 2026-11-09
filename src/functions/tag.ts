@@ -1,7 +1,7 @@
-import { defineFunctionBuilders } from "../defineFunction";
+import { defineFunctionBuilders } from '../defineFunction';
 
 defineFunctionBuilders({
-  type: "tag"
+  type: 'tag',
 });
 
 // For a \tag, the work usually done in a mathmlBuilder is instead done in buildMathML.js.

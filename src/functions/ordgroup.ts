@@ -1,9 +1,9 @@
-import { defineFunctionBuilders } from "../defineFunction";
-import * as mml from "../buildMathML";
+import { defineFunctionBuilders } from '../defineFunction';
+import * as mml from '../buildMathML';
 
 defineFunctionBuilders({
-  type: "ordgroup",
+  type: 'ordgroup',
   mathmlBuilder(group, style) {
     return mml.buildExpressionRow(group.body, style, group.semisimple);
-  }
+  },
 });

@@ -1,4 +1,4 @@
-import SourceLocation from "./SourceLocation";
+import SourceLocation from './SourceLocation';
 
 /**
  * The resulting token returned from `lex`.
@@ -32,7 +32,7 @@ export class Token {
    */
   range(
     endToken: Token, // last token of the range, inclusive
-    text: string     // the text of the newly constructed token
+    text: string, // the text of the newly constructed token
   ): Token {
     return new Token(text, SourceLocation.range(this, endToken));
   }

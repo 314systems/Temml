@@ -18,8 +18,8 @@ export interface LocSource {
  */
 export default class SourceLocation {
   readonly lexer: LexerInterface; // Lexer holding the input string.
-  readonly start: number;         // Start offset, zero-based inclusive.
-  readonly end: number;           // End offset, zero-based exclusive.
+  readonly start: number; // Start offset, zero-based inclusive.
+  readonly end: number; // End offset, zero-based exclusive.
 
   constructor(lexer: LexerInterface, start: number, end: number) {
     this.lexer = lexer;
@@ -37,7 +37,7 @@ export default class SourceLocation {
    */
   static range(
     first?: LocSource | null,
-    second?: LocSource | null
+    second?: LocSource | null,
   ): SourceLocation | null | undefined {
     if (!second) {
       return first && first.loc;

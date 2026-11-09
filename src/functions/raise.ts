@@ -1,69 +1,69 @@
-import defineFunction from "../defineFunction"
-import { StyleLevel } from "../constants"
-import * as mathMLTree from "../mathMLTree"
-import { assertNodeType } from "../parseNode"
-import { calculateSize } from "../units"
-import * as mml from "../buildMathML"
-import type { MathMLBuilder } from "../defineFunction"
+import defineFunction from '../defineFunction';
+import { StyleLevel } from '../constants';
+import * as mathMLTree from '../mathMLTree';
+import { assertNodeType } from '../parseNode';
+import { calculateSize } from '../units';
+import * as mml from '../buildMathML';
+import type { MathMLBuilder } from '../defineFunction';
 
 // \raise, \lower, and \raisebox
 
-const mathmlBuilder: MathMLBuilder<"raise"> = (group, style) => {
-  const newStyle = style.withLevel(StyleLevel.TEXT)
-  const node = new mathMLTree.MathNode("mpadded", [mml.buildGroup(group.body, newStyle)])
-  const dy = calculateSize(group.dy, style)
-  node.setAttribute("voffset", dy.number + dy.unit)
+const mathmlBuilder: MathMLBuilder<'raise'> = (group, style) => {
+  const newStyle = style.withLevel(StyleLevel.TEXT);
+  const node = new mathMLTree.MathNode('mpadded', [mml.buildGroup(group.body, newStyle)]);
+  const dy = calculateSize(group.dy, style);
+  node.setAttribute('voffset', dy.number + dy.unit);
   // Add padding, which acts to increase height in Chromium.
   // TODO: Figure out some way to change height in Firefox w/o breaking Chromium.
   if (dy.number > 0) {
-    node.style.padding = dy.number + dy.unit + " 0 0 0"
+    node.style.padding = dy.number + dy.unit + ' 0 0 0';
   } else {
-    node.style.padding = "0 0 " + Math.abs(dy.number) + dy.unit + " 0"
+    node.style.padding = '0 0 ' + Math.abs(dy.number) + dy.unit + ' 0';
   }
-  return node
-}
+  return node;
+};
 
 defineFunction({
-  type: "raise",
-  names: ["\\raise", "\\lower"],
+  type: 'raise',
+  names: ['\\raise', '\\lower'],
   props: {
     numArgs: 2,
-    argTypes: ["size", "primitive"],
-    primitive: true
+    argTypes: ['size', 'primitive'],
+    primitive: true,
   },
   handler({ parser, funcName }, args) {
-    const amount = assertNodeType(args[0], "size").value;
-    if (funcName === "\\lower") { amount.number *= -1 }
-    const body = args[1]
+    const amount = assertNodeType(args[0], 'size').value;
+    if (funcName === '\\lower') {
+      amount.number *= -1;
+    }
+    const body = args[1];
     return {
-      type: "raise",
+      type: 'raise',
       mode: parser.mode,
       dy: amount,
-      body
+      body,
     };
   },
-  mathmlBuilder
-})
-
+  mathmlBuilder,
+});
 
 defineFunction({
-  type: "raise",
-  names: ["\\raisebox"],
+  type: 'raise',
+  names: ['\\raisebox'],
   props: {
     numArgs: 2,
-    argTypes: ["size", "hbox"],
-    allowedInText: true
+    argTypes: ['size', 'hbox'],
+    allowedInText: true,
   },
   handler({ parser, funcName }, args) {
-    const amount = assertNodeType(args[0], "size").value
-    const body = args[1]
+    const amount = assertNodeType(args[0], 'size').value;
+    const body = args[1];
     return {
-      type: "raise",
+      type: 'raise',
       mode: parser.mode,
       dy: amount,
-      body
+      body,
     };
   },
-  mathmlBuilder
-})
-
+  mathmlBuilder,
+});

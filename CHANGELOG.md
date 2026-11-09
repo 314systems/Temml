@@ -474,7 +474,6 @@ All notable changes to this project will be documented in this file. This CHANGE
 
 - Support \VDash
 
-
 ## [0.10.13] = 2023-06-08
 
 ### Changed
@@ -501,7 +500,7 @@ All notable changes to this project will be documented in this file. This CHANGE
 ### Added
 
 - Support `throwOnError` rendering option
-- Support  `\eqeq` and `\eqeqeq`
+- Support `\eqeq` and `\eqeqeq`
 
 ## [0.10.10] = 2023-02-14
 
@@ -669,7 +668,7 @@ All notable changes to this project will be documented in this file. This CHANGE
 
 This release is all about Chromium. Ignalia has announced an [intent to ship](https://www.igalia.com/2022/06/22/Intent-to-Ship-MathML.html) MathML in Chromium. In anticipation of that event, this version of Temml is written to support both Firefox and Chromium.
 
-Those two implementations are not written to the same specification. So Temml’s MathML must conform simultaneously to both [MathML 3]( https://www.w3.org/TR/MathML3/) (Firefox) and [MathML Core](https://w3c.github.io/mathml-core/) (Chromium). Given that challenge, I’m pretty happy with how well it has turned out. Temml emulates several hundred LaTeX functions and nearly all of them work very well.
+Those two implementations are not written to the same specification. So Temml’s MathML must conform simultaneously to both [MathML 3](https://www.w3.org/TR/MathML3/) (Firefox) and [MathML Core](https://w3c.github.io/mathml-core/) (Chromium). Given that challenge, I’m pretty happy with how well it has turned out. Temml emulates several hundred LaTeX functions and nearly all of them work very well.
 
 It’s not all perfect. In this version, Temml drops support for `\cancelto`, `\toggle`, `\texttip`, `\phase`, and `\longdiv`. I think that `\toggle` and `\texttip` are probably gone forever. The others I hope to restore someday after Chromium fully supports the `menclose` element.
 
