@@ -3,23 +3,26 @@
  */
 
 import * as mathMLTree from "./mathMLTree"
+import type { MathNode } from "./mathMLTree"
+import type { AnyParseNode, ParseNode } from "./parseNode"
 
 // TODO: Remove when Chromium stretches \widetilde & \widehat
-const estimatedWidth = node => {
+const estimatedWidth = (node: AnyParseNode): number => {
   let width = 0
-  if (node.body && Array.isArray(node.body)) {
-    for (const item of node.body) {
+  const body = (node as { body?: unknown }).body
+  if (body && Array.isArray(body)) {
+    for (const item of body as AnyParseNode[]) {
       width += estimatedWidth(item)
     }
-  } else if (node.body) {
-    width += estimatedWidth(node.body)
+  } else if (body) {
+    width += estimatedWidth(body as AnyParseNode)
   } else if (node.type === "supsub") {
-    width += estimatedWidth(node.base)
+    width += estimatedWidth(node.base!)
     if (node.sub) { width += 0.7 * estimatedWidth(node.sub) }
     if (node.sup) { width += 0.7 * estimatedWidth(node.sup) }
   } else if (node.type === "mathord" || node.type === "textord") {
     for (const ch of node.text.split('')) {
-      const codePoint = ch.codePointAt(0)
+      const codePoint = ch.codePointAt(0)!
       if ((0x60 < codePoint && codePoint < 0x7B) || (0x03B0 < codePoint && codePoint < 0x3CA)) {
         width += 0.56 // lower case latin or greek. Use advance width of letter n
       } else if (0x2F < codePoint && codePoint < 0x3A) {
@@ -34,7 +37,7 @@ const estimatedWidth = node => {
   return width
 }
 
-const stretchyCodePoint = {
+const stretchyCodePoint: Record<string, string> = {
   widehat: "\u02c6", // Shorter than \u005e, which is appropriate for an accent.
   widecheck: "ˇ",
   widetilde: "~",
@@ -91,7 +94,7 @@ const stretchyCodePoint = {
   chemequilibrium: "\u21cc"
 }
 
-export const mathMLnode = function(label) {
+export const mathMLnode = function(label: string): MathNode {
   const child = new mathMLTree.TextNode(stretchyCodePoint[label.slice(1)])
   const node = new mathMLTree.MathNode("mo", [child])
   node.setAttribute("stretchy", "true")
@@ -101,7 +104,7 @@ export const mathMLnode = function(label) {
 const wideHats = ["\\widehat", "\\widecheck"];
 
 // TODO: Remove if/when Chromium stretches \widetilde & \widehat
-export const accentNode = (group) => {
+export const accentNode = (group: ParseNode<"accent"> | ParseNode<"accentUnder">): MathNode => {
   const mo = mathMLnode(group.label)
   if (group.label.indexOf("tilde") > -1) {
     const width = estimatedWidth(group.base)

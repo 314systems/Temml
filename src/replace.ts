@@ -4,7 +4,7 @@
 // This module identifies those Unicode code points.
 
 // First, a few helpers.
-const script = Object.freeze({
+const script: Readonly<Record<string, number>> = Object.freeze({
   B: 0x20EA, // Offset from ASCII B to Unicode script B
   E: 0x20EB,
   F: 0x20EB,
@@ -18,7 +18,7 @@ const script = Object.freeze({
   o: 0x20C5
 })
 
-const frak = Object.freeze({
+const frak: Readonly<Record<string, number>> = Object.freeze({
   C: 0x20EA,
   H: 0x20C4,
   I: 0x20C8,
@@ -26,7 +26,7 @@ const frak = Object.freeze({
   Z: 0x20CE
 })
 
-const bbb = Object.freeze({
+const bbb: Readonly<Record<string, number>> = Object.freeze({
   C: 0x20BF, // blackboard bold
   H: 0x20C5,
   N: 0x20C7,
@@ -36,7 +36,7 @@ const bbb = Object.freeze({
   Z: 0x20CA
 })
 
-const bold = Object.freeze({
+const bold: Readonly<Record<string, number>> = Object.freeze({
   "\u03f5": 0x1D2E7, // lunate epsilon
   "\u03d1": 0x1D30C, // vartheta
   "\u03f0": 0x1D2EE, // varkappa
@@ -45,7 +45,7 @@ const bold = Object.freeze({
   "\u03d6": 0x1D30B  // varpi
 })
 
-const boldItalic = Object.freeze({
+const boldItalic: Readonly<Record<string, number>> = Object.freeze({
   "\u03f5": 0x1D35B, // lunate epsilon
   "\u03d1": 0x1D380, // vartheta
   "\u03f0": 0x1D362, // varkappa
@@ -54,7 +54,7 @@ const boldItalic = Object.freeze({
   "\u03d6": 0x1D37F  // varpi
 })
 
-const boldsf = Object.freeze({
+const boldsf: Readonly<Record<string, number>> = Object.freeze({
   "\u03f5": 0x1D395, // lunate epsilon
   "\u03d1": 0x1D3BA, // vartheta
   "\u03f0": 0x1D39C, // varkappa
@@ -63,7 +63,7 @@ const boldsf = Object.freeze({
   "\u03d6": 0x1D3B9  // varpi
 })
 
-const bisf = Object.freeze({
+const bisf: Readonly<Record<string, number>> = Object.freeze({
   "\u03f5": 0x1D3CF, // lunate epsilon
   "\u03d1": 0x1D3F4, // vartheta
   "\u03f0": 0x1D3D6, // varkappa
@@ -73,7 +73,10 @@ const bisf = Object.freeze({
 })
 
 // Code point offsets below are derived from https://www.unicode.org/charts/PDF/U1D400.pdf
-const offset = Object.freeze({
+// For each block of characters and each variant, the offset to add to the code point.
+type Offsets = Record<string, Record<string, (ch: string) => number>>
+
+const offset: Readonly<Offsets> = Object.freeze({
   upperCaseLatin: { // A-Z
     "normal": ch =>                 { return 0 },
     "bold": ch =>                   { return 0x1D3BF },
@@ -175,8 +178,8 @@ const offset = Object.freeze({
   }
 })
 
-export const variantChar = (ch, variant) => {
-  const codePoint = ch.codePointAt(0)
+export const variantChar = (ch: string, variant: string): string => {
+  const codePoint = ch.codePointAt(0)!
   const block = 0x40 < codePoint && codePoint < 0x5b
     ? "upperCaseLatin"
     : 0x60 < codePoint && codePoint < 0x7b
@@ -195,7 +198,7 @@ export const variantChar = (ch, variant) => {
     : String.fromCodePoint(codePoint + offset[block][variant](ch))
 }
 
-export const smallCaps = Object.freeze({
+export const smallCaps: Readonly<Record<string, string>> = Object.freeze({
   a: "ᴀ",
   b: "ʙ",
   c: "ᴄ",

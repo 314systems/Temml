@@ -58,7 +58,7 @@ defineFunctionBuilders({
     if (style.fontFamily === "textsc") {
       // Convert small latin letters to small caps.
       if (96 < codePoint && codePoint < 123) {
-        ch = (smallCaps as Record<string, string>)[ch]
+        ch = smallCaps[ch]
       }
     }
     const text = mml.makeText(ch, group.mode, style)
