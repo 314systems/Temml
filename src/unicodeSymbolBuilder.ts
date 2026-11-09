@@ -4,7 +4,7 @@
 // needs String's normalize function.
 import accents from "./unicodeAccents";
 
-const result = {};
+const result: Record<string, string> = {};
 const letters =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
   "αβγδεϵζηθϑικλμνξοπϖρϱςστυφϕχψωΓΔΘΛΞΠΣΥΦΨΩ";

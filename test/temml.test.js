@@ -2612,3 +2612,12 @@ test("Line-wrapping should work", () => {
   expect(build(wrapExpression, wrapSettings("="))[0].children.length).toBe(2)
   expect(build(r`x^{\textcolor{red}{-yz}}`)[0].children.length).toBe(2)
 })
+
+test("unicodeSymbolBuilder should reproduce every entry of unicodeSymbols", async () => {
+  // The builder also outputs letters with a cedilla, which unicodeSymbols leaves out.
+  const { default: built } = await import("../src/unicodeSymbolBuilder")
+  const { default: unicodeSymbols } = await import("../src/unicodeSymbols")
+  for (const [key, value] of Object.entries(unicodeSymbols)) {
+    expect(built[key]).toBe(value)
+  }
+})
