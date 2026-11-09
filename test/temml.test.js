@@ -2613,11 +2613,13 @@ test("Line-wrapping should work", () => {
   expect(build(r`x^{\textcolor{red}{-yz}}`)[0].children.length).toBe(2)
 })
 
-test("unicodeSymbolBuilder should reproduce every entry of unicodeSymbols", async () => {
-  // The builder also outputs letters with a cedilla, which unicodeSymbols leaves out.
+test("unicodeSymbols should match the output of unicodeSymbolBuilder", async () => {
   const { default: built } = await import("../src/unicodeSymbolBuilder")
   const { default: unicodeSymbols } = await import("../src/unicodeSymbols")
-  for (const [key, value] of Object.entries(unicodeSymbols)) {
-    expect(built[key]).toBe(value)
-  }
+  expect(unicodeSymbols).toEqual(built)
+})
+
+test("A letter with a cedilla should be an accent in math mode", () => {
+  // U+015F, s with a cedilla
+  expect(parse("\u015f")[0].type).toBe("accent")
 })
