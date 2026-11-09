@@ -1,6 +1,7 @@
 import globals from "globals";
 import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([{
   ignores: ["contrib/auto-render/test/*.js", "src/autocorrect.js"]
@@ -96,5 +97,20 @@ export default defineConfig([{
     "prefer-arrow-callback": 0,
     "valid-jsdoc": 0,
     "require-jsdoc": 0
+  }
+}, {
+  files: ["**/*.ts"],
+  extends: [tseslint.configs.recommended],
+
+  rules: {
+    // TypeScript checks these itself, or handles them better.
+    "no-undef": 0,
+    "no-dupe-class-members": 0,
+    "no-unused-vars": 0,
+
+    "@typescript-eslint/no-unused-vars": [2, {
+      args: "none",
+      varsIgnorePattern: "^_*$"
+    }]
   }
 }]);
