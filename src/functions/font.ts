@@ -2,10 +2,14 @@ import defineFunction, { normalizeArgument } from "../defineFunction"
 import * as mml from "../buildMathML"
 import * as mathMLTree from "../mathMLTree"
 import { variantChar } from "../replace"
+import type { MathNode, TextNode } from "../mathMLTree"
+import type { MathMLBuilder } from "../defineFunction"
+import type { ParseNode } from "../parseNode"
+import type { MathDomNode } from "../tree"
 
 const varNameFonts = ["mathrm", "mathit"];
 
-const isLongVariableName = (group, font) => {
+const isLongVariableName = (group: ParseNode<"font">, font: string): boolean => {
   if (!varNameFonts.includes(font) || !group.body || group.body.type !== "ordgroup" ||
       group.body.body.length === 1) {
     return false
@@ -14,17 +18,24 @@ const isLongVariableName = (group, font) => {
   for (let i = 1; i < group.body.body.length; i++) {
     const parseNodeType = group.body.body[i].type
     if (!(parseNodeType ===  "mathord" ||
-    (parseNodeType ===  "textord" && !isNaN(group.body.body[i].text)))) {
+    (parseNodeType ===  "textord" &&
+      !isNaN(Number((group.body.body[i] as ParseNode<"textord">).text))))) {
       return false
     }
   }
   return true
 }
 
-const mathmlBuilder = (group, style) => {
+// Whether a node has children, i.e., is not a TextNode.
+const hasChildren = (node: MathDomNode): node is MathNode =>
+  Boolean((node as { children?: unknown }).children)
+
+const mathmlBuilder: MathMLBuilder<"font"> = (group, style) => {
   const font = group.font
   const newStyle = style.withFont(font)
-  const mathGroup = mml.buildGroup(group.body, newStyle)
+  // The checks below read the children as MathNodes, as the original duck-typed code did.
+  const mathGroup = mml.buildGroup(group.body, newStyle) as MathNode
+  const children = mathGroup.children as MathNode[]
 
   if (mathGroup.children.length === 0) { return mathGroup } // empty group, e.g., \mathrm{}
   if (font === "boldsymbol" && ["mo", "mpadded", "mrow"].includes(mathGroup.type)) {
@@ -34,19 +45,20 @@ const mathmlBuilder = (group, style) => {
   // Check if it is possible to consolidate elements into a single <mi> element.
   if (isLongVariableName(group, font)) {
     // This is a \mathrm{…} or \mathit{…} group. It gets special treatment.
-    const mi = mathGroup.children[0].children[0].children
-      ? mathGroup.children[0].children[0]
-      : mathGroup.children[0];
+    const grandChild = children[0].children[0]
+    const mi = hasChildren(grandChild) ? grandChild : children[0];
     delete mi.attributes.mathvariant
-    for (let i = 1; i < mathGroup.children.length; i++) {
-      mi.children[0].text += mathGroup.children[i].children[0].children
-        ? mathGroup.children[i].children[0].children[0].text
-        : mathGroup.children[i].children[0].text
+    const miText = mi.children[0] as TextNode
+    for (let i = 1; i < children.length; i++) {
+      const child = children[i].children[0]
+      miText.text += hasChildren(child)
+        ? (child.children[0] as TextNode).text
+        : (child as TextNode).text
     }
     if (font === "mathit") {
       // Long <mi> elements are normally rendered in upright font.
       // To get italic, we need to convert each character to the corresponding italic character.
-      mi.children[0].text = mi.children[0].text.split("")
+      miText.text = miText.text.split("")
         .map(c => variantChar(c, "italic")).join("")
       return mi
     }
@@ -55,21 +67,21 @@ const mathmlBuilder = (group, style) => {
     mpadded.setAttribute("lspace", "0")
     return mpadded
   }
-  let canConsolidate = mathGroup.children[0].type === "mo"
-  for (let i = 1; i < mathGroup.children.length; i++) {
-    if (mathGroup.children[i].type === "mo" && font === "boldsymbol") {
-      mathGroup.children[i].style.fontWeight = "bold"
+  let canConsolidate = children[0].type === "mo"
+  for (let i = 1; i < children.length; i++) {
+    if (children[i].type === "mo" && font === "boldsymbol") {
+      children[i].style.fontWeight = "bold"
     }
-    if (mathGroup.children[i].type !== "mi") { canConsolidate = false }
-    const localVariant = mathGroup.children[i].attributes &&
-      mathGroup.children[i].attributes.mathvariant || ""
+    if (children[i].type !== "mi") { canConsolidate = false }
+    const localVariant = children[i].attributes &&
+      children[i].attributes.mathvariant || ""
     if (localVariant !== "normal") { canConsolidate = false }
   }
   if (!canConsolidate) { return mathGroup }
   // Consolidate the <mi> elements.
-  const mi = mathGroup.children[0];
-  for (let i = 1; i < mathGroup.children.length; i++) {
-    mi.children.push(mathGroup.children[i].children[0])
+  const mi = children[0];
+  for (let i = 1; i < children.length; i++) {
+    mi.children.push(children[i].children[0])
   }
   if (mi.attributes.mathvariant && mi.attributes.mathvariant === "normal") {
     // Workaround for a Firefox bug that renders spurious space around
@@ -77,13 +89,17 @@ const mathmlBuilder = (group, style) => {
     // Ref: https://bugs.webkit.org/show_bug.cgi?id=129097
     // We insert a text node that contains a zero-width space and wrap in an mrow.
     // TODO: Get rid of this <mi> workaround when the Firefox bug is fixed.
-    const bogus = new mathMLTree.MathNode("mtext", new mathMLTree.TextNode("\u200b"))
+    // FIXME: The children should be an array. As written, the <mtext> stays empty.
+    const bogus = new mathMLTree.MathNode(
+      "mtext",
+      new mathMLTree.TextNode("\u200b") as unknown as MathDomNode[]
+    )
     return new mathMLTree.MathNode("mrow", [bogus, mi])
   }
   return mi
 };
 
-const fontAliases = {
+const fontAliases: Record<string, string> = {
   "\\Bbb": "\\mathbb",
   "\\bold": "\\mathbf",
   "\\frak": "\\mathfrak",

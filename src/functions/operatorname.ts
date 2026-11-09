@@ -6,19 +6,23 @@ import { ordTypes } from "./op"
 import { isDelimiter } from "./delimiter"
 
 import * as mml from "../buildMathML"
+import { isMathNodeOfType } from "../mathMLTree"
+import type { MathNode, TextNode } from "../mathMLTree"
+import type { MathMLBuilder } from "../defineFunction"
 
 // NOTE: Unlike most builders, this one handles not only
 // "operatorname", but also  "supsub" since \operatorname* can
 // affect super/subscripting.
 
-const mathmlBuilder = (group, style) => {
+const mathmlBuilder: MathMLBuilder<"operatorname"> = (group, style) => {
   let expression = mml.buildExpression(group.body, style.withFont("mathrm"))
 
   // Is expression a string or has it something like a fraction?
   let isAllString = true; // default
   for (let i = 0; i < expression.length; i++) {
-    let node = expression[i]
-    if (node instanceof mathMLTree.MathNode) {
+    const item = expression[i]
+    if (item instanceof mathMLTree.MathNode) {
+      let node: MathNode = item
       if ((node.type === "mrow" || node.type === "mpadded") && node.children.length === 1 &&
           node.children[0] instanceof mathMLTree.MathNode) {
         node = node.children[0]
@@ -29,12 +33,11 @@ const mathmlBuilder = (group, style) => {
                  node.children[1].children.length === 0) {
         // This is a workaround for a Firefox bug that applies spacing to
         // an <mi> with mathvariant="normal".
-        node = node.children[0];
+        node = node.children[0] as MathNode;
       }
       switch (node.type) {
         case "mi":
         case "mn":
-        case "ms":
         case "mtext":
           break; // Do nothing yet.
         case "mspace":
@@ -67,28 +70,28 @@ const mathmlBuilder = (group, style) => {
     }
   }
 
+  const only = expression.length === 1 ? expression[0] : undefined
   if (isAllString) {
     // Write a single TextNode instead of multiple nested tags.
     const word = expression.map((node) => node.toText()).join("")
     expression = [new mathMLTree.TextNode(word)]
   } else if (
-    expression.length === 1
-    && ["mover", "munder"].includes(expression[0].type) &&
-    (expression[0].children[0].type === "mi" || expression[0].children[0].type === "mtext")
+    (isMathNodeOfType(only, "mover") || isMathNodeOfType(only, "munder")) &&
+    (isMathNodeOfType(only.children[0], "mi") || isMathNodeOfType(only.children[0], "mtext"))
   ) {
-    expression[0].children[0].type = "mi"
+    (only.children[0] as MathNode).type = "mi"
     if (group.parentIsSupSub) {
       return new mathMLTree.MathNode("mrow", expression)
     } else {
       const operator = new mathMLTree.MathNode("mo", [mml.makeText("\u2061", "text")])
-      return mathMLTree.newDocumentFragment([expression[0], operator])
+      return mathMLTree.newDocumentFragment([only, operator])
     }
   }
 
-  let wrapper;
+  let wrapper: MathNode;
   if (isAllString) {
     wrapper = new mathMLTree.MathNode("mi", expression)
-    if (expression[0].text.length === 1) {
+    if ((expression[0] as TextNode).text.length === 1) {
       wrapper.setAttribute("mathvariant", "normal")
     }
   } else {

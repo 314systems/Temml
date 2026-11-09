@@ -2,6 +2,9 @@ import { defineFunctionBuilders } from "../defineFunction"
 import { StyleLevel } from "../constants"
 import * as mathMLTree from "../mathMLTree"
 import * as mml from "../buildMathML"
+import type { DocumentFragment, MathDomNode } from "../tree"
+import type { MathNode, MathNodeType } from "../mathMLTree"
+import type { ParseNode } from "../parseNode"
 
 /**
  * Sometimes, groups perform special rules when they have superscripts or
@@ -30,7 +33,7 @@ defineFunctionBuilders({
     let isSup
     let appendApplyFunction = false
     let appendSpace = false
-    let needsLeadingSpace = false
+    let needsLeadingSpace: boolean | undefined = false
 
     if (group.base && group.base.type === "horizBracket") {
       isSup = !!group.sup
@@ -43,13 +46,15 @@ defineFunctionBuilders({
     if (group.base && !group.stack &&
       (group.base.type === "op" || group.base.type === "operatorname")) {
       group.base.parentIsSupSub = true
-      appendApplyFunction = !group.base.symbol
+      appendApplyFunction = !(group.base.type === "op" && group.base.symbol)
       appendSpace = appendApplyFunction && !group.isFollowedByDelimiter
       needsLeadingSpace = group.base.needsLeadingSpace
     }
 
-    const children = group.stack && group.base.body.length === 1
-      ? [mml.buildGroup(group.base.body[0], style)]
+    // A stacked supsub has an op base whose body holds the stacked group.
+    const children: MathDomNode[] =
+      group.stack && (group.base as ParseNode<"op">).body!.length === 1
+      ? [mml.buildGroup((group.base as ParseNode<"op">).body![0], style)]
       : [mml.buildGroup(group.base, style)];
 
     // Note regarding scriptstyle level.
@@ -60,17 +65,18 @@ defineFunctionBuilders({
 
     const childStyle = style.inSubOrSup()
     if (group.sub) {
-      const sub = mml.buildGroup(group.sub, childStyle)
+      const sub = mml.buildGroup(group.sub, childStyle) as MathNode
       if (style.level === 3) { sub.setAttribute("scriptlevel", "2") }
       children.push(sub)
     }
 
     if (group.sup) {
-      const sup = mml.buildGroup(group.sup, childStyle)
+      const sup = mml.buildGroup(group.sup, childStyle) as MathNode
       if (style.level === 3) { sup.setAttribute("scriptlevel", "2") }
-      if (group.base && group.base.text && group.base.text.length === 1) {
+      const baseText = (group.base as { text?: string } | null | undefined)?.text
+      if (baseText && baseText.length === 1) {
         // Make an italic correction on the superscript.
-        const text = group.base.text
+        const text = baseText
         if (smallPad.indexOf(text) > -1) {
           sup.classes.push("tml-sml-pad")
         } else if (mediumPad.indexOf(text) > -1) {
@@ -82,7 +88,7 @@ defineFunctionBuilders({
       children.push(sup)
     }
 
-    let nodeType;
+    let nodeType: MathNodeType;
     if (isBracket) {
       nodeType = isOver ? "mover" : "munder"
     } else if (!group.sub) {
@@ -128,7 +134,8 @@ defineFunctionBuilders({
     } else {
       const base = group.base;
       if (base && ((base.type === "op" && base.limits) || base.type === "multiscript") &&
-        (style.level === StyleLevel.DISPLAY || base.alwaysHandleSupSub)
+        (style.level === StyleLevel.DISPLAY ||
+          ("alwaysHandleSupSub" in base && base.alwaysHandleSupSub))
       ) {
         nodeType = "munderover"
       } else if (
@@ -143,7 +150,7 @@ defineFunctionBuilders({
       }
     }
 
-    let node = new mathMLTree.MathNode(nodeType, children)
+    let node: MathNode | DocumentFragment = new mathMLTree.MathNode(nodeType, children)
     if (appendApplyFunction) {
       // Append an <mo>&ApplyFunction;</mo>.
       // ref: https://www.w3.org/TR/REC-MathML/chap3_2.html#sec3.2.4

@@ -5,20 +5,27 @@ import * as utils from "../utils"
 import { padding } from "./arrow";
 
 import * as mml from "../buildMathML";
+import type { MathNode } from "../mathMLTree";
+import type { AnyParseNode, ParseNode } from "../parseNode";
+import type Style from "../Style";
 
 const textAtomTypes = ["text", "textord", "mathord", "atom"]
 
-function mathmlBuilder(group, style) {
-  let node;
+// The text of a parse node or MathML text node, if it has one.
+const textOf = (node: unknown): string | undefined => (node as { text?: string }).text
+
+function mathmlBuilder(group: ParseNode<"mclass">, style: Style): MathNode {
+  let node: MathNode;
   const inner = mml.buildExpression(group.body, style);
 
   if (group.mclass === "minner") {
     node = new mathMLTree.MathNode("mpadded", inner)
   } else if (group.mclass === "mord") {
-    if (group.isCharacterBox || inner[0].type === "mathord") {
-      node = inner[0];
+    // A MathML node never has the type "mathord", so only isCharacterBox matters here.
+    if (group.isCharacterBox) {
+      node = inner[0] as MathNode;
       node.type = "mi";
-      if (node.children.length === 1 && node.children[0].text && node.children[0].text === "∇") {
+      if (node.children.length === 1 && textOf(node.children[0]) === "∇") {
         node.setAttribute("mathvariant", "normal")
       }
     } else {
@@ -26,9 +33,10 @@ function mathmlBuilder(group, style) {
     }
   } else {
     if (group.mustPromote) {
-      node = inner[0];
+      node = inner[0] as MathNode;
       node.type = "mo";
-      if (group.isCharacterBox && group.body[0].text && /[A-Za-z]/.test(group.body[0].text)) {
+      const text = group.isCharacterBox ? textOf(group.body[0]) : undefined
+      if (text && /[A-Za-z]/.test(text)) {
         node.setAttribute("mathvariant", "italic")
       }
     } else {
@@ -106,16 +114,19 @@ defineFunction({
     // We should not wrap a <mo> around a <mi> or <mord>. That would be invalid MathML.
     // In that case, we instead promote the text contents of the body to the parent.
     let mustPromote = true
-    const mord = { type: "mathord", text: "", mode: parser.mode }
-    const arr = (body.body) ? body.body : [body];
+    const mord: ParseNode<"mathord"> = { type: "mathord", text: "", mode: parser.mode }
+    const bodyArray = (body as { body?: AnyParseNode[] }).body
+    const arr = (bodyArray) ? bodyArray : [body];
     for (const arg of arr) {
       if (textAtomTypes.includes(arg.type)) {
-        if (symbols[parser.mode][arg.text]) {
-          mord.text += symbols[parser.mode][arg.text].replace
-        } else if (arg.text) {
-          mord.text += arg.text
-        } else if (arg.body) {
-          arg.body.map(e => { mord.text += e.text })
+        const argText = textOf(arg)
+        const argBody = (arg as { body?: AnyParseNode[] }).body
+        if (symbols[parser.mode][argText!]) {
+          mord.text += symbols[parser.mode][argText!].replace
+        } else if (argText) {
+          mord.text += argText
+        } else if (argBody) {
+          argBody.map(e => { mord.text += textOf(e) })
         }
       } else {
         mustPromote = false
@@ -139,7 +150,7 @@ defineFunction({
   mathmlBuilder
 });
 
-export const binrelClass = (arg) => {
+export const binrelClass = (arg: AnyParseNode): string => {
   // \binrel@ spacing varies with (bin|rel|ord) of the atom in the argument.
   // (by rendering separately and with {}s before and after, and measuring
   // the change in spacing).  We'll do roughly the same by detecting the
@@ -149,8 +160,10 @@ export const binrelClass = (arg) => {
     : arg;
   if (atom.type === "atom") {
     // BIN args are sometimes changed to OPEN, so check the original family.
-    const family = arg.body.length > 0 && arg.body[0].text && symbols.math[arg.body[0].text]
-      ? symbols.math[arg.body[0].text].group
+    const body = (arg as ParseNode<"ordgroup">).body
+    const text = body.length > 0 ? textOf(body[0]) : undefined
+    const family = text && symbols.math[text]
+      ? symbols.math[text].group
       : atom.family
     if (family === "bin" || family === "rel") {
       return "m" + family;
@@ -213,7 +226,7 @@ defineFunction({
       symbol: false,
       suppressBaseShift: funcName !== "\\stackrel",
       body: ordargument(baseArg)
-    };
+    } as AnyParseNode;
 
     return {
       type: "supsub",

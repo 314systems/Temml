@@ -3,6 +3,7 @@ import * as mathMLTree from "../mathMLTree"
 import * as stretchy from "../stretchy"
 import * as mml from "../buildMathML"
 import { smalls } from "../utils"
+import type { MathMLBuilder } from "../defineFunction"
 
 
 // From the KaTeX font metrics, identify letters whose accents need a italic correction.
@@ -10,7 +11,7 @@ const smallNudge = "DHKLUcegorsuvxyzΠΥΨαδηιμνοτυχϵ"
 const mediumNudge = "BCEGIMNOPQRSTXZlpqtwΓΘΞΣΦΩβεζθξρςφψϑϕϱ"
 const largeNudge = "AFJdfΔΛ"
 
-const mathmlBuilder = (group, style) => {
+const mathmlBuilder: MathMLBuilder<"accent"> = (group, style) => {
   const accentNode = group.isStretchy
     ? stretchy.accentNode(group)
     : new mathMLTree.MathNode("mo", [mml.makeText(group.label, group.mode)]);
@@ -23,11 +24,14 @@ const mathmlBuilder = (group, style) => {
   }
   const tag = group.label === "\\c" ? "munder" : "mover"
   const needsWbkVertShift = needsWebkitVerticalShift.has(group.label)
-  if (tag === "mover" && group.mode === "math" && (!group.isStretchy) && group.base.text
-      && group.base.text.length === 1) {
-    const text = group.base.text
+  const baseText = (group.base as { text?: string }).text
+  if (tag === "mover" && group.mode === "math" && (!group.isStretchy) && baseText
+      && baseText.length === 1) {
+    const text = baseText
     const isVec = group.label === "\\vec"
-    const vecPostfix = isVec === "\\vec" ? "-vec" : ""
+    // FIXME: This was `isVec === "\\vec" ? "-vec" : ""`, which is always "" because
+    // isVec is a boolean. The CSS defines the chr-*-vec classes this should select.
+    const vecPostfix = ""
     if (isVec) {
       accentNode.classes.push("tml-vec") // Firefox sizing of \vec arrow
     }
@@ -84,7 +88,7 @@ const needsWebkitVerticalShift = new Set([
   "\\`", "\\'", "\\^", "\\=", "\\u", "\\.", '\\"', "\\r", "\\H", "\\v"
 ])
 
-const combiningChar = {
+const combiningChar: Record<string, string> = {
   "\\`": "\u0300",
   "\\'": "\u0301",
   "\\^": "\u0302",
@@ -168,18 +172,19 @@ defineFunction({
       console.log(`Temml parse error: Command ${context.funcName} is invalid in math mode.`)
     }
 
-    if (mode === "text" && base.text && base.text.length === 1
-        && context.funcName in combiningChar && smalls.indexOf(base.text) > -1) {
+    const baseText = (base as { text?: string }).text
+    if (mode === "text" && baseText && baseText.length === 1
+        && context.funcName in combiningChar && smalls.indexOf(baseText) > -1) {
       // Return a combining accent character
       return {
         type: "textord",
         mode: "text",
-        text: base.text + combiningChar[context.funcName]
+        text: baseText + combiningChar[context.funcName]
       }
-    } else if (context.funcName === "\\c" && mode === "text" && base.text
-        && base.text.length === 1) {
+    } else if (context.funcName === "\\c" && mode === "text" && baseText
+        && baseText.length === 1) {
       // combining cedilla
-      return { type: "textord", mode: "text", text: base.text + "\u0327" }
+      return { type: "textord", mode: "text", text: baseText + "\u0327" }
     } else {
       // Build up the accent
       return {
