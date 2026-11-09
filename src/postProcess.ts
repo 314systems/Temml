@@ -7,8 +7,8 @@
 
 export const version = "0.14.0";
 
-export function postProcess(block) {
-  const labelMap = {}
+export function postProcess(block: Element | Document): void {
+  const labelMap: Record<string, string> = {}
   let i = 0
 
   // Get a collection of the parents of each \tag & auto-numbered equation
@@ -26,11 +26,11 @@ export function postProcess(block) {
       if (parent.tagName === "mtable") { break }
       const labels = parent.getElementsByClassName("tml-label")
       if (labels.length > 0) {
-        const id = parent.attributes.id.value
+        const id = parent.attributes.getNamedItem("id")!.value
         labelMap[id] = String(i)
         break
       } else {
-        parent = parent.parentElement
+        parent = parent.parentElement!
       }
     }
   }
@@ -42,8 +42,8 @@ export function postProcess(block) {
     if (labels.length > 0) {
       const tags = parent.getElementsByClassName("tml-tag")
       if (tags.length > 0) {
-        const id = parent.attributes.id.value
-        labelMap[id] = tags[0].textContent
+        const id = parent.attributes.getNamedItem("id")!.value
+        labelMap[id] = tags[0].textContent!
       }
     }
   }
@@ -52,7 +52,7 @@ export function postProcess(block) {
   const refs = block.getElementsByClassName("tml-ref");
   [...refs].forEach(ref => {
     const attr = ref.getAttribute("href")
-    let str = labelMap[attr.slice(1)];
+    let str = labelMap[attr!.slice(1)];
     if (ref.className.indexOf("tml-eqref") === -1) {
       // \ref. Omit parens.
       str = str.replace(/^\(/, "")

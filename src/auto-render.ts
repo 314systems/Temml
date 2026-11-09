@@ -1,7 +1,40 @@
 import ParseError from "./ParseError"
-import { postProcess } from "./postProcess.js";
+import { postProcess } from "./postProcess";
+import type Temml from "../temml";
+import type { Options } from "../temml";
 
-const findEndOfMath = function(delimiter, text, startIndex) {
+// Importing temml.js would be a circular dependency, so the global is used.
+declare const temml: typeof Temml;
+
+interface Delimiter {
+  left: string;
+  right: string;
+  display: boolean;
+}
+
+/** A piece of text, split at math delimiters by splitAtDelimiters(). */
+type SplitData =
+  | { type: "text"; data: string }
+  | { type: "math"; data: string; rawData: string; display: boolean };
+
+export interface AutoRenderOptions extends Options {
+  delimiters?: Delimiter[];
+  fences?: string;
+  ignoredTags?: string[];
+  ignoredClasses?: string[];
+  errorCallback?: (msg: string, err: ParseError) => void;
+  preProcess?: (math: string) => string;
+}
+
+/** The options after renderMathInElement() has filled in the defaults. */
+interface ResolvedOptions extends AutoRenderOptions {
+  delimiters: Delimiter[];
+  ignoredTags: string[];
+  ignoredClasses: string[];
+  errorCallback: (msg: string, err: ParseError) => void;
+}
+
+const findEndOfMath = function(delimiter: string, text: string, startIndex: number): number {
   // Adapted from
   // https://github.com/Khan/perseus/blob/master/src/perseus-markdown.jsx
   let index = startIndex;
@@ -28,15 +61,15 @@ const findEndOfMath = function(delimiter, text, startIndex) {
   return -1;
 };
 
-const escapeRegex = function(string) {
+const escapeRegex = function(string: string): string {
   return string.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 };
 
 const amsRegex = /^\\(?:begin|(?:eq)?ref){/
 
-const splitAtDelimiters = function(text, delimiters) {
-  let index;
-  const data = [];
+const splitAtDelimiters = function(text: string, delimiters: Delimiter[]): SplitData[] {
+  let index: number;
+  const data: SplitData[] = [];
 
   const regexLeft = new RegExp(
     "(" + delimiters.map((x) => escapeRegex(x.left)).join("|") + ")"
@@ -83,7 +116,7 @@ const splitAtDelimiters = function(text, delimiters) {
   return data;
 };
 
-const defaultDelimiters = [
+const defaultDelimiters: Delimiter[] = [
   { left: "$$", right: "$$", display: true },
   { left: "\\(", right: "\\)", display: false },
   // LaTeX uses $…$, but it ruins the display of normal `$` in text:
@@ -107,7 +140,7 @@ const defaultDelimiters = [
   { left: "\\[", right: "\\]", display: true }
 ];
 
-const firstDraftDelimiters = {
+const firstDraftDelimiters: Record<string, Delimiter[]> = {
   "$": [
          { left: "$$", right: "$$", display: true },
          { left: "$`", right: "`$", display: false },
@@ -119,7 +152,7 @@ const firstDraftDelimiters = {
   ]
 }
 
-const amsDelimiters = [
+const amsDelimiters: Delimiter[] = [
   { left: "\\begin{equation}", right: "\\end{equation}", display: true },
   { left: "\\begin{equation*}", right: "\\end{equation*}", display: true },
   { left: "\\begin{align}", right: "\\end{align}", display: true },
@@ -133,7 +166,7 @@ const amsDelimiters = [
   { left: "\\eqref{", right: "}", display: false }
 ];
 
-const delimitersFromKey = key => {
+const delimitersFromKey = (key: string): Delimiter[] => {
   if (key === "$" || key === "(") {
     return firstDraftDelimiters[key];
   } else if (key === "$+" || key === "(+") {
@@ -151,7 +184,10 @@ const delimitersFromKey = key => {
 /* Note: optionsCopy is mutated by this method. If it is ever exposed in the
  * API, we should copy it before mutating.
  */
-const renderMathInText = function(text, optionsCopy) {
+const renderMathInText = function(
+  text: string,
+  optionsCopy: ResolvedOptions
+): DocumentFragment | null {
   const data = splitAtDelimiters(text, optionsCopy.delimiters);
   if (data.length === 1 && data[0].type === "text") {
     // There is no formula in the text.
@@ -163,31 +199,31 @@ const renderMathInText = function(text, optionsCopy) {
   const fragment = document.createDocumentFragment();
 
   for (let i = 0; i < data.length; i++) {
-    if (data[i].type === "text") {
-      fragment.appendChild(document.createTextNode(data[i].data));
+    const item = data[i];
+    if (item.type === "text") {
+      fragment.appendChild(document.createTextNode(item.data));
     } else {
       const span = document.createElement("span");
-      let math = data[i].data;
+      let math = item.data;
       // Override any display mode defined in the settings with that
       // defined by the text itself
-      optionsCopy.displayMode = data[i].display;
+      optionsCopy.displayMode = item.display;
       try {
         if (optionsCopy.preProcess) {
           math = optionsCopy.preProcess(math);
         }
         // Importing render() from temml.js would be a circular dependency.
         // So call the global version.
-        // eslint-disable-next-line no-undef
         temml.render(math, span, optionsCopy);
       } catch (e) {
         if (!(e instanceof ParseError)) {
           throw e;
         }
         optionsCopy.errorCallback(
-          "Temml auto-render: Failed to parse `" + data[i].data + "` with ",
+          "Temml auto-render: Failed to parse `" + item.data + "` with ",
           e
         );
-        fragment.appendChild(document.createTextNode(data[i].rawData));
+        fragment.appendChild(document.createTextNode(item.rawData));
         continue;
       }
       fragment.appendChild(span);
@@ -197,44 +233,38 @@ const renderMathInText = function(text, optionsCopy) {
   return fragment;
 };
 
-const renderElem = function(elem, optionsCopy) {
+const renderElem = function(elem: Element, optionsCopy: ResolvedOptions): void {
   for (let i = 0; i < elem.childNodes.length; i++) {
     const childNode = elem.childNodes[i];
     if (childNode.nodeType === 3) {
       // Text node
-      const frag = renderMathInText(childNode.textContent, optionsCopy);
+      const frag = renderMathInText(childNode.textContent!, optionsCopy);
       if (frag) {
         i += frag.childNodes.length - 1;
         elem.replaceChild(frag, childNode);
       }
     } else if (childNode.nodeType === 1) {
       // Element node
-      const className = " " + childNode.className + " ";
+      const className = " " + (childNode as Element).className + " ";
       const shouldRender =
         optionsCopy.ignoredTags.indexOf(childNode.nodeName.toLowerCase()) === -1 &&
         optionsCopy.ignoredClasses.every((x) => className.indexOf(" " + x + " ") === -1);
 
       if (shouldRender) {
-        renderElem(childNode, optionsCopy);
+        renderElem(childNode as Element, optionsCopy);
       }
     }
     // Otherwise, it's something else, and ignore it.
   }
 };
 
-export const renderMathInElement = function(elem, options) {
+export const renderMathInElement = function(elem: Element, options?: AutoRenderOptions): void {
   if (!elem) {
     throw new Error("No element provided to render");
   }
 
-  const optionsCopy = {};
-
-  // Object.assign(optionsCopy, option)
-  for (const option in options) {
-    if (Object.hasOwn(options, option)) {
-      optionsCopy[option] = options[option];
-    }
-  }
+  // Copy the own properties of the options.
+  const optionsCopy: AutoRenderOptions = { ...options };
 
   if (optionsCopy.fences) {
     optionsCopy.delimiters = delimitersFromKey(optionsCopy.fences);
@@ -258,6 +288,6 @@ export const renderMathInElement = function(elem, options) {
   // math elements within a single call to `renderMathInElement`.
   optionsCopy.macros = optionsCopy.macros || Object.create(null);
 
-  renderElem(elem, optionsCopy);
+  renderElem(elem, optionsCopy as ResolvedOptions);
   postProcess(elem);
 };
