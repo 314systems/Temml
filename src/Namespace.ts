@@ -49,7 +49,7 @@ export default class Namespace<Value> {
       );
     }
     for (const undef in undefs) {
-      if (Object.prototype.hasOwnProperty.call(undefs, undef)) {
+      if (Object.hasOwn(undefs, undef)) {
         const value = undefs[undef];
         if (value === undefined) {
           delete this.current[undef];
@@ -65,8 +65,8 @@ export default class Namespace<Value> {
    * `get(name) != null`.
    */
   has(name: string): boolean {
-    return Object.prototype.hasOwnProperty.call(this.current, name) ||
-    Object.prototype.hasOwnProperty.call(this.builtins, name);
+    return Object.hasOwn(this.current, name) ||
+    Object.hasOwn(this.builtins, name);
   }
 
   /**
@@ -78,7 +78,7 @@ export default class Namespace<Value> {
    * `if (namespace.has(...))`.
    */
   get(name: string): Value | undefined {
-    if (Object.prototype.hasOwnProperty.call(this.current, name)) {
+    if (Object.hasOwn(this.current, name)) {
       return this.current[name];
     } else {
       return this.builtins[name];
@@ -108,7 +108,7 @@ export default class Namespace<Value> {
       // unless an undo is already in place, in which case that older
       // value is the correct one.
       const top = this.undefStack[this.undefStack.length - 1];
-      if (top && !Object.prototype.hasOwnProperty.call(top, name)) {
+      if (top && !Object.hasOwn(top, name)) {
         top[name] = this.current[name];
       }
     }

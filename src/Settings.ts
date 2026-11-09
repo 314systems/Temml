@@ -34,7 +34,7 @@ const sanitizeMacros = (macros: unknown): MacroMap => {
     return Object.create(null);
   }
   for (const key of FORBIDDEN_MACRO_KEYS) {
-    if (Object.prototype.hasOwnProperty.call(macros, key)) {
+    if (Object.hasOwn(macros, key)) {
       delete (macros as Record<string, unknown>)[key];
     }
   }
@@ -69,14 +69,14 @@ export default class Settings {
     this.throwOnError = utils.deflt(opts, "throwOnError", false);
     this.errorColor = utils.deflt(opts, "errorColor", "#b22222");
     this.macros = sanitizeMacros(
-      Object.prototype.hasOwnProperty.call(opts, "macros") ? opts.macros : undefined
+      Object.hasOwn(opts, "macros") ? opts.macros : undefined
     );
     this.wrap = utils.deflt(opts, "wrap", "none")
     this.xml = utils.deflt(opts, "xml", false);
     this.colorIsTextColor = utils.deflt(opts, "colorIsTextColor", false);
     this.strict = utils.deflt(opts, "strict", false);
     this.trust = utils.deflt(opts, "trust", false);  // trust context. See html.js.
-    const maxSize = Object.prototype.hasOwnProperty.call(opts, "maxSize")
+    const maxSize = Object.hasOwn(opts, "maxSize")
       ? opts.maxSize
       : undefined;
     this.maxSize = Array.isArray(maxSize) ? maxSize : [Infinity, Infinity]

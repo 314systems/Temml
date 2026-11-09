@@ -24,7 +24,7 @@ defineFunction({
 
     if (funcName === "\\begin") {
       // begin...end is similar to left...right
-      if (!Object.prototype.hasOwnProperty.call(environments, envName )) {
+      if (!Object.hasOwn(environments, envName)) {
         throw new ParseError("No such environment: " + envName, nameGroup);
       }
       // Build the environment object. Arguments and other information will

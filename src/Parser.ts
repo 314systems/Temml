@@ -861,7 +861,7 @@ export default class Parser {
       // Otherwise, just return a nucleus
       result = this.parseFunction(breakOnTokenText, name) || this.parseSymbol();
       if (result == null && text[0] === "\\" &&
-          !Object.prototype.hasOwnProperty.call(implicitCommands, text)) {
+          !Object.hasOwn(implicitCommands, text)) {
         if (this.settings.throwOnError) {
           throw new ParseError("Unsupported function name: " + text, firstToken);
         }
@@ -950,7 +950,7 @@ export default class Parser {
     }
     // At this point, we should have a symbol, possibly with accents.
     // First expand any accented base symbol according to unicodeSymbols.
-    if (Object.prototype.hasOwnProperty.call(unicodeSymbols, text[0]) &&
+    if (Object.hasOwn(unicodeSymbols, text[0]) &&
       this.mode === "math" && !symbols[this.mode][text[0]]) {
       // This behavior is not strict (XeTeX-compatible) in math mode.
       if (this.settings.strict && this.mode === "math") {
@@ -983,7 +983,7 @@ export default class Parser {
       }
       const loc = SourceLocation.range(nucleus);
       let s: AnyParseNode;
-      if (Object.prototype.hasOwnProperty.call(ATOMS, group)) {
+      if (Object.hasOwn(ATOMS, group)) {
         const family = group;
         const atom: ParseNode<"atom"> = {
           type: "atom",

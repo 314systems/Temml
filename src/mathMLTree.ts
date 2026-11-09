@@ -76,7 +76,7 @@ export class MathNode implements MathDomNode {
     const node = document.createElementNS("http://www.w3.org/1998/Math/MathML", this.type);
 
     for (const attr in this.attributes) {
-      if (Object.prototype.hasOwnProperty.call(this.attributes, attr)) {
+      if (Object.hasOwn(this.attributes, attr)) {
         node.setAttribute(attr, this.attributes[attr]);
       }
     }
@@ -103,7 +103,7 @@ export class MathNode implements MathDomNode {
 
     // Add the attributes
     for (const attr in this.attributes) {
-      if (Object.prototype.hasOwnProperty.call(this.attributes, attr)) {
+      if (Object.hasOwn(this.attributes, attr)) {
         markup += " " + attr + '="';
         markup += utils.escape(this.attributes[attr]);
         markup += '"';
@@ -118,7 +118,7 @@ export class MathNode implements MathDomNode {
 
     // Add the styles, after hyphenation
     for (const style in this.style) {
-      if (Object.prototype.hasOwnProperty.call(this.style, style)) {
+      if (Object.hasOwn(this.style, style)) {
         styles += `${utils.hyphenate(style)}:${this.style[style]};`;
       }
     }

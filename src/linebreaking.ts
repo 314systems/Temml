@@ -66,7 +66,7 @@ export default function setLineBreaks(
     block.push(node);
     if (isMathNodeOfType(node, "mo") && node.children.length === 1 &&
         node.attributes.form !== "prefix" && // unary operators
-        !Object.prototype.hasOwnProperty.call(node.attributes, "movablelimits")) {
+        !Object.hasOwn(node.attributes, "movablelimits")) {
       const ch = (node.children[0] as TextNode).text
       if (wrapMode === "=" && ch === "=") {
         numTopLevelEquals += 1

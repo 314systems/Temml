@@ -85,7 +85,7 @@ defineFunction({
     element.classes = classes;
 
     for (const attr in group.attributes) {
-      if (attr !== "class" && Object.prototype.hasOwnProperty.call(group.attributes, attr)) {
+      if (attr !== "class" && Object.hasOwn(group.attributes, attr)) {
         element.setAttribute(attr, group.attributes[attr]);
       }
     }

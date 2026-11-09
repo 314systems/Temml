@@ -394,7 +394,7 @@ export function checkSymbolNodeType(
   node: AnyParseNode | null | undefined
 ): SymbolParseNode | null {
   if (node && (node.type === "atom" || node.type === "delimiter" ||
-      Object.prototype.hasOwnProperty.call(NON_ATOMS, node.type))) {
+      Object.hasOwn(NON_ATOMS, node.type))) {
     return node as SymbolParseNode;
   }
   return null;

@@ -93,5 +93,5 @@ export const getVariant = function(group: SymbolParseNode, style: Style): string
       break
   }
 
-  return Object.prototype.hasOwnProperty.call(fontMap, font) ? fontMap[font] : null
+  return Object.hasOwn(fontMap, font) ? fontMap[font] : null
 };

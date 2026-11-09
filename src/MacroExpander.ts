@@ -425,10 +425,10 @@ export default class MacroExpander {
   isDefined(name: string): boolean {
     return (
       this.macros.has(name) ||
-      Object.prototype.hasOwnProperty.call(functions, name) ||
-      Object.prototype.hasOwnProperty.call(symbols.math, name) ||
-      Object.prototype.hasOwnProperty.call(symbols.text, name) ||
-      Object.prototype.hasOwnProperty.call(implicitCommands, name)
+      Object.hasOwn(functions, name) ||
+      Object.hasOwn(symbols.math, name) ||
+      Object.hasOwn(symbols.text, name) ||
+      Object.hasOwn(implicitCommands, name)
     );
   }
 
@@ -439,6 +439,6 @@ export default class MacroExpander {
     const macro = this.macros.get(name);
     return macro != null
       ? typeof macro === "string" || typeof macro === "function" || !macro.unexpandable
-      : Object.prototype.hasOwnProperty.call(functions, name) && !functions[name].primitive;
+      : Object.hasOwn(functions, name) && !functions[name].primitive;
   }
 }

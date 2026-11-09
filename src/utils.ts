@@ -8,7 +8,7 @@ import type { AnyParseNode } from "./parseNode";
 /**
  * Look up `key` on a user-supplied `options` object and return its value, or
  * `defaultIfUndefined` if the setting is absent. Reads via
- * `Object.prototype.hasOwnProperty.call` rather than plain property access,
+ * `Object.hasOwn` rather than plain property access,
  * so a key that only exists because `Object.prototype` was polluted
  * elsewhere is never mistaken for a setting the caller actually provided.
  */
@@ -17,7 +17,7 @@ export const deflt = function<T extends object, K extends keyof T, D>(
   key: K,
   defaultIfUndefined: D
 ): Exclude<T[K], undefined> | D {
-  if (!Object.prototype.hasOwnProperty.call(options, key)) {
+  if (!Object.hasOwn(options, key)) {
     return defaultIfUndefined;
   }
   const setting = options[key];

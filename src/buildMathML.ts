@@ -29,7 +29,7 @@ export const makeText = function(text: string, mode: Mode, style?: Style): TextN
     symbols[mode][text].replace &&
     text.charCodeAt(0) !== 0xd835 &&
     !(
-      Object.prototype.hasOwnProperty.call(ligatures, text) &&
+      Object.hasOwn(ligatures, text) &&
       style &&
       ((style.fontFamily && style.fontFamily.slice(4, 6) === "tt") ||
         (style.font && style.font.slice(4, 6) === "tt"))

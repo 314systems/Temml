@@ -86,6 +86,7 @@ export default defineConfig([{
     "object-curly-spacing": [2, "always"],
     "one-var": [2, "never"],
     "prefer-const": 2,
+    "prefer-object-has-own": 2,
     "prefer-spread": 0,
     semi: 0,
     "space-before-blocks": 2,

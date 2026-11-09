@@ -231,7 +231,7 @@ export const renderMathInElement = function(elem, options) {
 
   // Object.assign(optionsCopy, option)
   for (const option in options) {
-    if (Object.prototype.hasOwnProperty.call(options, option)) {
+    if (Object.hasOwn(options, option)) {
       optionsCopy[option] = options[option];
     }
   }

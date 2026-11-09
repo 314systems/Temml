@@ -40,7 +40,7 @@ const toNode = function(this: HtmlElementData, tagName: string): HTMLElement {
 
   // Apply attributes
   for (const attr in this.attributes) {
-    if (Object.prototype.hasOwnProperty.call(this.attributes, attr)) {
+    if (Object.hasOwn(this.attributes, attr)) {
       node.setAttribute(attr, this.attributes[attr]);
     }
   }
@@ -68,7 +68,7 @@ const toMarkup = function(this: HtmlElementData, tagName: string): string {
 
   // Add the styles, after hyphenation
   for (const style in this.style) {
-    if (Object.prototype.hasOwnProperty.call(this.style, style)) {
+    if (Object.hasOwn(this.style, style)) {
       styles += `${utils.hyphenate(style)}:${this.style[style]};`;
     }
   }
@@ -79,7 +79,7 @@ const toMarkup = function(this: HtmlElementData, tagName: string): string {
 
   // Add the attributes
   for (const attr in this.attributes) {
-    if (Object.prototype.hasOwnProperty.call(this.attributes, attr)) {
+    if (Object.hasOwn(this.attributes, attr)) {
       markup += ` ${attr}="${utils.escape(this.attributes[attr])}"`;
     }
   }
@@ -217,7 +217,7 @@ export class Img implements VirtualNode {
     // Add the styles, after hyphenation
     let styles = "";
     for (const style in this.style) {
-      if (Object.prototype.hasOwnProperty.call(this.style, style)) {
+      if (Object.hasOwn(this.style, style)) {
         styles += `${utils.hyphenate(style)}:${this.style[style]};`;
       }
     }

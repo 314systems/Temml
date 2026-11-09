@@ -32,12 +32,12 @@ defineFunctionBuilders({
   mathmlBuilder(group, style) {
     let node
 
-    if (Object.prototype.hasOwnProperty.call(regularSpace, group.text)) {
+    if (Object.hasOwn(regularSpace, group.text)) {
       // Firefox does not render a space in a <mtext> </mtext>. So write a no-break space.
       // TODO: If Firefox fixes that bug, uncomment the next line and write ch into the node.
       //const ch = (regularSpace[group.text].className === "nobreak") ? "\u00a0" : " "
       node = new mathMLTree.MathNode("mtext", [new mathMLTree.TextNode("\u00a0")])
-    } else if (Object.prototype.hasOwnProperty.call(cssSpace, group.text)) {
+    } else if (Object.hasOwn(cssSpace, group.text)) {
       // MathML 3.0 calls for nobreak to occur in an <mo>, not an <mtext>
       // Ref: https://www.w3.org/Math/draft-spec/mathml.html#chapter3_presm.lbattrs
       node = new mathMLTree.MathNode("mo")
