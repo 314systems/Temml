@@ -23,7 +23,7 @@ import type { Mode } from "./types"
  * Takes a symbol and converts it into a MathML text node after performing
  * optional replacement from symbols.js.
  */
-export const makeText = function(text: string, mode: Mode, style?: Style): TextNode {
+export const makeText = (text: string, mode: Mode, style?: Style): TextNode => {
   if (
     symbols[mode][text] &&
     symbols[mode][text].replace &&
@@ -114,7 +114,7 @@ export const consolidateText = (mrow: MathDomNode): MathDomNode => {
  * Wrap the given array of nodes in an <mrow> node if needed, i.e.,
  * unless the array has length 1.  Always returns a single node.
  */
-export const makeRow = function(body: MathDomNode[], semisimple = false): MathDomNode {
+export const makeRow = (body: MathDomNode[], semisimple = false): MathDomNode => {
   if (body.length === 1 && !(body[0] instanceof DocumentFragment)) {
     return body[0];
   } else if (!semisimple) {
@@ -138,7 +138,7 @@ export const makeRow = function(body: MathDomNode[], semisimple = false): MathDo
  * or <mo separator="true" lspace="0em" rspace="0em">,</mo>
  * which is how a braced comma {,} renders in MathML
  */
-function isNumberPunctuation(group: MathDomNode | undefined): group is MathNode {
+const isNumberPunctuation = (group: MathDomNode | undefined): group is MathNode => {
   if (!(group instanceof MathNode)) {
     return false
   }
@@ -177,11 +177,11 @@ const isRel = (item: AnyParseNode): boolean => {
  * (1) Suppress spacing when an author wraps an operator w/braces, as in {=}.
  * (2) Suppress spacing between two adjacent relations.
  */
-export const buildExpression = function(
+export const buildExpression = (
   expression: AnyParseNode[],
   style: Style,
   semisimple = false
-): MathDomNode[] {
+): MathDomNode[] => {
   if (!semisimple && expression.length === 1) {
     const group = buildGroup(expression[0], style);
     if (isMathNodeOfType(group, "mo")) {
@@ -249,11 +249,11 @@ export const buildExpression = function(
  * Equivalent to buildExpression, but wraps the elements in an <mrow>
  * if there's more than one.  Returns a single node instead of an array.
  */
-export const buildExpressionRow = function(
+export const buildExpressionRow = (
   expression: AnyParseNode[],
   style: Style,
   semisimple = false
-): MathDomNode {
+): MathDomNode => {
   return makeRow(buildExpression(expression, style, semisimple), semisimple);
 };
 
@@ -261,10 +261,10 @@ export const buildExpressionRow = function(
  * Takes a group from the parser and calls the appropriate groupBuilders function
  * on it to produce a MathML node.
  */
-export const buildGroup = function(
+export const buildGroup = (
   group: AnyParseNode | null | undefined,
   style: Style
-): MathDomNode {
+): MathDomNode => {
   if (!group) {
     return new mathMLTree.MathNode("mrow");
   }
@@ -331,12 +331,12 @@ const taggedExpression = (
  * Takes a full parse tree and settings and builds a MathML representation of
  * it.
  */
-export default function buildMathML(
+const buildMathML = (
   tree: AnyParseNode[],
   texExpression: string,
   style: Style,
   settings: Settings
-): MathNode | AnchorNode {
+): MathNode | AnchorNode => {
   // Strip off outer tag wrapper for processing below.
   let tag: AnyParseNode[] | null = null
   const first = tree[0]
@@ -384,3 +384,5 @@ export default function buildMathML(
   }
   return math;
 }
+
+export default buildMathML

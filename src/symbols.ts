@@ -49,13 +49,13 @@ symbols.math = Object.create(null);
 symbols.text = Object.create(null);
 export default symbols;
 
-export function defineSymbol(
+export const defineSymbol = (
   mode: Mode,
   group: Group,
   replace: string | null,
   name: string,
   acceptUnicodeChar?: boolean
-): void {
+): void => {
   if (mode !== "math" && mode !== "text") {
     throw new TypeError(`Invalid mode: ${mode} called in defineSymbol`);
   }

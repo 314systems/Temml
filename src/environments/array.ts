@@ -25,7 +25,7 @@ import type { StyleStr } from "../types";
 import type { Measurement } from "../units";
 
 // Helper functions
-function getHLines(parser: Parser): boolean[] {
+const getHLines = (parser: Parser): boolean[] => {
   // Return an array. The array length = number of hlines.
   // Each element in the array tells if the line is dashed.
   const hlineInfo: boolean[] = [];
@@ -90,7 +90,7 @@ const checkCellForLabels = (cell: AnyParseNode[]): string => {
 // * true: Automatic equation numbering, overridable by \tag
 // * false: Tags allowed on each row, but no automatic numbering
 // This function *doesn't* work with the "split" environment name.
-function getAutoTag(name: string): boolean | undefined {
+const getAutoTag = (name: string): boolean | undefined => {
   if (name.indexOf("ed") === -1) {
     return name.indexOf("*") === -1;
   }
@@ -115,7 +115,7 @@ interface ArrayOptions {
   arraycolsep?: Measurement | null;
 }
 
-function parseArray(
+const parseArray = (
   parser: Parser,
   {
     cols,
@@ -129,7 +129,7 @@ function parseArray(
     arraycolsep
   }: ArrayOptions,
   scriptLevel: StyleStr
-): ParseNode<"array"> {
+): ParseNode<"array"> => {
   const endToken = envClasses && envClasses.includes("bordermatrix") ? "}" : "\\end"
   parser.gullet.beginGroup();
   if (!singleRow) {
@@ -153,12 +153,12 @@ function parseArray(
   // amsmath uses \global\@eqnswtrue and \global\@eqnswfalse to represent
   // whether this row should have an equation number.  Simulate this with
   // a \@eqnsw macro set to 1 or 0.
-  function beginRow() {
+  const beginRow = () => {
     if (autoTag) {
       parser.gullet.macros.set("\\@eqnsw", "1", true);
     }
   }
-  function endRow() {
+  const endRow = () => {
     if (tags) {
       if (parser.gullet.macros.get("\\df@tag")) {
         tags.push(parser.subparse([new Token("\\df@tag")]));
@@ -271,7 +271,7 @@ function parseArray(
 
 // Decides on a scriptLevel for cells in an array according to whether the given
 // environment name starts with the letter 'd'.
-function dCellStyle(envName: string): StyleStr {
+const dCellStyle = (envName: string): StyleStr => {
   return envName.slice(0, 1) === "d" ? "display" : "text"
 }
 
@@ -293,7 +293,7 @@ const glue = (group: ParseNode<"array">): MathNode => {
 // The cells of a table row. Rows only ever contain <mtd> cells.
 const cellsOf = (mtr: MathNode): MathNode[] => mtr.children as MathNode[]
 
-const mathmlBuilder: MathMLBuilder<"array"> = function(group, style) {
+const mathmlBuilder: MathMLBuilder<"array"> = (group, style) => {
   const tbl: MathNode[] = [];
   const numRows = group.body.length
   const hlines = group.hLinesBeforeRow;
@@ -588,7 +588,7 @@ const mathmlBuilder: MathMLBuilder<"array"> = function(group, style) {
 };
 
 // Convenience function for align, align*, aligned, alignat, alignat*, alignedat, split.
-const alignedHandler = function(context: EnvContext, args: AnyParseNode[]): ParseNode<"array"> {
+const alignedHandler = (context: EnvContext, args: AnyParseNode[]): ParseNode<"array"> => {
   if (context.envName.indexOf("ed") === -1) {
     validateAmsEnvironmentContext(context);
   }
@@ -633,7 +633,7 @@ const alignedHandler = function(context: EnvContext, args: AnyParseNode[]): Pars
     numMaths = Number(arg0)
     numCols = numMaths * 2
   }
-  res.body.forEach(function(row) {
+  res.body.forEach((row) => {
     if (isAlignedAt) {
       // Case 1
       const curMaths = row.length / 2;
@@ -689,7 +689,7 @@ defineEnvironment({
     // - The argument is a bare symbol node.
     const symNode = checkSymbolNodeType(args[0]);
     const colalign = symNode ? [args[0]] : assertNodeType(args[0], "ordgroup").body;
-    const cols = colalign.map(function(nde): ColSpec {
+    const cols = colalign.map((nde): ColSpec => {
       const node = assertSymbolNodeType(nde);
       const ca = node.text;
       if ("lcr".indexOf(ca) !== -1) {
@@ -848,7 +848,7 @@ defineEnvironment({
     // Parsing of {subarray} is similar to {array}
     const symNode = checkSymbolNodeType(args[0]);
     const colalign = symNode ? [args[0]] : assertNodeType(args[0], "ordgroup").body;
-    const cols = colalign.map(function(nde): ColSpec {
+    const cols = colalign.map((nde): ColSpec => {
       const node = assertSymbolNodeType(nde);
       const ca = node.text;
       // {subarray} only recognizes "l" & "c"

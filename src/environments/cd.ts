@@ -30,11 +30,11 @@ const isLabelEnd = (node: AnyParseNode, endChar: string): boolean => {
   return (node.type === "mathord" || node.type === "atom") && node.text === endChar;
 };
 
-function cdArrow(
+const cdArrow = (
   arrowChar: string,
   labels: ParseNode<"ordgroup">[],
   parser: Parser
-): AnyParseNode {
+): AnyParseNode => {
   // Return a parse tree of an arrow and its labels.
   // This acts in a way similar to a macro expansion.
   const funcName = cdArrowFunctionName[arrowChar];
@@ -72,7 +72,7 @@ function cdArrow(
   }
 }
 
-export function parseCD(parser: Parser): ParseNode<"array"> {
+export const parseCD = (parser: Parser): ParseNode<"array"> => {
   // Get the array's parse nodes with \\ temporarily mapped to \cr.
   const parsedRows: AnyParseNode[][] = [];
   parser.gullet.beginGroup();

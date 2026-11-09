@@ -16,7 +16,7 @@ import type { Token } from "./Token";
 //////////////////////////////////////////////////////////////////////
 // macro tools
 
-defineMacro("\\noexpand", function(context) {
+defineMacro("\\noexpand", (context) => {
   // The expansion is the token itself; but that token is interpreted
   // as if its meaning were ‘\relax’ if it is a control sequence that
   // would ordinarily be expanded by TeX’s expansion rules.
@@ -28,7 +28,7 @@ defineMacro("\\noexpand", function(context) {
   return { tokens: [t], numArgs: 0 };
 });
 
-defineMacro("\\expandafter", function(context) {
+defineMacro("\\expandafter", (context) => {
   // TeX first reads the token that comes immediately after \expandafter,
   // without expanding it; let’s call this token t. Then TeX reads the
   // token that comes after t (and possibly more tokens, if that token
@@ -41,14 +41,14 @@ defineMacro("\\expandafter", function(context) {
 
 // LaTeX's \@firstoftwo{#1}{#2} expands to #1, skipping #2
 // TeX source: \long\def\@firstoftwo#1#2{#1}
-defineMacro("\\@firstoftwo", function(context) {
+defineMacro("\\@firstoftwo", (context) => {
   const args = context.consumeArgs(2);
   return { tokens: args[0], numArgs: 0 };
 });
 
 // LaTeX's \@secondoftwo{#1}{#2} expands to #2, skipping #1
 // TeX source: \long\def\@secondoftwo#1#2{#2}
-defineMacro("\\@secondoftwo", function(context) {
+defineMacro("\\@secondoftwo", (context) => {
   const args = context.consumeArgs(2);
   return { tokens: args[1], numArgs: 0 };
 });
@@ -57,7 +57,7 @@ defineMacro("\\@secondoftwo", function(context) {
 // symbol that isn't a space, consuming any spaces but not consuming the
 // first nonspace character.  If that nonspace character matches #1, then
 // the macro expands to #2; otherwise, it expands to #3.
-defineMacro("\\@ifnextchar", function(context) {
+defineMacro("\\@ifnextchar", (context) => {
   const args = context.consumeArgs(3); // symbol, if, else
   context.consumeSpaces();
   const nextToken = context.future();
@@ -75,7 +75,7 @@ defineMacro("\\@ifnextchar", function(context) {
 defineMacro("\\@ifstar", "\\@ifnextchar *{\\@firstoftwo{#1}}");
 
 // LaTeX's \TextOrMath{#1}{#2} expands to #1 in text mode, #2 in math mode
-defineMacro("\\TextOrMath", function(context) {
+defineMacro("\\TextOrMath", (context) => {
   const args = context.consumeArgs(2);
   if (context.mode === "text") {
     return { tokens: args[0], numArgs: 0 };
@@ -143,7 +143,7 @@ const appendCharNumbers = (number: number, numStr: string, base: number): number
 //   \char`\x  -- character that cannot be written (e.g. %)
 // These all refer to characters from the font, so we turn them into special
 // calls to a function \@char dealt with in the Parser.
-defineMacro("\\char", function(context) {
+defineMacro("\\char", (context) => {
   let token = context.popToken();
   let base: number | undefined;
   let number: number | string | undefined = "";
@@ -186,7 +186,7 @@ defineMacro("\\char", function(context) {
   return `\\@char{${number}}`;
 });
 
-function recreateArgStr(context: MacroExpander): string {
+const recreateArgStr = (context: MacroExpander): string => {
   // Recreate the macro's original argument string from the array of parse tokens.
   const tokens = context.consumeArgs(1)[0];
   let str = ""
@@ -324,7 +324,7 @@ const dotsByToken: Record<string, string> = {
   "\\DOTSX": "\\dotsx"
 };
 
-defineMacro("\\dots", function(context) {
+defineMacro("\\dots", (context) => {
   // TODO: If used in text mode, should expand to \textellipsis.
   // However, in Temml, \textellipsis and \ldots behave the same
   // (in text mode), and it's unlikely we'd see any of the math commands
@@ -559,7 +559,7 @@ const replaceVert = (argStr: string, match: RegExpExecArray): string => {
   const replaceStr = `}\\,\\middle${ch}\\,{`
   return argStr.slice(0, match.index) + replaceStr + argStr.slice(match.index + match[0].length)
 }
-defineMacro("\\Braket",  function(context) {
+defineMacro("\\Braket",  (context) => {
   let argStr = recreateArgStr(context)
   const regEx = /\|\||\||\\\|/g
   let match: RegExpExecArray | null
@@ -568,7 +568,7 @@ defineMacro("\\Braket",  function(context) {
   }
   return "\\left\\langle{" + argStr + "}\\right\\rangle"
 });
-defineMacro("\\Set",  function(context) {
+defineMacro("\\Set",  (context) => {
   let argStr = recreateArgStr(context)
   const match = /\|\||\||\\\|/.exec(argStr)
   if (match) {
@@ -576,7 +576,7 @@ defineMacro("\\Set",  function(context) {
   }
   return "\\left\\{\\:{" + argStr + "}\\:\\right\\}"
 });
-defineMacro("\\set",  function(context) {
+defineMacro("\\set",  (context) => {
   const argStr = recreateArgStr(context)
   return "\\{{" + argStr.replace(/\|/, "}\\mid{") + "}\\}"
 });
@@ -601,11 +601,11 @@ const pdvHelper = (args: Token[][]): string[] => {
   denoms.map(e => { denominator += "\\partial " + e.trim() +  "\\,"})
   return [numerator, numOp,  denominator.replace(/\\,$/, "")]
 }
-defineMacro("\\pdv@numerator", function(context) {
+defineMacro("\\pdv@numerator", (context) => {
   const [numerator, numOp, denominator] = pdvHelper(context.consumeArgs(2))
   return `\\frac{${numOp} ${numerator}}{${denominator}}`
 })
-defineMacro("\\pdv@next", function(context) {
+defineMacro("\\pdv@next", (context) => {
   const [numerator, numOp, denominator] = pdvHelper(context.consumeArgs(2))
   return `\\frac{${numOp}}{${denominator}} ${numerator}`
 })

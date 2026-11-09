@@ -127,20 +127,20 @@ export const _mathmlGroupBuilders: Partial<Record<NodeType, AnyMathMLBuilder>> =
  * Register a MathML builder. Each builder only ever receives nodes of its own
  * type (see buildMathML.js), so it is safe to store it as `AnyMathMLBuilder`.
  */
-export function registerMathMLBuilder<NODETYPE extends NodeType>(
+export const registerMathMLBuilder = <NODETYPE extends NodeType>(
   type: NODETYPE,
   mathmlBuilder: MathMLBuilder<NODETYPE>
-): void {
+): void => {
   _mathmlGroupBuilders[type] = mathmlBuilder as unknown as AnyMathMLBuilder
 }
 
-export default function defineFunction<NODETYPE extends NodeType>({
+const defineFunction = <NODETYPE extends NodeType>({
   type,
   names,
   props,
   handler,
   mathmlBuilder
-}: FunctionSpec<NODETYPE>): void {
+}: FunctionSpec<NODETYPE>): void => {
   // Set default values of functions
   const data: FunctionSpecData = {
     type,
@@ -162,18 +162,20 @@ export default function defineFunction<NODETYPE extends NodeType>({
   }
 }
 
+export default defineFunction
+
 /**
  * Use this to register only the MathML builder for a function(e.g.
  * if the function's ParseNode is generated in Parser.js rather than via a
  * stand-alone handler provided to `defineFunction`).
  */
-export function defineFunctionBuilders<NODETYPE extends NodeType>({
+export const defineFunctionBuilders = <NODETYPE extends NodeType>({
   type,
   mathmlBuilder
 }: {
   type: NODETYPE;
   mathmlBuilder?: MathMLBuilder<NODETYPE>;
-}): void {
+}): void => {
   defineFunction({
     type,
     names: [],
@@ -185,12 +187,12 @@ export function defineFunctionBuilders<NODETYPE extends NodeType>({
   })
 }
 
-export const normalizeArgument = function(arg: AnyParseNode): AnyParseNode {
+export const normalizeArgument = (arg: AnyParseNode): AnyParseNode => {
   return arg.type === "ordgroup" && arg.body.length === 1 ? arg.body[0] : arg
 }
 
 // Since the corresponding buildMathML function expects a
 // list of elements, we normalize for different kinds of arguments
-export const ordargument = function(arg: AnyParseNode): AnyParseNode[] {
+export const ordargument = (arg: AnyParseNode): AnyParseNode[] => {
   return arg.type === "ordgroup" ? arg.body : [arg]
 }

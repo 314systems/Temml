@@ -14,7 +14,7 @@ const textAtomTypes = ["text", "textord", "mathord", "atom"]
 // The text of a parse node or MathML text node, if it has one.
 const textOf = (node: unknown): string | undefined => (node as { text?: string }).text
 
-function mathmlBuilder(group: ParseNode<"mclass">, style: Style): MathNode {
+const mathmlBuilder = (group: ParseNode<"mclass">, style: Style): MathNode => {
   let node: MathNode;
   const inner = mml.buildExpression(group.body, style);
 

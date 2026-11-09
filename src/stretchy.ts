@@ -94,7 +94,7 @@ const stretchyCodePoint: Record<string, string> = {
   chemequilibrium: "\u21cc"
 }
 
-export const mathMLnode = function(label: string): MathNode {
+export const mathMLnode = (label: string): MathNode => {
   const child = new mathMLTree.TextNode(stretchyCodePoint[label.slice(1)])
   const node = new mathMLTree.MathNode("mo", [child])
   node.setAttribute("stretchy", "true")

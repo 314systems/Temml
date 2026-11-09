@@ -34,7 +34,7 @@ interface ResolvedOptions extends AutoRenderOptions {
   errorCallback: (msg: string, err: ParseError) => void;
 }
 
-const findEndOfMath = function(delimiter: string, text: string, startIndex: number): number {
+const findEndOfMath = (delimiter: string, text: string, startIndex: number): number => {
   // Adapted from
   // https://github.com/Khan/perseus/blob/master/src/perseus-markdown.jsx
   let index = startIndex;
@@ -61,13 +61,13 @@ const findEndOfMath = function(delimiter: string, text: string, startIndex: numb
   return -1;
 };
 
-const escapeRegex = function(string: string): string {
+const escapeRegex = (string: string): string => {
   return string.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 };
 
 const amsRegex = /^\\(?:begin|(?:eq)?ref){/
 
-const splitAtDelimiters = function(text: string, delimiters: Delimiter[]): SplitData[] {
+const splitAtDelimiters = (text: string, delimiters: Delimiter[]): SplitData[] => {
   let index: number;
   const data: SplitData[] = [];
 
@@ -184,10 +184,10 @@ const delimitersFromKey = (key: string): Delimiter[] => {
 /* Note: optionsCopy is mutated by this method. If it is ever exposed in the
  * API, we should copy it before mutating.
  */
-const renderMathInText = function(
+const renderMathInText = (
   text: string,
   optionsCopy: ResolvedOptions
-): DocumentFragment | null {
+): DocumentFragment | null => {
   const data = splitAtDelimiters(text, optionsCopy.delimiters);
   if (data.length === 1 && data[0].type === "text") {
     // There is no formula in the text.
@@ -233,7 +233,7 @@ const renderMathInText = function(
   return fragment;
 };
 
-const renderElem = function(elem: Element, optionsCopy: ResolvedOptions): void {
+const renderElem = (elem: Element, optionsCopy: ResolvedOptions): void => {
   for (let i = 0; i < elem.childNodes.length; i++) {
     const childNode = elem.childNodes[i];
     if (childNode.nodeType === 3) {
@@ -258,7 +258,7 @@ const renderElem = function(elem: Element, optionsCopy: ResolvedOptions): void {
   }
 };
 
-export const renderMathInElement = function(elem: Element, options?: AutoRenderOptions): void {
+export const renderMathInElement = (elem: Element, options?: AutoRenderOptions): void => {
   if (!elem) {
     throw new Error("No element provided to render");
   }

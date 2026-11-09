@@ -13,7 +13,7 @@ const plugins = ["mhchem", "texvc", "physics"]
 // Insert the extension macros right after the last built-in macro definition.
 const insert = file => {
   const code = fs.readFileSync(file, "utf8")
-  if (!/\bfunction defineMacro\(/.test(code)) {
+  if (!/\b(?:function defineMacro\(|const defineMacro = )/.test(code)) {
     throw new Error(`${file}: defineMacro was renamed by the bundler`)
   }
   const marker = code.indexOf("standardstate")

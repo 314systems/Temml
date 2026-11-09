@@ -29,6 +29,8 @@ export type MacroMap = Record<string, MacroDefinition>;
 export const _macros: MacroMap = Object.create(null);
 
 // This function might one day accept an additional argument and do more things.
-export default function defineMacro(name: string, body: MacroDefinition): void {
+const defineMacro = (name: string, body: MacroDefinition): void => {
   _macros[name] = body;
 }
+
+export default defineMacro

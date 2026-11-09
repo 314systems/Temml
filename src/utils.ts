@@ -12,11 +12,11 @@ import type { AnyParseNode } from "./parseNode";
  * so a key that only exists because `Object.prototype` was polluted
  * elsewhere is never mistaken for a setting the caller actually provided.
  */
-export const deflt = function<T extends object, K extends keyof T, D>(
+export const deflt = <T extends object, K extends keyof T, D>(
   options: T,
   key: K,
   defaultIfUndefined: D
-): Exclude<T[K], undefined> | D {
+): Exclude<T[K], undefined> | D => {
   if (!Object.hasOwn(options, key)) {
     return defaultIfUndefined;
   }
@@ -27,7 +27,7 @@ export const deflt = function<T extends object, K extends keyof T, D>(
 // hyphenate and escape adapted from Facebook's React under Apache 2 license
 
 const uppercase = /([A-Z])/g;
-export const hyphenate = function(str: string): string {
+export const hyphenate = (str: string): string => {
   return str.replace(uppercase, "-$1").toLowerCase();
 };
 
@@ -44,7 +44,7 @@ const ESCAPE_REGEX = /[&><"']/g;
 /**
  * Escapes text to prevent scripting attacks.
  */
-export function escape(text: unknown): string {
+export const escape = (text: unknown): string => {
   return String(text).replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 }
 
@@ -53,7 +53,7 @@ export function escape(text: unknown): string {
  * cases, this will just be the group itself, but when ordgroups and colors have
  * a single element, we want to pull that out.
  */
-export const getBaseElem = function(group: AnyParseNode): AnyParseNode {
+export const getBaseElem = (group: AnyParseNode): AnyParseNode => {
   if (group.type === "ordgroup") {
     if (group.body.length === 1) {
       return getBaseElem(group.body[0]);
@@ -78,14 +78,14 @@ export const getBaseElem = function(group: AnyParseNode): AnyParseNode {
  * with a single character in them. To decide if something is a character box,
  * we find its innermost group, and see if it is a single character.
  */
-export const isCharacterBox = function(group: AnyParseNode): boolean {
+export const isCharacterBox = (group: AnyParseNode): boolean => {
   const baseElem = getBaseElem(group);
 
   // These are all the types of groups which hold single characters
   return baseElem.type === "mathord" || baseElem.type === "textord" || baseElem.type === "atom"
 };
 
-export const assert = function<T>(value: T): NonNullable<T> {
+export const assert = <T>(value: T): NonNullable<T> => {
   if (!value) {
     throw new Error("Expected non-null, but got " + String(value));
   }
@@ -97,7 +97,7 @@ export const assert = function<T>(value: T): NonNullable<T> {
  * protocol (and thus is relative), or `null` if URL has invalid protocol
  * (so should be outright rejected).
  */
-export const protocolFromUrl = function(url: string): string | null {
+export const protocolFromUrl = (url: string): string | null => {
   // Check for possible leading protocol.
   // https://url.spec.whatwg.org/#url-parsing strips leading whitespace
   // (\x00) or C0 control (\x00-\x1F) characters.
@@ -125,7 +125,7 @@ export const protocolFromUrl = function(url: string): string | null {
  * 1/6551.6em with our ptPerEm = 10):
  * http://www.ctex.org/documents/shredder/src/texbook.pdf#page=69
  */
-export const round = function(n: number): number {
+export const round = (n: number): number => {
   return +n.toFixed(4);
 };
 

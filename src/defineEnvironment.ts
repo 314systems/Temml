@@ -63,13 +63,13 @@ export interface EnvSpecData {
  */
 export const _environments: Record<string, EnvSpecData> = {};
 
-export default function defineEnvironment<NODETYPE extends NodeType>({
+const defineEnvironment = <NODETYPE extends NodeType>({
   type,
   names,
   props,
   handler,
   mathmlBuilder
-}: EnvSpec<NODETYPE>): void {
+}: EnvSpec<NODETYPE>): void => {
   // Set default values of environments.
   const data: EnvSpecData = {
     type,
@@ -85,3 +85,5 @@ export default function defineEnvironment<NODETYPE extends NodeType>({
     registerMathMLBuilder(type, mathmlBuilder);
   }
 }
+
+export default defineEnvironment

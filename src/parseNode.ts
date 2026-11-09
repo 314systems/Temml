@@ -358,10 +358,10 @@ export type SymbolParseNode =
  * Asserts that the node is of the given type and returns it with stricter
  * typing. Throws if the node's type does not match.
  */
-export function assertNodeType<NODETYPE extends NodeType>(
+export const assertNodeType = <NODETYPE extends NodeType>(
   node: AnyParseNode | null | undefined,
   type: NODETYPE
-): ParseNode<NODETYPE> {
+): ParseNode<NODETYPE> => {
   if (!node || node.type !== type) {
     throw new Error(
       `Expected node of type ${type}, but got ` +
@@ -375,7 +375,7 @@ export function assertNodeType<NODETYPE extends NodeType>(
  * Returns the node more strictly typed iff it is of the given type. Otherwise,
  * returns null.
  */
-export function assertSymbolNodeType(node: AnyParseNode | null | undefined): SymbolParseNode {
+export const assertSymbolNodeType = (node: AnyParseNode | null | undefined): SymbolParseNode => {
   const typedNode = checkSymbolNodeType(node);
   if (!typedNode) {
     throw new Error(
@@ -390,9 +390,9 @@ export function assertSymbolNodeType(node: AnyParseNode | null | undefined): Sym
  * Returns the node more strictly typed iff it is of the given type. Otherwise,
  * returns null.
  */
-export function checkSymbolNodeType(
+export const checkSymbolNodeType = (
   node: AnyParseNode | null | undefined
-): SymbolParseNode | null {
+): SymbolParseNode | null => {
   if (node && (node.type === "atom" || node.type === "delimiter" ||
       Object.hasOwn(NON_ATOMS, node.type))) {
     return node as SymbolParseNode;

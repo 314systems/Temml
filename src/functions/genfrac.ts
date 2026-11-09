@@ -214,7 +214,7 @@ defineFunction({
   }
 });
 
-const delimFromValue = function(delimString: string): string | null {
+const delimFromValue = (delimString: string): string | null => {
   let delim: string | null = null;
   if (delimString.length > 0) {
     delim = delimString;

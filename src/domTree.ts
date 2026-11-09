@@ -15,7 +15,7 @@ import * as utils from "./utils";
  * Create an HTML className based on a list of classes. In addition to joining
  * with spaces, we also remove empty classes.
  */
-export const createClass = function(classes: string[]): string {
+export const createClass = (classes: string[]): string => {
   return classes.filter((cls) => cls).join(" ");
 };
 

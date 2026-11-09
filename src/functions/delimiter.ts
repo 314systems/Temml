@@ -152,7 +152,7 @@ export const isDelimiter = (str: string): boolean => str.length > 0 &&
 const sizeToMaxHeight = [0, 1.2, 1.8, 2.4, 3.0];
 
 // Delimiter functions
-function checkDelimiter(delim: AnyParseNode, context: { funcName: string }): SymbolParseNode {
+const checkDelimiter = (delim: AnyParseNode, context: { funcName: string }): SymbolParseNode => {
   if (delim.type === "ordgroup" && delim.body.length === 1) {
     delim = delim.body[0]; // Unwrap the braces
   }
@@ -257,7 +257,7 @@ defineFunction({
   }
 });
 
-function assertParsed(group: { body?: unknown }): void {
+const assertParsed = (group: { body?: unknown }): void => {
   if (!group.body) {
     throw new Error("Bug: The delim ParseNode wasn't fully parsed.");
   }

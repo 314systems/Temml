@@ -19,7 +19,7 @@ export type MathNodeType =
   | "mmultiscripts" | "mprescripts" | "none"
   | "mtable" | "mtr" | "mtd" | "mlabeledtr";
 
-export function newDocumentFragment(children: MathDomNode[]): DocumentFragment {
+export const newDocumentFragment = (children: MathDomNode[]): DocumentFragment => {
   return new DocumentFragment(children);
 }
 

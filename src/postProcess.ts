@@ -7,7 +7,7 @@
 
 export const version = "0.14.0";
 
-export function postProcess(block: Element | Document): void {
+export const postProcess = (block: Element | Document): void => {
   const labelMap: Record<string, string> = {}
   let i = 0
 

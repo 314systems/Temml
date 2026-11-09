@@ -33,11 +33,11 @@ const attributesOf = (node: MathDomNode): Record<string, string> | undefined =>
  * much of this module.
  */
 
-export default function setLineBreaks(
+const setLineBreaks = (
   expression: MathDomNode[],
   wrapMode: "none" | "tex" | "=",
   isDisplayMode: boolean
-): MathNode | DocumentFragment {
+): MathNode | DocumentFragment => {
   const mtrs: MathNode[] = [];
   let mrows: MathDomNode[] = [];
   let block: MathDomNode[] = [];
@@ -133,3 +133,5 @@ export default function setLineBreaks(
   }
   return mathMLTree.newDocumentFragment(mrows);
 }
+
+export default setLineBreaks

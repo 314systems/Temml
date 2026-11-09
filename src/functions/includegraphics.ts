@@ -7,7 +7,7 @@ import { assertNodeType } from "../parseNode"
 import type { CssStyle } from "../tree"
 import type { Measurement } from "../units"
 
-const sizeData = function(str: string): Measurement {
+const sizeData = (str: string): Measurement => {
   if (/^[-+]? *(\d+(\.\d*)?|\.\d+)$/.test(str)) {
     // str is a number with no unit specified.
     // default unit is bp, per graphix package.

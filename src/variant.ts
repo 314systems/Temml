@@ -24,7 +24,7 @@ const fontMap: Record<string, string> = {
 /**
  * Returns the math variant as a string or null if none is required.
  */
-export const getVariant = function(group: SymbolParseNode, style: Style): string | null {
+export const getVariant = (group: SymbolParseNode, style: Style): string | null => {
   // Handle font specifiers as best we can.
   // Chromium does not support the MathML mathvariant attribute.
   // So we'll use Unicode replacement characters instead.

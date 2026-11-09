@@ -52,7 +52,7 @@ const validUnits: readonly string[] = [
   "sp"
 ]
 
-export const validUnit = function(unit: string | { unit: string }): boolean {
+export const validUnit = (unit: string | { unit: string }): boolean => {
   if (typeof unit !== "string") {
     unit = unit.unit
   }
@@ -68,7 +68,7 @@ export const emScale = (styleLevel: number): number => {
  * Convert a "size" parse node (with numeric "number" and string "unit" fields,
  * as parsed by functions.js argType "size") into a CSS value.
  */
-export const calculateSize = function(sizeValue: Measurement, style: Style): Measurement {
+export const calculateSize = (sizeValue: Measurement, style: Style): Measurement => {
   let number = sizeValue.number
   if (style.maxSize[0] < 0 && number > 0) {
     return { number: 0, unit: "em" }

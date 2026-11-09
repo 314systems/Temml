@@ -33,11 +33,11 @@ export type { AutoRenderOptions } from "./src/auto-render";
  * Parse and build an expression, and place that expression in the DOM node
  * given.
  */
-let render = function(
+let render = (
   expression: string,
   baseNode: HTMLElement | MathMLElement,
   options: Options = {}
-): void {
+): void => {
   baseNode.textContent = "";
   const alreadyInMathElement = baseNode.tagName.toLowerCase() === "math"
   if (alreadyInMathElement) { options.wrap = "none" }
@@ -65,7 +65,7 @@ if (typeof document !== "undefined") {
       );
     }
 
-    render = function() {
+    render = () => {
       throw new ParseError("Temml doesn't work in quirks mode.");
     };
   }
@@ -74,7 +74,7 @@ if (typeof document !== "undefined") {
 /**
  * Parse and build an expression, and return the markup for that.
  */
-const renderToString = function(expression: string, options?: Options): string {
+const renderToString = (expression: string, options?: Options): string => {
   const markup = renderToMathMLTree(expression, options).toMarkup();
   return markup;
 };
@@ -82,7 +82,7 @@ const renderToString = function(expression: string, options?: Options): string {
 /**
  * Parse an expression and return the parse tree.
  */
-const generateParseTree = function(expression: string, options?: Options): AnyParseNode[] {
+const generateParseTree = (expression: string, options?: Options): AnyParseNode[] => {
   const settings = new Settings(options);
   return parseTree(expression, settings);
 };
@@ -91,7 +91,7 @@ const generateParseTree = function(expression: string, options?: Options): AnyPa
  * Take an expression which contains a preamble.
  * Parse it and return the macros.
  */
-const definePreamble = function(expression: string, options?: Options): MacroMap {
+const definePreamble = (expression: string, options?: Options): MacroMap => {
   const settings = new Settings(options);
   settings.macros = Object.create(null);
   if (!(typeof expression === "string" || (expression as unknown) instanceof String)) {
@@ -109,7 +109,7 @@ const definePreamble = function(expression: string, options?: Options): MacroMap
  * renders the invalid LaTeX as a span with hover title giving the Temml
  * error message.  Otherwise, simply throws the error.
  */
-const renderError = function(error: unknown, expression: string, options: Settings): Span {
+const renderError = (error: unknown, expression: string, options: Settings): Span => {
   if (options.throwOnError || !(error instanceof ParseError)) {
     throw error;
   }
@@ -123,10 +123,10 @@ const renderError = function(error: unknown, expression: string, options: Settin
  * Generates and returns the Temml build tree. This is used for advanced
  * use cases (like rendering to custom output).
  */
-const renderToMathMLTree = function(
+const renderToMathMLTree = (
   expression: string,
   options?: Options
-): MathNode | AnchorNode | Span {
+): MathNode | AnchorNode | Span => {
   const settings = new Settings(options);
   try {
     const tree = parseTree(expression, settings);
