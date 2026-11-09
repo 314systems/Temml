@@ -1,4 +1,4 @@
-const temml = require("../utils/temml.cjs")
+const temml = require("../dist/temml.cjs")
 
 /*
  * Unit tests for Temml.

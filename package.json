@@ -32,19 +32,15 @@
     "esm": "^3.2.25",
     "globals": "^17.14.0",
     "rollup": "^4.59.0",
-    "terser": "^5.34.0",
-    "ws": "^8.20.0"
+    "terser": "^5.34.0"
   },
   "scripts": {
     "lint": "eslint temml.js src",
     "unit-test": "node ./test/unit-test.cjs",
-    "visual-test": "node utils/buildTests.js",
-    "test": "pnpm lint && node utils/buildTests.js && pnpm unit-test",
-    "minify": "terser test/temml.js -o site/assets/temml.min.js -c -m && terser contrib/mhchem/mhchem.js -o site/assets/mhchem.min.js -c -m",
-    "build": "rollup --config ./utils/rollupConfig.mjs && pnpm minify && node utils/insertPlugins.js",
-    "docs": "node utils/buildDocs.js",
-    "dist": "pnpm build && node ./utils/copyfiles.js",
-    "serve": "node utils/server.cjs site/docs/en/mathml-status.html 8000"
+    "test": "pnpm lint && pnpm build && pnpm unit-test",
+    "minify": "terser dist/temml.js -o dist/temml.min.js -c -m && terser contrib/mhchem/mhchem.js -o contrib/mhchem/mhchem.min.js -c -m && terser contrib/copy-tex/copy-tex.js -o contrib/copy-tex/copy-tex.min.js -c -m",
+    "build": "rollup --config ./utils/rollupConfig.mjs && node utils/insertPlugins.js && node utils/copyfiles.js && pnpm minify",
+    "dist": "pnpm build"
   },
   "devEngines": {
     "packageManager": {

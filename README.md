@@ -1,5 +1,21 @@
 *Temml* is a LaTeX-to-[MathML Core](https://w3c.github.io/mathml-core/) JavaScript conversion utility. It is built to be lightweight.
 
+This fork maintains the library without the upstream website. Documentation and
+demo links below refer to the upstream project.
+
+### Development
+
+```sh
+pnpm install
+pnpm build
+pnpm test
+```
+
+`pnpm build` generates the library bundles in `dist/` and minifies the mhchem and
+copy-tex extensions. `pnpm test` runs lint, builds the library, and runs the unit tests.
+Stylesheets, fonts, and accompanying license files are kept in `assets/`.
+Unit tests in `test/` load the built library from `dist/`.
+
 | Library       | Minified JavaScript + CSS |
 |:--------------|:-------------------------:|
 | Temml         |         173 KB            |

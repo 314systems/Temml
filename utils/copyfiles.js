@@ -1,60 +1,11 @@
-const fs = require('fs');
+const fs = require("node:fs");
 
-// Populate the `dist` folder.
+fs.mkdirSync("dist", { recursive: true });
 
-fs.copyFile('site/assets/Temml-Local.css', 'dist/Temml-Local.css', (err) => {
-  if (err) { throw err }
-})
+for (const name of fs.readdirSync("assets")) {
+  if (name.endsWith(".css") || name === "Temml.woff2") {
+    fs.copyFileSync(`assets/${name}`, `dist/${name}`);
+  }
+}
 
-fs.copyFile('site/assets/Temml-Latin-Modern.css', 'dist/Temml-Latin-Modern.css', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('site/assets/Temml-Asana.css', 'dist/Temml-Asana.css', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('site/assets/Temml-STIX2.css', 'dist/Temml-STIX2.css', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('site/assets/Temml-Libertinus.css', 'dist/Temml-Libertinus.css', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('site/assets/Temml-NotoSans.css', 'dist/Temml-NotoSans.css', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('site/assets/temml.min.js', 'dist/temml.min.js', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('test/temml.js', 'dist/temml.js', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('utils/temml.cjs', 'dist/temml.cjs', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('utils/temml.mjs', 'dist/temml.mjs', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('test/temmlPostProcess.js', 'dist/temmlPostProcess.js', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('site/assets/Temml.woff2', 'dist/Temml.woff2', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('site/assets/mhchem.min.js', 'contrib/mhchem/mhchem.min.js', (err) => {
-  if (err) { throw err }
-})
-
-fs.copyFile('temml.d.ts', 'dist/temml.d.ts',
-(err) => {
-  if (err) { throw err }
-})
+fs.copyFileSync("temml.d.ts", "dist/temml.d.ts");
