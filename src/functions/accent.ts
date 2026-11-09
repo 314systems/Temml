@@ -29,9 +29,7 @@ const mathmlBuilder: MathMLBuilder<"accent"> = (group, style) => {
       && baseText.length === 1) {
     const text = baseText
     const isVec = group.label === "\\vec"
-    // FIXME: This was `isVec === "\\vec" ? "-vec" : ""`, which is always "" because
-    // isVec is a boolean. The CSS defines the chr-*-vec classes this should select.
-    const vecPostfix = ""
+    const vecPostfix = isVec ? "-vec" : ""
     if (isVec) {
       accentNode.classes.push("tml-vec") // Firefox sizing of \vec arrow
     }

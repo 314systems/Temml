@@ -184,6 +184,11 @@ test("Double exponents should not parse", () => {
   expect(`x^x_x^x`).not.toParse();
 })
 
+test("\\vec should get the classes for its arrow position", () => {
+  // x needs a small nudge. See smallNudge in accent.ts.
+  expect(temml.renderToString(r`\vec{x}`)).toContain("chr-sml-vec")
+})
+
 test("A missing sub- or superscript should be a ParseError", () => {
   expect(() => parse(`x^`, throwOnErrorSettings())).toThrow(temml.ParseError)
   expect(() => parse(`x_`, throwOnErrorSettings())).toThrow("Expected group after '_'")

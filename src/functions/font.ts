@@ -89,11 +89,7 @@ const mathmlBuilder: MathMLBuilder<"font"> = (group, style) => {
     // Ref: https://bugs.webkit.org/show_bug.cgi?id=129097
     // We insert a text node that contains a zero-width space and wrap in an mrow.
     // TODO: Get rid of this <mi> workaround when the Firefox bug is fixed.
-    // FIXME: The children should be an array. As written, the <mtext> stays empty.
-    const bogus = new mathMLTree.MathNode(
-      "mtext",
-      new mathMLTree.TextNode("\u200b") as unknown as MathDomNode[]
-    )
+    const bogus = new mathMLTree.MathNode("mtext", [new mathMLTree.TextNode("\u200b")])
     return new mathMLTree.MathNode("mrow", [bogus, mi])
   }
   return mi
