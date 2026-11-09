@@ -218,7 +218,7 @@ export interface ParseNodeTypes {
   "multiscript": {
     base: AnyParseNode;
     isSideset: boolean;
-    prescripts: Scripts | null;
+    prescripts: Scripts;
     postscripts: Scripts | null;
   };
   "noTag": Record<never, never>;

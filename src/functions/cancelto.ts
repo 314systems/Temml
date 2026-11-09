@@ -2,6 +2,8 @@ import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import * as mml from "../buildMathML";
 import { isCharacterBox, smalls } from "../utils";
+import type { MathNode } from "../mathMLTree";
+import type { ParseNode } from "../parseNode";
 
 defineFunction({
   type: "cancelto",
@@ -21,6 +23,9 @@ defineFunction({
     };
   },
   mathmlBuilder(group, style) {
+    // The text of a character box. The body is an ordgroup with one symbol in it.
+    const charText = () =>
+      ((group.body as ParseNode<"ordgroup">).body[0] as { text: string }).text
     const fromNode = new mathMLTree.MathNode(
       "mrow",
       [mml.buildGroup(group.body, style)],
@@ -31,12 +36,12 @@ defineFunction({
     const phantom = new mathMLTree.MathNode("mphantom", [mml.buildGroup(group.body, style)])
     const arrow = new mathMLTree.MathNode("mrow", [phantom], ["tml-cancelto"])
     arrow.style.color = style.color
-    if (group.isCharacterBox && smalls.indexOf(group.body.body[0].text) > -1) {
+    if (group.isCharacterBox && smalls.indexOf(charText()) > -1) {
       arrow.style.left = "0.1em"
       arrow.style.width = "90%"
     }
     const node = new mathMLTree.MathNode("mrow", [fromNode, arrow], ["menclose"])
-    if (!group.isCharacterBox || /[f∫∑]/.test(group.body.body[0].text)) {
+    if (!group.isCharacterBox || /[f∫∑]/.test(charText())) {
       // Add 0.2em space to right of content to make room for the arrowhead.
       phantom.style.paddingRight = "0.2em"
     } else {
@@ -61,10 +66,10 @@ defineFunction({
       zeroWidthNode.setAttribute("width", "0.1px") // Don't use 0. WebKit would omit it.
       dummyNode = new mathMLTree.MathNode("mphantom", [zeroWidthNode]) // Hide it.
     }
-    const toNode = mml.buildGroup(group.to, style)
+    const toNode = mml.buildGroup(group.to, style) as MathNode
     toNode.style.color = style.color
     const zeroWidthToNode = new mathMLTree.MathNode("mpadded", [toNode])
-    if (!group.isCharacterBox || /[f∫∑]/.test(group.body.body[0].text)) {
+    if (!group.isCharacterBox || /[f∫∑]/.test(charText())) {
       const w = new mathMLTree.MathNode("mspace", [])
       w.setAttribute('width', "0.2em")
       zeroWidthToNode.children.unshift(w)

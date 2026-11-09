@@ -67,7 +67,7 @@ defineFunction({
   }
 });
 
-export const spaceCharacter = function(width) {
+export const spaceCharacter = function(width: number): string {
   if (width >= 0.05555 && width <= 0.05556) {
     return "\u200a"; // &VeryThinSpace;
   } else if (width >= 0.1666 && width <= 0.1667) {

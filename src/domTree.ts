@@ -187,7 +187,7 @@ export class AnchorNode implements MathDomNode {
 /*
  * This node represents an image embed (<img>) element.
  */
-export class Img implements VirtualNode {
+export class Img implements MathDomNode {
   src: string;
   alt: string;
   classes: string[];
@@ -232,5 +232,9 @@ export class Img implements VirtualNode {
 
     markup += ">";
     return markup;
+  }
+
+  toText(): string {
+    return ""
   }
 }

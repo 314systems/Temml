@@ -1,8 +1,10 @@
 import defineFunction, { ordargument } from "../defineFunction";
 import * as mml from "../buildMathML";
+import type { ParseNode } from "../parseNode";
+import type Style from "../Style";
 
 // Non-mathy text, possibly in a font
-const textFontFamilies = {
+const textFontFamilies: Record<string, string | undefined> = {
   "\\text": undefined,
   "\\textrm": "textrm",
   "\\textsf": "textsf",
@@ -11,23 +13,23 @@ const textFontFamilies = {
   "\\textsc": "textsc"      // small caps
 };
 
-const textFontWeights = {
+const textFontWeights: Record<string, string> = {
   "\\textbf": "textbf",
   "\\textmd": "textmd"
 };
 
-const textFontShapes = {
+const textFontShapes: Record<string, string> = {
   "\\textit": "textit",
   "\\textup": "textup"
 };
 
-const styleWithFont = (group, style) => {
+const styleWithFont = (group: ParseNode<"text">, style: Style): Style => {
   const font = group.font;
   // Checks if the argument is a font family or a font style.
   if (!font) {
     return style;
   } else if (textFontFamilies[font]) {
-    return style.withTextFontFamily(textFontFamilies[font]);
+    return style.withTextFontFamily(textFontFamilies[font]!);
   } else if (textFontWeights[font]) {
     return style.withTextFontWeight(textFontWeights[font]);
   } else if (font === "\\emph") {

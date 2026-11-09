@@ -3,6 +3,7 @@ import { getVariant } from "../variant"
 import { variantChar, smallCaps } from "../replace"
 import * as mathMLTree from "../mathMLTree"
 import * as mml from "../buildMathML"
+import type { MathNode, TextNode } from "../mathMLTree"
 
 // "mathord" and "textord" ParseNodes created in Parser.js from symbol Groups in
 // src/symbols.js.
@@ -12,7 +13,7 @@ const latinRegEx = /[A-Ba-z]/
 const primes = new Set(["\\prime", "\\dprime", "\\trprime", "\\qprime",
   "\\backprime", "\\backdprime", "\\backtrprime"]);
 
-const italicNumber = (text, variant, tag) => {
+const italicNumber = (text: TextNode, variant: string, tag: "mtext" | "mn"): MathNode => {
   const mn = new mathMLTree.MathNode(tag, [text])
   const wrapper = new mathMLTree.MathNode("mstyle", [mn])
   wrapper.style["font-style"] = "italic"
@@ -25,7 +26,7 @@ defineFunctionBuilders({
   type: "mathord",
   mathmlBuilder(group, style) {
     const text = mml.makeText(group.text, group.mode, style)
-    const codePoint = text.text.codePointAt(0)
+    const codePoint = text.text.codePointAt(0) ?? 0
     // Test for upper-case Greek
     const defaultVariant = (0x0390 < codePoint && codePoint < 0x03aa) ? "normal" : "italic"
     const variant = getVariant(group, style) || defaultVariant
@@ -53,17 +54,17 @@ defineFunctionBuilders({
   type: "textord",
   mathmlBuilder(group, style) {
     let ch = group.text
-    const codePoint = ch.codePointAt(0)
+    const codePoint = ch.codePointAt(0) ?? 0
     if (style.fontFamily === "textsc") {
       // Convert small latin letters to small caps.
       if (96 < codePoint && codePoint < 123) {
-        ch = smallCaps[ch]
+        ch = (smallCaps as Record<string, string>)[ch]
       }
     }
     const text = mml.makeText(ch, group.mode, style)
     const variant = getVariant(group, style) || "normal"
 
-    let node
+    let node: MathNode
     if (numberRegEx.test(group.text)) {
       const tag = group.mode === "text" ? "mtext" : "mn"
       if (variant === "italic" || variant === "bold-italic") {

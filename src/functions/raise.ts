@@ -4,10 +4,11 @@ import * as mathMLTree from "../mathMLTree"
 import { assertNodeType } from "../parseNode"
 import { calculateSize } from "../units"
 import * as mml from "../buildMathML"
+import type { MathMLBuilder } from "../defineFunction"
 
 // \raise, \lower, and \raisebox
 
-const mathmlBuilder = (group, style) => {
+const mathmlBuilder: MathMLBuilder<"raise"> = (group, style) => {
   const newStyle = style.withLevel(StyleLevel.TEXT)
   const node = new mathMLTree.MathNode("mpadded", [mml.buildGroup(group.body, newStyle)])
   const dy = calculateSize(group.dy, style)

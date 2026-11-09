@@ -4,8 +4,10 @@ import ParseError from "../ParseError"
 import { Img } from "../domTree"
 import * as mathMLTree from "../mathMLTree"
 import { assertNodeType } from "../parseNode"
+import type { CssStyle } from "../tree"
+import type { Measurement } from "../units"
 
-const sizeData = function(str) {
+const sizeData = function(str: string): Measurement {
   if (/^[-+]? *(\d+(\.\d*)?|\.\d+)$/.test(str)) {
     // str is a number with no unit specified.
     // default unit is bp, per graphix package.
@@ -36,9 +38,9 @@ defineFunction({
     allowedInText: false
   },
   handler: ({ parser, token }, args, optArgs) => {
-    let width = { number: 0, unit: "em" }
-    let height = { number: 0.9, unit: "em" }  // sorta character sized.
-    let totalheight = { number: 0, unit: "em" }
+    let width: Measurement = { number: 0, unit: "em" }
+    let height: Measurement = { number: 0.9, unit: "em" }  // sorta character sized.
+    let totalheight: Measurement = { number: 0, unit: "em" }
     let alt = ""
 
     if (optArgs[0]) {
@@ -110,12 +112,12 @@ defineFunction({
       }
     }
 
-    let width = 0
+    let width: Measurement = { number: 0, unit: "em" }
     if (group.width.number > 0) {
       width = calculateSize(group.width, style)
     }
 
-    const graphicStyle = { height: height.number + depth.number + "em" }
+    const graphicStyle: CssStyle = { height: height.number + depth.number + "em" }
     if (width.number > 0) {
       graphicStyle.width = width.number + width.unit
     }
@@ -124,8 +126,6 @@ defineFunction({
     }
 
     const node = new Img(group.src, group.alt, graphicStyle)
-    node.height = height
-    node.depth = depth
     return new mathMLTree.MathNode("mtext", [node])
   }
 })

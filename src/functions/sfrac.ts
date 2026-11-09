@@ -1,9 +1,10 @@
 import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import ParseError from "../ParseError"
+import { assertNodeType } from "../parseNode"
 
 const numRegEx = /^[0-9]$/
-const unicodeNumSubs = {
+const unicodeNumSubs: Record<string, string> = {
   '0': '₀',
   '1': '₁',
   '2': '₂',
@@ -15,7 +16,7 @@ const unicodeNumSubs = {
   '8': '₈',
   '9': '₉'
 }
-const unicodeNumSups = {
+const unicodeNumSups: Record<string, string> = {
   '0': '⁰',
   '1': '¹',
   '2': '²',
@@ -38,14 +39,14 @@ defineFunction({
   },
   handler({ parser }, args) {
     let numerator = ""
-    for (const node of args[0].body) {
+    for (const node of assertNodeType(args[0], "ordgroup").body) {
       if (node.type !== "textord" || !numRegEx.test(node.text)) {
         throw new ParseError("Numerator must be an integer.", node)
       }
       numerator += node.text
     }
     let denominator = ""
-    for (const node of args[1].body) {
+    for (const node of assertNodeType(args[1], "ordgroup").body) {
       if (node.type !== "textord" || !numRegEx.test(node.text)) {
         throw new ParseError("Denominator must be an integer.", node)
       }
@@ -62,7 +63,7 @@ defineFunction({
     const numerator = group.numerator.split('').map(c => unicodeNumSups[c]).join('')
     const denominator = group.denominator.split('').map(c => unicodeNumSubs[c]).join('')
     // Use a fraction slash.
-    const text = new mathMLTree.TextNode(numerator + "\u2044" + denominator, group.mode, style)
+    const text = new mathMLTree.TextNode(numerator + "\u2044" + denominator)
     return new mathMLTree.MathNode("mn", [text], ["special-fraction"])
   }
 });

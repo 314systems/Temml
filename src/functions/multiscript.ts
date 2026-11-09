@@ -2,12 +2,22 @@ import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import * as mml from "../buildMathML"
 import ParseError from "../ParseError";
+import { isMathNodeOfType } from "../mathMLTree";
+import type { MathNode } from "../mathMLTree";
+import { assertNodeType } from "../parseNode";
+import type { AnyParseNode, ParseNode } from "../parseNode";
+import type Style from "../Style";
+import type { MathDomNode } from "../tree";
 
 // Helper function
-export const buildGroup = (el, style, noneNode) => {
+export const buildGroup = (
+  el: AnyParseNode | null | undefined,
+  style: Style,
+  noneNode: MathNode
+): MathDomNode => {
   if (!el) { return noneNode }
   const node = mml.buildGroup(el, style)
-  if (node.type === "mrow" && node.children.length === 0) { return noneNode }
+  if (isMathNodeOfType(node, "mrow") && node.children.length === 0) { return noneNode }
   return node
 }
 
@@ -18,23 +28,27 @@ defineFunction({
     numArgs: 3
   },
   handler({ parser, funcName, token }, args) {
-    if (args[2].body.length === 0) {
+    const preArg = assertNodeType(args[0], "ordgroup")
+    const postArg = assertNodeType(args[1], "ordgroup")
+    const baseArg = assertNodeType(args[2], "ordgroup")
+    if (baseArg.body.length === 0) {
       throw new ParseError(funcName + `cannot parse an empty base.`)
     }
-    const base = args[2].body[0]
-    if (parser.settings.strict && funcName === "\\sideset" && !base.symbol) {
+    const base = baseArg.body[0]
+    if (parser.settings.strict && funcName === "\\sideset" &&
+        !(base as { symbol?: boolean }).symbol) {
       throw new ParseError(`The base of \\sideset must be a big operator. Try \\prescript.`)
     }
 
-    if ((args[0].body.length > 0 && args[0].body[0].type !== "supsub") ||
-        (args[1].body.length > 0 && args[1].body[0].type !== "supsub")) {
+    if ((preArg.body.length > 0 && preArg.body[0].type !== "supsub") ||
+        (postArg.body.length > 0 && postArg.body[0].type !== "supsub")) {
       throw new ParseError("\\sideset can parse only subscripts and " +
                             "superscripts in its first two arguments", token)
     }
 
     // The prescripts and postscripts come wrapped in a supsub.
-    const prescripts = args[0].body.length > 0 ? args[0].body[0] : null
-    const postscripts = args[1].body.length > 0 ? args[1].body[0] : null
+    const prescripts = preArg.body.length > 0 ? preArg.body[0] as ParseNode<"supsub"> : null
+    const postscripts = postArg.body.length > 0 ? postArg.body[0] as ParseNode<"supsub"> : null
 
     if (!prescripts && !postscripts) {
       return base
@@ -48,8 +62,8 @@ defineFunction({
           type: "supsub",
           mode: parser.mode,
           base,
-          sup: postscripts.sup,
-          sub: postscripts.sub
+          sup: postscripts!.sup,
+          sub: postscripts!.sub
         }]
       }
     } else {
@@ -68,14 +82,14 @@ defineFunction({
 
     const prescriptsNode = new mathMLTree.MathNode("mprescripts")
     const noneNode = new mathMLTree.MathNode("none")
-    let children
+    let children: MathDomNode[]
 
     const preSub = buildGroup(group.prescripts.sub, style, noneNode)
     const preSup = buildGroup(group.prescripts.sup, style, noneNode)
     if (group.isSideset) {
       // This seems silly, but LaTeX does this. Firefox ignores it, which does not make me sad.
-      preSub.setAttribute("style", "text-align: left;")
-      preSup.setAttribute("style", "text-align: left;")
+      (preSub as MathNode).setAttribute("style", "text-align: left;");
+      (preSup as MathNode).setAttribute("style", "text-align: left;")
     }
 
     if (group.postscripts) {

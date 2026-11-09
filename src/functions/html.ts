@@ -1,6 +1,8 @@
 import defineFunction, { ordargument } from "../defineFunction";
 import { assertNodeType } from "../parseNode";
 import ParseError from "../ParseError";
+import type { MathNode } from "../mathMLTree";
+import type { TrustContext } from "../Settings";
 
 import * as mml from "../buildMathML";
 
@@ -20,8 +22,8 @@ defineFunction({
       throw new ParseError(`Function "${funcName}" is disabled in strict mode`, token)
     }
 
-    let trustContext;
-    const attributes = {};
+    let trustContext: TrustContext;
+    const attributes: Record<string, string> = {};
 
     switch (funcName) {
       case "\\class":
@@ -76,9 +78,9 @@ defineFunction({
     };
   },
   mathmlBuilder: (group, style) => {
-    const element =  mml.buildExpressionRow(group.body, style);
+    const element = mml.buildExpressionRow(group.body, style) as MathNode;
 
-    const classes = [];
+    const classes: string[] = [];
     if (group.attributes.class) {
       classes.push(...group.attributes.class.trim().split(/\s+/));
     }

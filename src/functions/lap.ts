@@ -3,6 +3,8 @@ import defineFunction, { ordargument } from "../defineFunction";
 import * as mathMLTree from "../mathMLTree"
 import * as mml from "../buildMathML"
 import ParseError from "../ParseError";
+import type { MathNode } from "../mathMLTree"
+import type { ParseNode } from "../parseNode"
 
 const textModeLap = ["\\clap", "\\llap", "\\rlap"];
 
@@ -33,7 +35,7 @@ defineFunction({
   },
   mathmlBuilder: (group, style) => {
     // mathllap, mathrlap, mathclap
-    let strut
+    let strut: MathNode | undefined
     if (group.alignment === "llap") {
       // We need an invisible strut with the same depth as the group.
       // We can't just read the depth, so we use \vphantom methods.
@@ -43,19 +45,20 @@ defineFunction({
       strut.setAttribute("width", "0.1px")  // Don't use 0. WebKit would hide it.
     }
 
-    const inner = mml.buildGroup(group.body, style)
+    const inner = mml.buildGroup(group.body, style) as MathNode
     let node
     if (group.alignment === "llap") {
       inner.style.position = "absolute"
       inner.style.right = "0"
       inner.style.bottom = `0` // If we could have read the ink depth, it would go here.
-      node = new mathMLTree.MathNode("mpadded", [strut, inner])
+      node = new mathMLTree.MathNode("mpadded", [strut!, inner])
     } else {
       node = new mathMLTree.MathNode("mpadded", [inner])
     }
 
     if (group.alignment === "rlap") {
-      if (group.body.body.length > 0 && group.body.body[0].type === "genfrac") {
+      const body = (group.body as ParseNode<"ordgroup">).body
+      if (body.length > 0 && body[0].type === "genfrac") {
         // In Firefox, a <mpadded> squashes the 3/18em padding of a child \frac. Put it back.
         node.setAttribute("lspace", "0.16667em")
       }
