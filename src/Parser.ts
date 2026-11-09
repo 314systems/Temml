@@ -329,7 +329,7 @@ export default class Parser {
     let group: AnyParseNode | null
     do {
       group = this.parseGroup(name);
-    } while (group!.type === "internal")
+    } while (group?.type === "internal")
 
     if (!group) {
       throw new ParseError("Expected group after '" + symbol + "'", symbolToken);

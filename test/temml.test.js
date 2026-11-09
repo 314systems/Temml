@@ -184,6 +184,15 @@ test("Double exponents should not parse", () => {
   expect(`x^x_x^x`).not.toParse();
 })
 
+test("A missing sub- or superscript should be a ParseError", () => {
+  expect(() => parse(`x^`, throwOnErrorSettings())).toThrow(temml.ParseError)
+  expect(() => parse(`x_`, throwOnErrorSettings())).toThrow("Expected group after '_'")
+  expect(() => parse(`{x^}`, throwOnErrorSettings())).toThrow(temml.ParseError)
+  expect(() => parse(r`x^\relax`, throwOnErrorSettings())).toThrow(temml.ParseError)
+  // Without throwOnError, the error is rendered rather than thrown.
+  expect(temml.renderToString(`x^`)).toContain("temml-error")
+})
+
 test("An invalid function name should throw when throwOnError is true", () => {
   expect(() => parse(r`\?`, throwOnErrorSettings())).toThrow();
   expect(() => parse(r`\notSupported`, throwOnErrorSettings())).toThrow();
