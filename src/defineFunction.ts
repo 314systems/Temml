@@ -172,7 +172,7 @@ export function defineFunctionBuilders<NODETYPE extends NodeType>({
   mathmlBuilder
 }: {
   type: NODETYPE;
-  mathmlBuilder: MathMLBuilder<NODETYPE>;
+  mathmlBuilder?: MathMLBuilder<NODETYPE>;
 }): void {
   defineFunction({
     type,

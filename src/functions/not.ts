@@ -2,6 +2,7 @@ import defineFunction, { ordargument } from "../defineFunction";
 import symbols from "../symbols";
 import * as mml from "../buildMathML";
 import * as utils from "../utils"
+import type { AnyParseNode, ParseNode, SymbolParseNode } from "../parseNode";
 
 defineFunction({
   type: "not",
@@ -13,19 +14,22 @@ defineFunction({
   },
   handler({ parser }, args) {
     const isCharacterBox = utils.isCharacterBox(args[0])
-    let body
+    let body: AnyParseNode[]
     if (isCharacterBox) {
       body = ordargument(args[0])
-      if (body[0].text.charAt(0) === "\\") {
-        body[0].text = symbols.math[body[0].text].replace
+      const first = body[0] as SymbolParseNode
+      if (first.text.charAt(0) === "\\") {
+        first.text = symbols.math[first.text].replace
       }
       // \u0338 is the Unicode Combining Long Solidus Overlay
-      body[0].text = body[0].text.slice(0, 1) + "\u0338" + body[0].text.slice(1)
+      first.text = first.text.slice(0, 1) + "\u0338" + first.text.slice(1)
     } else {
       // When the argument is not a character box, TeX does an awkward, poorly placed overlay.
       // We'll do the same.
-      const notNode = { type: "textord", mode: "math", text: "\u0338" }
-      const kernNode = { type: "kern", mode: "math", dimension: { number: -0.6, unit: "em" } }
+      const notNode: ParseNode<"textord"> = { type: "textord", mode: "math", text: "\u0338" }
+      const kernNode: ParseNode<"kern"> = {
+        type: "kern", mode: "math", dimension: { number: -0.6, unit: "em" }
+      }
       body = [notNode, kernNode, args[0]]
     }
     return {

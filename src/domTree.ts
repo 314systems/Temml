@@ -8,7 +8,7 @@
  * Similar functions for working with MathML nodes exist in mathMLTree.js.
  *
  */
-import type { CssStyle, VirtualNode } from "./tree";
+import type { CssStyle, MathDomNode, VirtualNode } from "./tree";
 import * as utils from "./utils";
 
 /**
@@ -142,7 +142,7 @@ export class TextNode implements VirtualNode {
 }
 
 // Create an <a href="…"> node.
-export class AnchorNode implements VirtualNode {
+export class AnchorNode implements MathDomNode {
   href: string;
   classes: string[];
   children: VirtualNode[];
@@ -176,6 +176,11 @@ export class AnchorNode implements VirtualNode {
     }
     markup += "</a>"
     return markup
+  }
+
+  // An anchor for \ref holds no text until postProcess fills it in.
+  toText(): string {
+    return ""
   }
 }
 

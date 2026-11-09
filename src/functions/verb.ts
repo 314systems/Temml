@@ -1,6 +1,7 @@
 import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import ParseError from "../ParseError";
+import type { ParseNode } from "../parseNode";
 
 defineFunction({
   type: "verb",
@@ -30,4 +31,5 @@ defineFunction({
  * \verb* replaces each space with an open box \u2423
  * \verb replaces each space with a no-break space \xA0
  */
-const makeVerb = (group) => group.body.replace(/ /g, group.star ? "\u2423" : "\xA0");
+const makeVerb = (group: ParseNode<"verb">): string =>
+  group.body.replace(/ /g, group.star ? "\u2423" : "\xA0");

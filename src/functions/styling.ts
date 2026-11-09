@@ -1,15 +1,16 @@
 import defineFunction from "../defineFunction";
 import { wrapWithMstyle } from "../mathMLTree"
 import * as mml from "../buildMathML";
+import type { StyleStr } from "../types";
 
-const styleMap = {
+const styleMap: Record<StyleStr, number> = {
   display: 0,
   text: 1,
   script: 2,
   scriptscript: 3
 };
 
-const styleAttributes = {
+const styleAttributes: Record<StyleStr, [string, string]> = {
   display: ["0", "true"],
   text: ["0", "false"],
   script: ["1", "false"],
@@ -28,7 +29,7 @@ defineFunction({
     // parse out the implicit body
     const body = parser.parseExpression(true, breakOnTokenText, true);
 
-    const scriptLevel = funcName.slice(1, funcName.length - 5);
+    const scriptLevel = funcName.slice(1, funcName.length - 5) as StyleStr;
     return {
       type: "styling",
       mode: parser.mode,

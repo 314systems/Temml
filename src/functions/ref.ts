@@ -1,6 +1,7 @@
 import defineFunction from "../defineFunction";
 import { AnchorNode } from "../domTree";
 import { invalidIdRegEx } from "./label";
+import { assertNodeType } from "../parseNode";
 
 defineFunction({
   type: "ref",
@@ -14,7 +15,7 @@ defineFunction({
       type: "ref",
       mode: parser.mode,
       funcName,
-      string: args[0].string.replace(invalidIdRegEx, "")
+      string: assertNodeType(args[0], "raw").string.replace(invalidIdRegEx, "")
     };
   },
   mathmlBuilder(group, style) {

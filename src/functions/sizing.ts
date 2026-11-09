@@ -4,7 +4,7 @@ import * as mml from "../buildMathML";
 
 // The size mappings are taken from TeX with \normalsize=10pt.
 // We don't have to track script level. MathML does that.
-const sizeMap = {
+const sizeMap: Record<string, number> = {
   "\\tiny": 0.5,
   "\\sixptsize": 0.6,
   "\\Tiny": 0.6,

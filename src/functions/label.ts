@@ -1,5 +1,6 @@
 import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
+import { assertNodeType } from "../parseNode";
 
 // Limit valid characters to a small set, for safety.
 export const invalidIdRegEx = /[^A-Za-z_0-9-]/g
@@ -15,7 +16,7 @@ defineFunction({
     return {
       type: "label",
       mode: parser.mode,
-      string: args[0].string.replace(invalidIdRegEx, "")
+      string: assertNodeType(args[0], "raw").string.replace(invalidIdRegEx, "")
     };
   },
   mathmlBuilder(group, style) {

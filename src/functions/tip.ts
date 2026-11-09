@@ -1,6 +1,7 @@
 import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import * as mml from "../buildMathML";
+import type { MathNode, TextNode } from "../mathMLTree";
 
 // Two functions included to enable migration from Mathjax.
 
@@ -45,15 +46,15 @@ defineFunction({
     };
   },
   mathmlBuilder: (group, style) => {
-    const math = mml.buildGroup(group.body, style)
-    const tip = mml.buildGroup(group.tip, style)
+    const math = mml.buildGroup(group.body, style) as MathNode
+    const tip = mml.buildGroup(group.tip, style) as MathNode
     // args[1] only accepted text, so tip is a <mtext> element or a <mrow> of them.
     let str = ""
     if (tip.type === "mtext") {
-      str = tip.children[0].text
+      str = (tip.children[0] as TextNode).text
     } else {
       for (const child of tip.children) {
-        str += child.children[0].text
+        str += ((child as MathNode).children[0] as TextNode).text
       }
     }
     // Implement \texttip via a title attribute.

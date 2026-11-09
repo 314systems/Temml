@@ -2,10 +2,11 @@ import defineFunction from "../defineFunction";
 import * as mathMLTree from "../mathMLTree";
 import * as stretchy from "../stretchy";
 import * as mml from "../buildMathML";
+import type { MathMLBuilder } from "../defineFunction";
 
-const mathmlBuilder = (group, style) => {
+const mathmlBuilder: MathMLBuilder<"horizBracket"> = (group, style) => {
   const accentNode = stretchy.mathMLnode(group.label);
-  accentNode.style["math-depth"] = 0
+  accentNode.style["math-depth"] = "0"
   return new mathMLTree.MathNode(group.isOver ? "mover" : "munder", [
     mml.buildGroup(group.base, style),
     accentNode

@@ -28,7 +28,7 @@ defineFunction({
   },
   mathmlBuilder: (group, style) => {
     const accentNode = stretchy.accentNode(group);
-    accentNode.style["math-depth"] = 0
+    accentNode.style["math-depth"] = "0"
     const node = new mathMLTree.MathNode("munder", [
       mml.buildGroup(group.base, style),
       accentNode

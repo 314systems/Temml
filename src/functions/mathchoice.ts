@@ -1,8 +1,10 @@
 import defineFunction, { ordargument } from "../defineFunction";
 import { StyleLevel } from "../constants";
 import * as mml from "../buildMathML";
+import type { AnyParseNode, ParseNode } from "../parseNode";
+import type Style from "../Style";
 
-const chooseStyle = (group, style) => {
+const chooseStyle = (group: ParseNode<"mathchoice">, style: Style): AnyParseNode[] => {
   switch (style.level) {
     case StyleLevel.DISPLAY:       // 0
       return group.display;

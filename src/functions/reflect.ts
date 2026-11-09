@@ -1,5 +1,6 @@
 import defineFunction from "../defineFunction"
 import * as mml from "../buildMathML"
+import type { MathNode } from "../mathMLTree"
 
 defineFunction({
   type: "reflect",
@@ -17,7 +18,7 @@ defineFunction({
     };
   },
   mathmlBuilder(group, style) {
-    const node = mml.buildGroup(group.body, style)
+    const node = mml.buildGroup(group.body, style) as MathNode
     node.style.transform = "scaleX(-1)"
     return node
   }

@@ -24,7 +24,7 @@ defineFunction({
       for (let i = 0; i < tbArg.body.length; ++i) {
         const node = tbArg.body[i];
         // TODO: Write an AssertSymbolNode
-        const letter = node.text;
+        const letter = (node as { text?: string }).text;
         if (letter === "t") {
           smashHeight = true;
         } else if (letter === "b") {
