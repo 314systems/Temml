@@ -33,7 +33,6 @@
     "globals": "^17.14.0",
     "rolldown": "^1.2.15",
     "rolldown-plugin-dts": "^0.30.0",
-    "terser": "^5.34.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "typescript-eslint": "^8.72.1",
     "vitest": "^5.1.0"
@@ -44,8 +43,7 @@
     "unit-test": "vitest run",
     "test:watch": "vitest",
     "test": "pnpm lint && pnpm typecheck && pnpm unit-test",
-    "minify": "terser dist/temml.js -o dist/temml.min.js -c -m && terser contrib/mhchem/mhchem.js -o contrib/mhchem/mhchem.min.js -c -m && terser contrib/copy-tex/copy-tex.js -o contrib/copy-tex/copy-tex.min.js -c -m",
-    "build": "rolldown --config ./utils/rolldown.config.mjs && node utils/insertPlugins.js && node utils/copyfiles.js && pnpm minify",
+    "build": "rolldown --config ./utils/rolldown.config.mjs && node utils/insertPlugins.js && node utils/copyfiles.js",
     "dist": "pnpm build"
   },
   "devEngines": {

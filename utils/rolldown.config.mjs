@@ -8,7 +8,10 @@ const output = { charset: "ascii" };
 export default defineConfig([
   {
     input: "./temml.ts",
-    output: { ...output, format: "iife", name: "temml", file: "./dist/temml.js" }
+    output: [
+      { ...output, format: "iife", name: "temml", file: "./dist/temml.js" },
+      { ...output, format: "iife", name: "temml", file: "./dist/temml.min.js", minify: true }
+    ]
   },
   {
     input: "./temml.ts",
@@ -22,6 +25,10 @@ export default defineConfig([
     input: "./src/postProcess.ts",
     output: { ...output, format: "umd", name: "temml", file: "./dist/temmlPostProcess.js" }
   },
+  ...["mhchem", "copy-tex"].map(name => ({
+    input: `./contrib/${name}/${name}.js`,
+    output: { ...output, format: "iife", file: `./contrib/${name}/${name}.min.js`, minify: true }
+  })),
   // Bundle the declarations into dist/temml.d.ts.
   {
     input: "./temml.ts",
