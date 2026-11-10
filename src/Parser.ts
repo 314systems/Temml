@@ -155,9 +155,7 @@ export default class Parser {
   parsePreamble(): MacroMap {
     this.parseInGroup();
     const macros = Object.create(null) as MacroMap;
-    for (const [key, value] of Object.entries(this.gullet.macros.current)) {
-      macros[key] = value;
-    }
+    Object.assign(macros, this.gullet.macros.current);
     this.gullet.endGroup();
     return macros;
   }

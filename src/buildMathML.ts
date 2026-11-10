@@ -98,9 +98,7 @@ export const consolidateText = (mrow: MathDomNode): MathDomNode => {
       if (L > 0 && text.text.charAt(L - 1) === ' ') {
         text.text = text.text.slice(0, -1) + '\u{A0}';
       }
-      for (const [key, value] of Object.entries(mrow.attributes)) {
-        mtext.attributes[key] = value;
-      }
+      Object.assign(mtext.attributes, mrow.attributes);
     }
   }
   if (newRow.children.length === 1 && isMathNodeOfType(newRow.children[0], 'mtext')) {

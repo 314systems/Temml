@@ -16,11 +16,7 @@ const RGBregEx = /^ *\d{1,3} *(?:, *\d{1,3} *){2}$/;
 const rgbRegEx = /^ *[10](?:\.\d*)? *(?:, *[10](?:\.\d*)? *){2}$/;
 const xcolorHtmlRegEx = /^[a-f0-9]{6}$/i;
 const toHex = (num: number): string => {
-  let str = num.toString(16);
-  if (str.length === 1) {
-    str = '0' + str;
-  }
-  return str;
+  return num.toString(16).padStart(2, '0');
 };
 
 // Colors from Tables 4.1 and 4.2 of the xcolor package.

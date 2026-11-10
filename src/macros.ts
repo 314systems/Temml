@@ -563,26 +563,16 @@ defineMacro('\\braket', '\\mathinner{\\langle{#1}\\rangle}');
 defineMacro('\\Bra', '\\left\\langle#1\\right|');
 defineMacro('\\Ket', '\\left|#1\\right\\rangle');
 // A helper for \Braket and \Set
-const replaceVert = (argStr: string, match: RegExpExecArray): string => {
-  const ch = match[0] === '|' ? '\\vert' : '\\Vert';
-  const replaceStr = `}\\,\\middle${ch}\\,{`;
-  return argStr.slice(0, match.index) + replaceStr + argStr.slice(match.index + match[0].length);
+const replaceVert = (match: string): string => {
+  const ch = match === '|' ? '\\vert' : '\\Vert';
+  return `}\\,\\middle${ch}\\,{`;
 };
 defineMacro('\\Braket', (context) => {
-  let argStr = recreateArgStr(context);
-  const regEx = /\|\||\||\\\|/g;
-  let match: RegExpExecArray | null;
-  while ((match = regEx.exec(argStr)) !== null) {
-    argStr = replaceVert(argStr, match);
-  }
+  const argStr = recreateArgStr(context).replaceAll(/\|\||\||\\\|/g, replaceVert);
   return '\\left\\langle{' + argStr + '}\\right\\rangle';
 });
 defineMacro('\\Set', (context) => {
-  let argStr = recreateArgStr(context);
-  const match = /\|\||\||\\\|/.exec(argStr);
-  if (match) {
-    argStr = replaceVert(argStr, match);
-  }
+  const argStr = recreateArgStr(context).replace(/\|\||\||\\\|/, replaceVert);
   return '\\left\\{\\:{' + argStr + '}\\:\\right\\}';
 });
 defineMacro('\\set', (context) => {

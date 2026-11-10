@@ -1060,71 +1060,68 @@ for (let i = 0; i < narrow.length; i++) {
   defineSymbol(text, textord, ch, ch);
 }
 
-// The next loop loads wide (surrogate pair) characters.
+// The next loop loads wide characters by code point.
 // We support some letters in the Unicode range U+1D400 to U+1D7FF,
 // Mathematical Alphanumeric Symbols.
 let wideChar: string;
 for (let i = 0; i < letters.length; i++) {
-  // The hex numbers in the next line are a surrogate pair.
-  // 0xD835 is the high surrogate for all letters in the range we support.
-  // 0xDC00 is the low surrogate for bold A.
-  wideChar = String.fromCodePoint(0xd8_35, 0xdc_00 + i); // A-Z a-z bold
+  wideChar = String.fromCodePoint(0x1_d4_00 + i); // A-Z a-z bold
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdc_34 + i); // A-Z a-z italic
+  wideChar = String.fromCodePoint(0x1_d4_34 + i); // A-Z a-z italic
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdc_68 + i); // A-Z a-z bold italic
+  wideChar = String.fromCodePoint(0x1_d4_68 + i); // A-Z a-z bold italic
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdd_04 + i); // A-Z a-z Fractur
+  wideChar = String.fromCodePoint(0x1_d5_04 + i); // A-Z a-z Fractur
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdd_a0 + i); // A-Z a-z sans-serif
+  wideChar = String.fromCodePoint(0x1_d5_a0 + i); // A-Z a-z sans-serif
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdd_d4 + i); // A-Z a-z sans bold
+  wideChar = String.fromCodePoint(0x1_d5_d4 + i); // A-Z a-z sans bold
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xde_08 + i); // A-Z a-z sans italic
+  wideChar = String.fromCodePoint(0x1_d6_08 + i); // A-Z a-z sans italic
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xde_70 + i); // A-Z a-z monospace
+  wideChar = String.fromCodePoint(0x1_d6_70 + i); // A-Z a-z monospace
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdd_38 + i); // A-Z a-z double struck
+  wideChar = String.fromCodePoint(0x1_d5_38 + i); // A-Z a-z double struck
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
   const ch = letters.charAt(i);
-  wideChar = String.fromCodePoint(0xd8_35, 0xdc_9c + i); // A-Z a-z calligraphic
+  wideChar = String.fromCodePoint(0x1_d4_9c + i); // A-Z a-z calligraphic
   defineSymbol(math, mathord, ch, wideChar);
   defineSymbol(text, textord, ch, wideChar);
 }
 
 // Next, some wide character numerals
 for (let i = 0; i < 10; i++) {
-  wideChar = String.fromCodePoint(0xd8_35, 0xdf_ce + i); // 0-9 bold
+  wideChar = String.fromCodePoint(0x1_d7_ce + i); // 0-9 bold
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdf_e2 + i); // 0-9 sans serif
+  wideChar = String.fromCodePoint(0x1_d7_e2 + i); // 0-9 sans serif
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdf_ec + i); // 0-9 bold sans
+  wideChar = String.fromCodePoint(0x1_d7_ec + i); // 0-9 bold sans
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 
-  wideChar = String.fromCodePoint(0xd8_35, 0xdf_f6 + i); // 0-9 monospace
+  wideChar = String.fromCodePoint(0x1_d7_f6 + i); // 0-9 monospace
   defineSymbol(math, mathord, wideChar, wideChar);
   defineSymbol(text, textord, wideChar, wideChar);
 }

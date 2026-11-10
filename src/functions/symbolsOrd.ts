@@ -46,7 +46,9 @@ defineFunctionBuilders({
       text.text = variantChar(text.text, variant);
     }
     let node = new mathMLTree.MathNode('mi', [text]);
-    // TODO: Handle U+1D49C - U+1D4CF per https://www.unicode.org/charts/PDF/U1D400.pdf
+    if (codePoint >= 0x1_d4_9c && codePoint <= 0x1_d4_cf) {
+      node.classes.push(text.text.codePointAt(2) === 0xfe_01 ? 'mathscr' : 'mathcal');
+    }
     if (variant === 'normal') {
       node.setAttribute('mathvariant', 'normal');
       if (text.text.length === 1) {
