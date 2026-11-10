@@ -19,7 +19,7 @@ export type MacroDefinition =
   | MacroExpansion
   | ((context: MacroExpander) => string | MacroExpansion);
 
-export type MacroMap = Record<string, MacroDefinition>;
+export type MacroMap = Record<string, MacroDefinition | undefined>;
 
 /**
  * All registered global/built-in macros.

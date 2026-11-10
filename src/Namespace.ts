@@ -8,12 +8,12 @@
 
 import ParseError from './ParseError';
 
-export type Mapping<Value> = Record<string, Value>;
+export type Mapping<Value> = Record<string, Value | undefined>;
 
 export default class Namespace<Value> {
   current: Mapping<Value>;
   builtins: Mapping<Value>;
-  undefStack: Array<Mapping<Value | undefined>>;
+  undefStack: Array<Mapping<Value>>;
 
   /**
    * Both arguments are optional.  The first argument is an object of
@@ -61,8 +61,7 @@ export default class Namespace<Value> {
   }
 
   /**
-   * Detect whether `name` has a definition.  Equivalent to
-   * `get(name) != null`.
+   * Detect whether `name` has an entry, even if its value is `undefined`.
    */
   has(name: string): boolean {
     return Object.hasOwn(this.current, name) || Object.hasOwn(this.builtins, name);
@@ -90,7 +89,7 @@ export default class Namespace<Value> {
    * operation to the undo stack.  Global set() may change the undo
    * operation at every level, so takes time linear in their number.
    */
-  set(name: string, value: Value, global = false): void {
+  set(name: string, value: Value | undefined, global = false): void {
     if (global) {
       // Global set is equivalent to setting in all groups.  Simulate this
       // by destroying any undos currently scheduled for this name,

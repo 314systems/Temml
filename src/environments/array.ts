@@ -163,7 +163,7 @@ const parseArray = (
       if (parser.gullet.macros.get('\\df@tag')) {
         tags.push(parser.subparse([new Token('\\df@tag')]));
         // Undefine \df@tag.
-        parser.gullet.macros.set('\\df@tag', undefined as unknown as MacroDefinition, true);
+        parser.gullet.macros.set('\\df@tag', undefined, true);
       } else {
         tags.push(Boolean(autoTag) && parser.gullet.macros.get('\\@eqnsw') === '1');
       }
