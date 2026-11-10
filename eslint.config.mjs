@@ -1,10 +1,15 @@
+import { fileURLToPath } from 'node:url';
+
 import globals from 'globals';
 import js from '@eslint/js';
-import { defineConfig } from 'eslint/config';
+import { defineConfig, includeIgnoreFile } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import unicorn from 'eslint-plugin-unicorn';
 
+const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
+
 export default defineConfig([
+  includeIgnoreFile(gitignorePath, { gitignoreResolution: true }),
   {
     ignores: ['contrib/auto-render/test/*.js', 'src/autocorrect.js'],
   },
