@@ -17,15 +17,14 @@ const arrows = new Set(['\\Rsh', '\\Lsh', '\\restriction']);
 
 const isArrow = (str: string): boolean => {
   if (str.length === 1) {
-    const codePoint = str.codePointAt(0)!;
-    return 0x21_8f < codePoint && codePoint < 0x22_00;
+    return /[\u{2190}-\u{21FF}]/u.test(str);
   }
   return str.includes('arrow') || str.includes('harpoon') || arrows.has(str);
 };
 
 defineFunctionBuilders({
   type: 'atom',
-  mathmlBuilder(group, style) {
+  mathmlBuilder(group) {
     if (group.family === 'inner') {
       // Give \dots ORD spacing, not OP spacing.
       const tag = group.mode === 'text' ? 'mtext' : 'mi';
@@ -41,7 +40,7 @@ defineFunctionBuilders({
         node.setAttribute('form', 'prefix');
         // Set an explicit attribute for stretch. Otherwise Firefox may do it wrong.
         node.setAttribute('stretchy', 'false');
-      } else if (group.family === 'close') {
+      } else {
         node.setAttribute('form', 'postfix');
         node.setAttribute('stretchy', 'false');
       }

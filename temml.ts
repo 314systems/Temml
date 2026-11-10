@@ -97,7 +97,7 @@ const generateParseTree = (expression: string, options?: Options): AnyParseNode[
  */
 const definePreamble = (expression: string, options?: Options): MacroMap => {
   const settings = new Settings(options);
-  settings.macros = Object.create(null);
+  settings.macros = Object.create(null) as MacroMap;
   // eslint-disable-next-line unicorn/no-instanceof-builtins -- Preserve support for boxed strings.
   if (!(typeof expression === 'string' || (expression as unknown) instanceof String)) {
     throw new TypeError('Temml can only parse string typed expression');

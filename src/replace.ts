@@ -79,214 +79,214 @@ type Offsets = Record<string, Record<string, (ch: string) => number>>;
 const offset: Readonly<Offsets> = Object.freeze({
   upperCaseLatin: {
     // A-Z
-    normal: (ch) => {
+    normal: () => {
       return 0;
     },
-    bold: (ch) => {
+    bold: () => {
       return 0x1_d3_bf;
     },
-    italic: (ch) => {
+    italic: () => {
       return 0x1_d3_f3;
     },
-    'bold-italic': (ch) => {
+    'bold-italic': () => {
       return 0x1_d4_27;
     },
     script: (ch) => {
       return script[ch] || 0x1_d4_5b;
     },
-    'script-bold': (ch) => {
+    'script-bold': () => {
       return 0x1_d4_8f;
     },
     fraktur: (ch) => {
       return frak[ch] || 0x1_d4_c3;
     },
-    'fraktur-bold': (ch) => {
+    'fraktur-bold': () => {
       return 0x1_d5_2b;
     },
     'double-struck': (ch) => {
       return bbb[ch] || 0x1_d4_f7;
     },
-    'sans-serif': (ch) => {
+    'sans-serif': () => {
       return 0x1_d5_5f;
     },
-    'sans-serif-bold': (ch) => {
+    'sans-serif-bold': () => {
       return 0x1_d5_93;
     },
-    'sans-serif-italic': (ch) => {
+    'sans-serif-italic': () => {
       return 0x1_d5_c7;
     },
-    'sans-serif-bold-italic': (ch) => {
+    'sans-serif-bold-italic': () => {
       return 0x1_d6_3c;
     },
-    monospace: (ch) => {
+    monospace: () => {
       return 0x1_d6_2f;
     },
   },
   lowerCaseLatin: {
     // a-z
-    normal: (ch) => {
+    normal: () => {
       return 0;
     },
-    bold: (ch) => {
+    bold: () => {
       return 0x1_d3_b9;
     },
     italic: (ch) => {
       return ch === 'h' ? 0x20_a6 : 0x1_d3_ed;
     },
-    'bold-italic': (ch) => {
+    'bold-italic': () => {
       return 0x1_d4_21;
     },
     script: (ch) => {
       return script[ch] || 0x1_d4_55;
     },
-    'script-bold': (ch) => {
+    'script-bold': () => {
       return 0x1_d4_89;
     },
-    fraktur: (ch) => {
+    fraktur: () => {
       return 0x1_d4_bd;
     },
-    'fraktur-bold': (ch) => {
+    'fraktur-bold': () => {
       return 0x1_d5_25;
     },
-    'double-struck': (ch) => {
+    'double-struck': () => {
       return 0x1_d4_f1;
     },
-    'sans-serif': (ch) => {
+    'sans-serif': () => {
       return 0x1_d5_59;
     },
-    'sans-serif-bold': (ch) => {
+    'sans-serif-bold': () => {
       return 0x1_d5_8d;
     },
-    'sans-serif-italic': (ch) => {
+    'sans-serif-italic': () => {
       return 0x1_d5_c1;
     },
-    'sans-serif-bold-italic': (ch) => {
+    'sans-serif-bold-italic': () => {
       return 0x1_d5_f5;
     },
-    monospace: (ch) => {
+    monospace: () => {
       return 0x1_d6_29;
     },
   },
   upperCaseGreek: {
     // A-Ω
-    normal: (ch) => {
+    normal: () => {
       return 0;
     },
-    bold: (ch) => {
+    bold: () => {
       return 0x1_d3_17;
     },
-    italic: (ch) => {
+    italic: () => {
       return 0x1_d3_51;
     },
     // \boldsymbol actually returns upright bold for upperCaseGreek
-    'bold-italic': (ch) => {
+    'bold-italic': () => {
       return 0x1_d3_17;
     },
-    script: (ch) => {
+    script: () => {
       return 0;
     },
-    'script-bold': (ch) => {
+    'script-bold': () => {
       return 0;
     },
-    fraktur: (ch) => {
+    fraktur: () => {
       return 0;
     },
-    'fraktur-bold': (ch) => {
+    'fraktur-bold': () => {
       return 0;
     },
-    'double-struck': (ch) => {
+    'double-struck': () => {
       return 0;
     },
     // Unicode has no code points for regular-weight san-serif Greek. Use bold.
-    'sans-serif': (ch) => {
+    'sans-serif': () => {
       return 0x1_d3_c5;
     },
-    'sans-serif-bold': (ch) => {
+    'sans-serif-bold': () => {
       return 0x1_d3_c5;
     },
-    'sans-serif-italic': (ch) => {
+    'sans-serif-italic': () => {
       return 0;
     },
-    'sans-serif-bold-italic': (ch) => {
+    'sans-serif-bold-italic': () => {
       return 0x1_d3_ff;
     },
-    monospace: (ch) => {
+    monospace: () => {
       return 0;
     },
   },
   lowerCaseGreek: {
     // α-ω
-    normal: (ch) => {
+    normal: () => {
       return 0;
     },
-    bold: (ch) => {
+    bold: () => {
       return 0x1_d3_11;
     },
-    italic: (ch) => {
+    italic: () => {
       return 0x1_d3_4b;
     },
     'bold-italic': (ch) => {
       return ch === '\u{3D5}' ? 0x1_d3_7e : 0x1_d3_85;
     },
-    script: (ch) => {
+    script: () => {
       return 0;
     },
-    'script-bold': (ch) => {
+    'script-bold': () => {
       return 0;
     },
-    fraktur: (ch) => {
+    fraktur: () => {
       return 0;
     },
-    'fraktur-bold': (ch) => {
+    'fraktur-bold': () => {
       return 0;
     },
-    'double-struck': (ch) => {
+    'double-struck': () => {
       return 0;
     },
     // Unicode has no code points for regular-weight san-serif Greek. Use bold.
-    'sans-serif': (ch) => {
+    'sans-serif': () => {
       return 0x1_d3_bf;
     },
-    'sans-serif-bold': (ch) => {
+    'sans-serif-bold': () => {
       return 0x1_d3_bf;
     },
-    'sans-serif-italic': (ch) => {
+    'sans-serif-italic': () => {
       return 0;
     },
-    'sans-serif-bold-italic': (ch) => {
+    'sans-serif-bold-italic': () => {
       return 0x1_d3_f9;
     },
-    monospace: (ch) => {
+    monospace: () => {
       return 0;
     },
   },
   varGreek: {
     // \varGamma, etc
-    normal: (ch) => {
+    normal: () => {
       return 0;
     },
     bold: (ch) => {
       return bold[ch] || -51;
     },
-    italic: (ch) => {
+    italic: () => {
       return 0;
     },
     'bold-italic': (ch) => {
       return boldItalic[ch] || 0x3a;
     },
-    script: (ch) => {
+    script: () => {
       return 0;
     },
-    'script-bold': (ch) => {
+    'script-bold': () => {
       return 0;
     },
-    fraktur: (ch) => {
+    fraktur: () => {
       return 0;
     },
-    'fraktur-bold': (ch) => {
+    'fraktur-bold': () => {
       return 0;
     },
-    'double-struck': (ch) => {
+    'double-struck': () => {
       return 0;
     },
     'sans-serif': (ch) => {
@@ -295,65 +295,68 @@ const offset: Readonly<Offsets> = Object.freeze({
     'sans-serif-bold': (ch) => {
       return boldsf[ch] || 0x74;
     },
-    'sans-serif-italic': (ch) => {
+    'sans-serif-italic': () => {
       return 0;
     },
     'sans-serif-bold-italic': (ch) => {
       return bisf[ch] || 0xae;
     },
-    monospace: (ch) => {
+    monospace: () => {
       return 0;
     },
   },
   numeral: {
     // 0-9
-    normal: (ch) => {
+    normal: () => {
       return 0;
     },
-    bold: (ch) => {
+    bold: () => {
       return 0x1_d7_9e;
     },
-    italic: (ch) => {
+    italic: () => {
       return 0;
     },
-    'bold-italic': (ch) => {
+    'bold-italic': () => {
       return 0;
     },
-    script: (ch) => {
+    script: () => {
       return 0;
     },
-    'script-bold': (ch) => {
+    'script-bold': () => {
       return 0;
     },
-    fraktur: (ch) => {
+    fraktur: () => {
       return 0;
     },
-    'fraktur-bold': (ch) => {
+    'fraktur-bold': () => {
       return 0;
     },
-    'double-struck': (ch) => {
+    'double-struck': () => {
       return 0x1_d7_a8;
     },
-    'sans-serif': (ch) => {
+    'sans-serif': () => {
       return 0x1_d7_b2;
     },
-    'sans-serif-bold': (ch) => {
+    'sans-serif-bold': () => {
       return 0x1_d7_bc;
     },
-    'sans-serif-italic': (ch) => {
+    'sans-serif-italic': () => {
       return 0;
     },
-    'sans-serif-bold-italic': (ch) => {
+    'sans-serif-bold-italic': () => {
       return 0;
     },
-    monospace: (ch) => {
+    monospace: () => {
       return 0x1_d7_c6;
     },
   },
 });
 
 export const variantChar = (ch: string, variant: string): string => {
-  const codePoint = ch.codePointAt(0)!;
+  const codePoint = ch.codePointAt(0);
+  if (codePoint === undefined) {
+    return ch;
+  }
   const block =
     0x40 < codePoint && codePoint < 0x5b
       ? 'upperCaseLatin'

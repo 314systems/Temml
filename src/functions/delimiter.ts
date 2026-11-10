@@ -255,8 +255,8 @@ defineFunction({
       node.setAttribute('stretchy', 'true');
     }
     node.setAttribute('symmetric', 'true'); // Needed for tall arrows in Firefox.
-    node.setAttribute('minsize', sizeToMaxHeight[group.size] + 'em');
-    node.setAttribute('maxsize', sizeToMaxHeight[group.size] + 'em');
+    node.setAttribute('minsize', `${String(sizeToMaxHeight[group.size])}em`);
+    node.setAttribute('maxsize', `${String(sizeToMaxHeight[group.size])}em`);
     return node;
   },
 });
@@ -332,11 +332,9 @@ defineFunction({
     inner.unshift(leftNode);
 
     const rightNode = makeFenceMo(group.right, group.mode, 'postfix', true);
-    if (group.body.length > 0) {
-      const lastElement = group.body.at(-1)!;
-      if (lastElement.type === 'color' && !lastElement.isTextColor) {
-        rightNode.setAttribute('mathcolor', lastElement.color);
-      }
+    const lastElement = group.body.at(-1);
+    if (lastElement?.type === 'color' && !lastElement.isTextColor) {
+      rightNode.setAttribute('mathcolor', lastElement.color);
     }
     inner.push(rightNode);
 
@@ -359,7 +357,7 @@ defineFunction({
         type: 'textord',
         mode: 'text',
         text: funcName,
-        loc: token!.loc,
+        loc: token?.loc,
       };
     } else if (!parser.settings.wrapDelimiterPairs) {
       // Treat this token as an ordinary symbol.
@@ -367,7 +365,7 @@ defineFunction({
         type: 'atom',
         mode: 'math',
         family: 'open',
-        loc: token!.loc,
+        loc: token?.loc,
         text: funcName,
       };
     }
@@ -401,11 +399,9 @@ defineFunction({
     inner.unshift(leftNode);
 
     const rightNode = makeFenceMo(group.right, group.mode, 'postfix', false);
-    if (group.body.length > 0) {
-      const lastElement = group.body.at(-1)!;
-      if (lastElement.type === 'color' && !lastElement.isTextColor) {
-        rightNode.setAttribute('mathcolor', lastElement.color);
-      }
+    const lastElement = group.body.at(-1);
+    if (lastElement?.type === 'color' && !lastElement.isTextColor) {
+      rightNode.setAttribute('mathcolor', lastElement.color);
     }
     inner.push(rightNode);
 

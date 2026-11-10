@@ -50,11 +50,11 @@ defineFunction({
 
     const inner = mml.buildGroup(group.body, style) as MathNode;
     let node;
-    if (group.alignment === 'llap') {
+    if (strut) {
       inner.style.position = 'absolute';
       inner.style.right = '0';
       inner.style.bottom = `0`; // If we could have read the ink depth, it would go here.
-      node = new mathMLTree.MathNode('mpadded', [strut!, inner]);
+      node = new mathMLTree.MathNode('mpadded', [strut, inner]);
     } else {
       node = new mathMLTree.MathNode('mpadded', [inner]);
     }

@@ -13,6 +13,7 @@ import { stringFromArg } from '../macros';
 import { calculateSize } from '../units';
 import * as mml from '../buildMathML';
 import { isMathNodeOfType } from '../mathMLTree';
+import { assert } from '../utils';
 import type { MathNode } from '../mathMLTree';
 import type { EnvContext } from '../defineEnvironment';
 import type { MacroDefinition, MacroExpansion } from '../defineMacro';
@@ -73,8 +74,7 @@ const arrayGaps = (macros: Namespace<MacroDefinition>): [number | null, Measurem
 const checkCellForLabels = (cell: AnyParseNode[]): string => {
   // Check if the author wrote a \tag{} inside this cell.
   let rowLabel = '';
-  for (let i = 0; i < cell.length; i++) {
-    const node = cell[i];
+  for (const node of cell) {
     if (node.type === 'label') {
       if (rowLabel) {
         throw new ParseError('Multiple \\labels in one row');
@@ -130,7 +130,7 @@ const parseArray = (
   }: ArrayOptions,
   scriptLevel: StyleStr,
 ): ParseNode<'array'> => {
-  const endToken = envClasses && envClasses.includes('bordermatrix') ? '}' : '\\end';
+  const endToken = envClasses.includes('bordermatrix') ? '}' : '\\end';
   parser.gullet.beginGroup();
   if (!singleRow) {
     // \cr is equivalent to \\ without the optional size argument (see below)
@@ -143,12 +143,12 @@ const parseArray = (
 
   let row: AnyParseNode[] = [];
   const body = [row];
-  const rowGaps: Array<Measurement | null> = [];
+  const rowGaps: (Measurement | null)[] = [];
   const labels: string[] = [];
 
   const hLinesBeforeRow: boolean[][] = [];
 
-  const tags: Array<boolean | AnyParseNode[]> | undefined = autoTag == null ? undefined : [];
+  const tags: (boolean | AnyParseNode[])[] | undefined = autoTag == null ? undefined : [];
 
   // amsmath uses \global\@eqnswtrue and \global\@eqnswfalse to represent
   // whether this row should have an equation number.  Simulate this with
@@ -310,7 +310,8 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
   const tbl: MathNode[] = [];
   const numRows = group.body.length;
   const hlines = group.hLinesBeforeRow;
-  const tagIsPresent = group.tags && group.tags.some(Boolean);
+  const tags = group.tags ?? [];
+  const tagIsPresent = tags.some(Boolean);
 
   for (let i = 0; i < numRows; i++) {
     const rw = group.body[i];
@@ -322,9 +323,9 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
           ? StyleLevel.SCRIPT
           : StyleLevel.DISPLAY;
 
-    for (let j = 0; j < rw.length; j++) {
+    for (const cell of rw) {
       const mtd = new mathMLTree.MathNode('mtd', [
-        mml.buildGroup(rw[j], style.withLevel(cellLevel)),
+        mml.buildGroup(cell, style.withLevel(cellLevel)),
       ]);
 
       if (group.envClasses.includes('multline')) {
@@ -341,7 +342,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
       row.push(new mathMLTree.MathNode('mtd', [], []));
     }
     if (tagIsPresent) {
-      const tag = group.tags![i];
+      const tag = tags[i];
       let tagElement: MathDomNode;
       if (tag === true) {
         // automatic numbering
@@ -361,19 +362,17 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
         tagNode.classes = ['tml-tag'];
         tagElement = tagNode;
       }
-      if (tagElement) {
-        row.unshift(glue(group));
-        row.push(glue(group));
-        if (group.leqno) {
-          row[0].children.push(tagElement);
-        } else {
-          row.at(-1)!.children.push(tagElement);
-        }
+      row.unshift(glue(group));
+      row.push(glue(group));
+      if (group.leqno) {
+        row[0].children.push(tagElement);
+      } else {
+        assert(row.at(-1)).children.push(tagElement);
       }
     }
     const mtr = new mathMLTree.MathNode('mtr', row, []);
     const label = group.labels.shift();
-    if (label && group.tags && group.tags[i]) {
+    if (label && group.tags?.[i]) {
       mtr.setAttribute('id', label);
       if (Array.isArray(group.tags[i])) {
         mtr.classes.push('tml-tageqn');
@@ -431,10 +430,10 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
     // It defines a baseline to baseline distance.
     // Here, we do an approximation of that approach.
     const pad = String(1.4 * group.arraystretch - 0.8) + 'ex';
-    for (let i = 0; i < tbl.length; i++) {
-      for (let j = 0; j < tbl[i].children.length; j++) {
-        cellsOf(tbl[i])[j].style.paddingTop = pad;
-        cellsOf(tbl[i])[j].style.paddingBottom = pad;
+    for (const row of tbl) {
+      for (const cell of cellsOf(row)) {
+        cell.style.paddingTop = pad;
+        cell.style.paddingBottom = pad;
       }
     }
   }
@@ -481,19 +480,19 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
     };
 
     // Side padding
-    for (let i = 0; i < tbl.length; i++) {
-      for (let j = 0; j < tbl[i].children.length; j++) {
-        cellsOf(tbl[i])[j].style.paddingLeft = `${sidePad(j, 0)}${sidePadUnit}`;
-        cellsOf(tbl[i])[j].style.paddingRight = `${sidePad(j, 1)}${sidePadUnit}`;
+    for (const row of tbl) {
+      for (let j = 0; j < row.children.length; j++) {
+        cellsOf(row)[j].style.paddingLeft = `${sidePad(j, 0)}${sidePadUnit}`;
+        cellsOf(row)[j].style.paddingRight = `${sidePad(j, 1)}${sidePadUnit}`;
       }
     }
   }
   if (group.envClasses.length === 0) {
     // Set zero padding on side of the matrix
-    for (let i = 0; i < tbl.length; i++) {
-      cellsOf(tbl[i])[0].style.paddingLeft = '0em';
-      if (tbl[i].children.length === tbl[0].children.length) {
-        cellsOf(tbl[i]).at(-1)!.style.paddingRight = '0em';
+    for (const row of tbl) {
+      cellsOf(row)[0].style.paddingLeft = '0em';
+      if (row.children.length === tbl[0].children.length) {
+        assert(cellsOf(row).at(-1)).style.paddingRight = '0em';
       }
     }
   }
@@ -501,8 +500,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
   if (group.envClasses.length > 0) {
     // Justification
     const align = group.envClasses.includes('align') || group.envClasses.includes('alignat');
-    for (let i = 0; i < tbl.length; i++) {
-      const row = tbl[i];
+    for (const row of tbl) {
       if (align) {
         for (let j = 0; j < row.children.length; j++) {
           // Chromium does not recognize text-align: left. Use -webkit-
@@ -510,7 +508,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
           cellsOf(row)[j].classes = ['tml-' + (j % 2 ? 'left' : 'right')];
         }
         if (tagIsPresent) {
-          cellsOf(row).at(group.leqno ? 0 : -1)!.classes = []; // Default is center.
+          assert(cellsOf(row).at(group.leqno ? 0 : -1)).classes = []; // Default is center.
         }
       }
       if (row.children.length > 1 && group.envClasses.includes('cases')) {
@@ -580,7 +578,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
           }
         }
         prevTypeWasAlign = true;
-      } else if (col.type === 'separator') {
+      } else {
         // MathML accepts only single lines between cells.
         // So we read only the first of consecutive separators.
         if (prevTypeWasAlign) {
@@ -599,17 +597,18 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
         prevTypeWasAlign = false;
       }
     }
-    const lastCol = cols.at(-1)!;
+    const lastCol = assert(cols.at(-1));
     if (lastCol.type === 'separator') {
       const sep =
-        cols.at(-2)!.type === 'separator'
+        assert(cols.at(-2)).type === 'separator'
           ? '0.15em double'
           : lastCol.separator === '|'
             ? '0.06em solid'
             : '0.06em dashed';
       for (const row of table.children as MathNode[]) {
-        cellsOf(row).at(-1)!.style.borderRight = sep;
-        cellsOf(row).at(-1)!.style.paddingRight = '0.4em';
+        const lastCell = assert(cellsOf(row).at(-1));
+        lastCell.style.borderRight = sep;
+        lastCell.style.paddingRight = '0.4em';
       }
     }
   }
@@ -659,8 +658,8 @@ const alignedHandler = (context: EnvContext, args: AnyParseNode[]): ParseNode<'a
     // alignat environment takes an argument w/ number of columns
     let arg0 = '';
     const arg0Body = assertNodeType(args[0], 'ordgroup').body;
-    for (let i = 0; i < arg0Body.length; i++) {
-      const textord = assertNodeType(arg0Body[i], 'textord');
+    for (const node of arg0Body) {
+      const textord = assertNodeType(node, 'textord');
       arg0 += textord.text;
     }
     if (Number.isNaN(Number(arg0))) {
@@ -673,9 +672,9 @@ const alignedHandler = (context: EnvContext, args: AnyParseNode[]): ParseNode<'a
     if (isAlignedAt) {
       // Case 1
       const curMaths = row.length / 2;
-      if (numMaths! < curMaths) {
+      if (numMaths !== undefined && numMaths < curMaths) {
         throw new ParseError(
-          `Too many math in a row: expected ${numMaths}, but got ${curMaths}`,
+          `Too many math in a row: expected ${String(numMaths)}, but got ${String(curMaths)}`,
           row[0],
         );
       }
@@ -1057,7 +1056,7 @@ defineFunction({
     allowedInText: true,
     allowedInMath: true,
   },
-  handler(context, args) {
+  handler(context) {
     throw new ParseError(`${context.funcName} valid only within array environment`);
   },
 });

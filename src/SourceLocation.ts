@@ -40,8 +40,8 @@ export default class SourceLocation {
     second?: LocSource | null,
   ): SourceLocation | null | undefined {
     if (!second) {
-      return first && first.loc;
-    } else if (first && first.loc && second.loc && first.loc.lexer === second.loc.lexer) {
+      return first === null ? null : first?.loc;
+    } else if (first?.loc && first.loc.lexer === second.loc?.lexer) {
       return new SourceLocation(first.loc.lexer, first.loc.start, second.loc.end);
     } else {
       return null;

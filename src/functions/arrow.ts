@@ -12,7 +12,7 @@ import type { MathDomNode } from '../tree';
 
 export const padding = (width: number | string): MathNode => {
   const node = new mathMLTree.MathNode('mspace');
-  node.setAttribute('width', width + 'em');
+  node.setAttribute('width', `${String(width)}em`);
   return node;
 };
 
@@ -48,7 +48,7 @@ const labelSize = (size: number | string, scriptLevel: number): number =>
 // Whether a label has content: an \hphantom, whose body is a node, or a non-empty group.
 const hasContent = (node: AnyParseNode | null | undefined): boolean => {
   const body = (node as { body?: { body?: unknown; length?: number } } | null | undefined)?.body;
-  return Boolean(body && (body.body || (body.length ?? 0) > 0));
+  return Boolean(body?.body) || (body?.length ?? 0) > 0;
 };
 
 const munderoverNode = (
@@ -87,8 +87,7 @@ const munderoverNode = (
   let upperNode: MathNode | undefined;
   let lowerNode: MathNode | undefined;
 
-  const gotUpper = hasContent(body);
-  if (gotUpper) {
+  if (hasContent(body)) {
     let label: MathDomNode = mml.buildGroup(body, labelStyle);
     const mustSmash = fName === '\\\\cdrightarrow' || fName === '\\\\cdleftarrow';
     label = paddedNode(label, space, space, mustSmash);
@@ -97,22 +96,21 @@ const munderoverNode = (
     // TODO: Refactor this after Firefox supports minsize.
     upperNode = new mathMLTree.MathNode('mover', [label, dummyNode]);
   }
-  const gotLower = hasContent(below);
-  if (gotLower) {
+  if (hasContent(below)) {
     let label: MathDomNode = mml.buildGroup(below, labelStyle);
     label = paddedNode(label, space, space);
     lowerNode = new mathMLTree.MathNode('munder', [label, dummyNode]);
   }
 
   let node: MathNode;
-  if (!gotUpper && !gotLower) {
-    node = new mathMLTree.MathNode('mover', [arrowNode, emptyLabel]);
-  } else if (gotUpper && gotLower) {
-    node = new mathMLTree.MathNode('munderover', [arrowNode, lowerNode!, upperNode!]);
-  } else if (gotUpper) {
-    node = new mathMLTree.MathNode('mover', [arrowNode, upperNode!]);
+  if (upperNode && lowerNode) {
+    node = new mathMLTree.MathNode('munderover', [arrowNode, lowerNode, upperNode]);
+  } else if (upperNode) {
+    node = new mathMLTree.MathNode('mover', [arrowNode, upperNode]);
+  } else if (lowerNode) {
+    node = new mathMLTree.MathNode('munder', [arrowNode, lowerNode]);
   } else {
-    node = new mathMLTree.MathNode('munder', [arrowNode, lowerNode!]);
+    node = new mathMLTree.MathNode('mover', [arrowNode, emptyLabel]);
   }
   if (minWidth === '3.0') {
     node.style.height = '1em';

@@ -25,7 +25,7 @@ defineFunction({
       type: 'horizBracket',
       mode: parser.mode,
       label: funcName,
-      isOver: /^\\over/.test(funcName),
+      isOver: funcName.startsWith('\\over'),
       base: args[0],
     };
   },

@@ -19,7 +19,7 @@ defineFunction({
       string: assertNodeType(args[0], 'raw').string.replaceAll(invalidIdRegEx, ''),
     };
   },
-  mathmlBuilder(group, style) {
+  mathmlBuilder(group) {
     // Return a no-width, no-ink element with an HTML id.
     const node = new mathMLTree.MathNode('mrow', [], ['tml-label']);
     if (group.string.length > 0) {

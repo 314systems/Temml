@@ -177,7 +177,7 @@ export interface ParseNodeTypes {
     barSize?: Measurement;
     token: Token | null | undefined;
   };
-  internal: Record<never, never>;
+  internal: unknown; // No fields beyond the shared ParseNode properties.
   kern: {
     dimension: Measurement;
   };
@@ -219,7 +219,7 @@ export interface ParseNodeTypes {
     prescripts: Scripts;
     postscripts: Scripts | null;
   };
-  noTag: Record<never, never>;
+  noTag: unknown; // No fields beyond the shared ParseNode properties.
   not: {
     body: AnyParseNode[];
     isCharacterBox: boolean;
@@ -311,12 +311,12 @@ export interface ParseNodeTypes {
   array: {
     body: AnyParseNode[][]; // List of rows in the (2D) array.
     cols?: ColSpec[];
-    rowGaps?: Array<Measurement | null>;
+    rowGaps?: (Measurement | null)[];
     hLinesBeforeRow: boolean[][];
     envClasses: string[];
     autoTag?: boolean;
     scriptLevel?: StyleStr;
-    tags?: Array<boolean | AnyParseNode[]> | null;
+    tags?: (boolean | AnyParseNode[])[] | null;
     labels: string[];
     leqno?: boolean;
     arraystretch?: number | null;
@@ -360,7 +360,7 @@ export const assertNodeType = <NODETYPE extends NodeType>(
   node: AnyParseNode | null | undefined,
   type: NODETYPE,
 ): ParseNode<NODETYPE> => {
-  if (!node || node.type !== type) {
+  if (node?.type !== type) {
     throw new Error(
       `Expected node of type ${type}, but got ` +
         (node ? `node of type ${node.type}` : String(node)),

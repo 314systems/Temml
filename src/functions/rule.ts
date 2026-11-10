@@ -29,26 +29,26 @@ defineFunction({
     const width = calculateSize(group.width, style);
     const height = calculateSize(group.height, style);
     const shift = group.shift ? calculateSize(group.shift, style) : { number: 0, unit: 'em' };
-    const color = (style.color && style.getColor()) || 'black';
+    const color = style.color === '' ? 'black' : (style.getColor() ?? 'black');
 
     const rule = new mathMLTree.MathNode('mspace');
     if (width.number > 0 && height.number > 0) {
       rule.setAttribute('mathbackground', color);
     }
-    rule.setAttribute('width', width.number + width.unit);
-    rule.setAttribute('height', height.number + height.unit);
+    rule.setAttribute('width', `${String(width.number)}${width.unit}`);
+    rule.setAttribute('height', `${String(height.number)}${height.unit}`);
     if (shift.number === 0) {
       return rule;
     }
 
     const wrapper = new mathMLTree.MathNode('mpadded', [rule]);
     if (shift.number >= 0) {
-      wrapper.setAttribute('height', '+' + shift.number + shift.unit);
+      wrapper.setAttribute('height', `+${String(shift.number)}${shift.unit}`);
     } else {
-      wrapper.setAttribute('height', shift.number + shift.unit);
-      wrapper.setAttribute('depth', '+' + -shift.number + shift.unit);
+      wrapper.setAttribute('height', `${String(shift.number)}${shift.unit}`);
+      wrapper.setAttribute('depth', `+${String(-shift.number)}${shift.unit}`);
     }
-    wrapper.setAttribute('voffset', shift.number + shift.unit);
+    wrapper.setAttribute('voffset', `${String(shift.number)}${shift.unit}`);
     return wrapper;
   },
 });

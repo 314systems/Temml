@@ -77,7 +77,7 @@ const mathmlBuilder: MathMLBuilder<'genfrac'> = (group, style) => {
     frac.setAttribute('linethickness', '0px');
   } else if (group.barSize) {
     const ruleWidth = calculateSize(group.barSize, style);
-    frac.setAttribute('linethickness', ruleWidth.number + ruleWidth.unit);
+    frac.setAttribute('linethickness', `${String(ruleWidth.number)}${ruleWidth.unit}`);
   }
 
   let node: MathDomNode = frac;
@@ -312,7 +312,7 @@ defineFunction({
     argTypes: ['size'],
     infix: true,
   },
-  handler({ parser, funcName, token }, args) {
+  handler({ parser, token }, args) {
     return {
       type: 'infix',
       mode: parser.mode,
@@ -330,7 +330,7 @@ defineFunction({
     numArgs: 3,
     argTypes: ['math', 'size', 'math'],
   },
-  handler: ({ parser, funcName }, args) => {
+  handler: ({ parser }, args) => {
     const numer = args[0];
     const barSize = assert(assertNodeType(args[1], 'infix').barSize);
     const denom = args[2];

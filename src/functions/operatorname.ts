@@ -40,7 +40,7 @@ const mathmlBuilder: MathMLBuilder<'operatorname'> = (group, style) => {
       ) {
         // This is a workaround for a Firefox bug that applies spacing to
         // an <mi> with mathvariant="normal".
-        node = node.children[0] as MathNode;
+        node = node.children[0];
       }
       switch (node.type) {
         case 'mi':
@@ -86,7 +86,7 @@ const mathmlBuilder: MathMLBuilder<'operatorname'> = (group, style) => {
     (isMathNodeOfType(only, 'mover') || isMathNodeOfType(only, 'munder')) &&
     (isMathNodeOfType(only.children[0], 'mi') || isMathNodeOfType(only.children[0], 'mtext'))
   ) {
-    (only.children[0] as MathNode).type = 'mi';
+    only.children[0].type = 'mi';
     if (group.parentIsSupSub) {
       return new mathMLTree.MathNode('mrow', expression);
     } else {

@@ -59,7 +59,7 @@ defineFunction({
       denominator,
     };
   },
-  mathmlBuilder(group, style) {
+  mathmlBuilder(group) {
     const numerator = group.numerator
       .split('')
       .map((c) => unicodeNumSups[c])

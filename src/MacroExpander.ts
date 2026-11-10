@@ -77,18 +77,19 @@ export default class MacroExpander {
    * Similar in behavior to TeX's `\futurelet`.
    */
   future(): Token {
-    if (this.stack.length === 0) {
-      this.pushToken(this.lexer.lex());
+    let token = this.stack.at(-1);
+    if (!token) {
+      token = this.lexer.lex();
+      this.pushToken(token);
     }
-    return this.stack.at(-1)!;
+    return token;
   }
 
   /**
    * Remove and return the next unexpanded token.
    */
   popToken(): Token {
-    this.future(); // ensure non-empty stack
-    return this.stack.pop()!;
+    return this.stack.pop() ?? this.lexer.lex();
   }
 
   /**
@@ -213,7 +214,7 @@ export default class MacroExpander {
     } while (depth !== 0 || isDelimited);
     // If the argument found ... has the form ‘{<nested tokens>}’,
     // ... the outermost braces enclosing the argument are removed
-    if (start.text === '{' && tokens.at(-1)!.text === '}') {
+    if (start.text === '{' && tokens.at(-1)?.text === '}') {
       tokens.pop();
       tokens.shift();
     }
@@ -231,9 +232,9 @@ export default class MacroExpander {
         throw new ParseError("The length of delimiters doesn't match the number of args!");
       }
       const delims = delimiters[0];
-      for (let i = 0; i < delims.length; i++) {
+      for (const delim of delims) {
         const tok = this.popToken();
-        if (delims[i] !== tok.text) {
+        if (delim !== tok.text) {
           throw new ParseError("Use of the macro doesn't match its definition", tok);
         }
       }
@@ -241,7 +242,7 @@ export default class MacroExpander {
 
     const args: Token[][] = [];
     for (let i = 0; i < numArgs; i++) {
-      args.push(this.consumeArg(delimiters && delimiters[i + 1]).tokens);
+      args.push(this.consumeArg(delimiters?.[i + 1]).tokens);
     }
     return args;
   }
@@ -270,7 +271,7 @@ export default class MacroExpander {
     const name = topToken.text;
     const expansion = topToken.noexpand ? null : this._getExpansion(name);
     if (expansion == null || (expandableOnly && expansion.unexpandable)) {
-      if (expandableOnly && expansion == null && name[0] === '\\' && !this.isDefined(name)) {
+      if (expandableOnly && expansion == null && name.startsWith('\\') && !this.isDefined(name)) {
         throw new ParseError('Undefined control sequence: ' + name);
       }
       this.pushToken(topToken);
@@ -329,7 +330,7 @@ export default class MacroExpander {
     for (;;) {
       if (this.expandOnce() === false) {
         // fully expanded
-        const token = this.stack.pop()!;
+        const token = this.popToken();
         // The token after \noexpand is interpreted as if its meaning were ‘\relax’
         if (token.treatAsRelax) {
           token.text = '\\relax';
@@ -360,7 +361,7 @@ export default class MacroExpander {
       // Expand only expandable tokens
       if (this.expandOnce(true) === false) {
         // fully expanded
-        const token = this.stack.pop()!;
+        const token = this.popToken();
         if (token.treatAsRelax) {
           // the expansion of \noexpand is the token itself
           token.noexpand = false;
@@ -408,7 +409,7 @@ export default class MacroExpander {
       let numArgs = 0;
       if (expansion.includes('#')) {
         const stripped = expansion.replaceAll('##', '');
-        while (stripped.includes('#' + (numArgs + 1))) {
+        while (stripped.includes(`#${String(numArgs + 1)}`)) {
           ++numArgs;
         }
       }
@@ -449,7 +450,7 @@ export default class MacroExpander {
   isExpandable(name: string): boolean {
     const macro = this.macros.get(name);
     return macro == null
-      ? Object.hasOwn(functions, name) && !functions[name].primitive
+      ? Object.hasOwn(functions, name) && functions[name]?.primitive === false
       : typeof macro === 'string' || typeof macro === 'function' || !macro.unexpandable;
   }
 }

@@ -48,8 +48,8 @@ defineFunction({
 
       // Parser.js does not parse key/value pairs. We get a string.
       const attributes = attributeStr.split(',');
-      for (let i = 0; i < attributes.length; i++) {
-        const keyVal = attributes[i].split('=');
+      for (const attribute of attributes) {
+        const keyVal = attribute.split('=');
         if (keyVal.length === 2) {
           const str = keyVal[1].trim();
           switch (keyVal[0].trim()) {
@@ -118,12 +118,12 @@ defineFunction({
       width = calculateSize(group.width, style);
     }
 
-    const graphicStyle: CssStyle = { height: height.number + depth.number + 'em' };
+    const graphicStyle: CssStyle = { height: `${String(height.number + depth.number)}em` };
     if (width.number > 0) {
-      graphicStyle.width = width.number + width.unit;
+      graphicStyle.width = `${String(width.number)}${width.unit}`;
     }
     if (depth.number > 0) {
-      graphicStyle.verticalAlign = -depth.number + depth.unit;
+      graphicStyle.verticalAlign = `${String(-depth.number)}${depth.unit}`;
     }
 
     const node = new Img(group.src, group.alt, graphicStyle);

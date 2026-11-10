@@ -67,7 +67,7 @@ export default class Lexer implements LexerInterface {
   tokenRegex: RegExp;
   // Category codes. The lexer only supports comment characters (14) for now.
   // MacroExpander additionally distinguishes active (13).
-  catcodes: Record<string, number>;
+  catcodes: Record<string, number | undefined>;
 
   constructor(input: string, settings: Settings) {
     // Separate accents from characters
@@ -94,7 +94,7 @@ export default class Lexer implements LexerInterface {
       return new Token('EOF', new SourceLocation(this, pos, pos));
     }
     const match = this.tokenRegex.exec(input);
-    if (match === null || match.index !== pos) {
+    if (match?.index !== pos) {
       throw new ParseError(
         `Unexpected character: '${input[pos]}'`,
         new Token(input[pos], new SourceLocation(this, pos, pos + 1)),

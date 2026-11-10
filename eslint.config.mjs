@@ -22,23 +22,26 @@ export default defineConfig([
     },
   },
   {
-    files: ['**/*.ts'],
-    extends: [tseslint.configs.recommended],
-
+    files: ['**/*.{js,ts}'],
+    extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
     rules: {
-      // TypeScript checks these itself, or handles them better.
-      'no-undef': 0,
-      'no-dupe-class-members': 0,
-      'no-unused-vars': 0,
-
-      '@typescript-eslint/no-unused-vars': [
-        2,
-        {
-          args: 'none',
-          varsIgnorePattern: '^_*$',
-        },
+      '@typescript-eslint/no-unnecessary-condition': [
+        'error',
+        { allowConstantLoopConditions: 'only-allowed-literals' },
       ],
     },
+    languageOptions: {
+      parser: tseslint.parser,
+      // https://typescript-eslint.io/getting-started/typed-linting
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ['**/*.js'],
+    extends: [tseslint.configs.disableTypeChecked],
   },
   {
     extends: [unicorn.configs.unopinionated],

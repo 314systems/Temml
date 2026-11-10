@@ -1,6 +1,6 @@
 // Mapping of Unicode accent characters to their LaTeX equivalent in text and
 // math mode (when they exist).
-const unicodeAccents: Record<string, { text: string; math?: string }> = {
+const unicodeAccents: Record<string, { text: string; math?: string } | undefined> = {
   '\u{301}': { text: "\\'", math: '\\acute' },
   '\u{300}': { text: '\\`', math: '\\grave' },
   '\u{308}': { text: '\\"', math: '\\ddot' },

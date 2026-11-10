@@ -18,7 +18,7 @@ defineFunction({
       string: assertNodeType(args[0], 'raw').string.replace(invalidIdRegEx, ''),
     };
   },
-  mathmlBuilder(group, style) {
+  mathmlBuilder(group) {
     // Create an empty <a> node. Set a class and an href attribute.
     // The post-processor will populate with the target's tag or equation number.
     const classes = group.funcName === '\\ref' ? ['tml-ref'] : ['tml-ref', 'tml-eqref'];

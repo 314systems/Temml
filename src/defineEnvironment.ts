@@ -23,7 +23,7 @@ export interface EnvContext {
 export type EnvHandler = (
   context: EnvContext,
   args: AnyParseNode[],
-  optArgs: Array<AnyParseNode | null | undefined>,
+  optArgs: (AnyParseNode | null | undefined)[],
 ) => AnyParseNode;
 
 /**
@@ -78,8 +78,8 @@ const defineEnvironment = <NODETYPE extends NodeType>({
     numOptionalArgs: 0,
     handler,
   };
-  for (let i = 0; i < names.length; ++i) {
-    _environments[names[i]] = data;
+  for (const name of names) {
+    _environments[name] = data;
   }
   if (mathmlBuilder) {
     registerMathMLBuilder(type, mathmlBuilder);

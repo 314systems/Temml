@@ -15,7 +15,7 @@ defineFunction({
     allowedInText: true,
   },
 
-  handler({ parser }, args, optArgs) {
+  handler({ parser }) {
     const size = parser.gullet.future().text === '[' ? parser.parseSizeGroup(true) : null;
     const newLine = !parser.settings.displayMode;
     return {
@@ -37,7 +37,7 @@ defineFunction({
       node.setAttribute('linebreak', 'newline');
       if (group.size) {
         const size = calculateSize(group.size, style);
-        node.setAttribute('height', size.number + size.unit);
+        node.setAttribute('height', `${String(size.number)}${size.unit}`);
       }
     }
     return node;

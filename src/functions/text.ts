@@ -29,7 +29,7 @@ const styleWithFont = (group: ParseNode<'text'>, style: Style): Style => {
   if (!font) {
     return style;
   } else if (textFontFamilies[font]) {
-    return style.withTextFontFamily(textFontFamilies[font]!);
+    return style.withTextFontFamily(textFontFamilies[font]);
   } else if (textFontWeights[font]) {
     return style.withTextFontWeight(textFontWeights[font]);
   } else if (font === '\\emph') {

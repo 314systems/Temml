@@ -29,7 +29,7 @@ const regularSpace = {
 // src/symbols.js.
 defineFunctionBuilders({
   type: 'spacing',
-  mathmlBuilder(group, style) {
+  mathmlBuilder(group) {
     let node;
 
     if (Object.hasOwn(regularSpace, group.text)) {

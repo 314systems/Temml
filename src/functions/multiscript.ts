@@ -61,9 +61,7 @@ defineFunction({
     const prescripts = preArg.body.length > 0 ? (preArg.body[0] as ParseNode<'supsub'>) : null;
     const postscripts = postArg.body.length > 0 ? (postArg.body[0] as ParseNode<'supsub'>) : null;
 
-    if (!prescripts && !postscripts) {
-      return base;
-    } else if (prescripts) {
+    if (prescripts) {
       return {
         type: 'multiscript',
         mode: parser.mode,
@@ -72,7 +70,7 @@ defineFunction({
         postscripts,
         base,
       };
-    } else {
+    } else if (postscripts) {
       // It's not a multi-script. Get a \textstyle supsub.
       return {
         type: 'styling',
@@ -83,12 +81,13 @@ defineFunction({
             type: 'supsub',
             mode: parser.mode,
             base,
-            sup: postscripts!.sup,
-            sub: postscripts!.sub,
+            sup: postscripts.sup,
+            sub: postscripts.sub,
           },
         ],
       };
     }
+    return base;
   },
   mathmlBuilder(group, style) {
     const base = mml.buildGroup(group.base, style);

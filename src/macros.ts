@@ -10,6 +10,7 @@ export default macros;
 
 import symbols from './symbols';
 import ParseError from './ParseError';
+import { assert } from './utils';
 import type MacroExpander from './MacroExpander';
 import type { Token } from './Token';
 
@@ -94,7 +95,7 @@ export const stringFromArg = (arg: Token[]): string => {
 };
 
 // Lookup table for parsing numbers in base 8 through 16
-const digitToNumber: Record<string, number> = {
+const digitToNumber: Record<string, number | undefined> = {
   0: 0,
   1: 1,
   2: 2,
@@ -119,7 +120,7 @@ const digitToNumber: Record<string, number> = {
   F: 15,
 };
 
-const nextCharNumber = (context: MacroExpander): [number | null, string] => {
+const nextCharNumber = (context: MacroExpander): [number | null | undefined, string] => {
   const numStr = context.future().text;
   if (numStr === 'EOF') {
     return [null, ''];
@@ -129,7 +130,7 @@ const nextCharNumber = (context: MacroExpander): [number | null, string] => {
 
 const appendCharNumbers = (number: number, numStr: string, base: number): number => {
   for (let i = 1; i < numStr.length; i++) {
-    const digit = digitToNumber[numStr.charAt(i)];
+    const digit = Number(digitToNumber[numStr.charAt(i)]);
     number *= base;
     number += digit;
   }
@@ -162,7 +163,7 @@ defineMacro('\\char', (context) => {
     }
     case '`': {
       token = context.popToken();
-      if (token.text[0] === '\\') {
+      if (token.text.startsWith('\\')) {
         number = token.text.codePointAt(1);
       } else if (token.text === 'EOF') {
         throw new ParseError('\\char` missing argument');
@@ -180,10 +181,10 @@ defineMacro('\\char', (context) => {
     let numStr = token.text;
     number = digitToNumber[numStr.charAt(0)];
     if (number == null || number >= base) {
-      throw new ParseError(`Invalid base-${base} digit ${token.text}`);
+      throw new ParseError(`Invalid base-${String(base)} digit ${token.text}`);
     }
     number = appendCharNumbers(number, numStr, base);
-    let digit: number | null;
+    let digit: number | null | undefined;
     [digit, numStr] = nextCharNumber(context);
     while (digit != null && digit < base) {
       number *= base;
@@ -200,9 +201,9 @@ const recreateArgStr = (context: MacroExpander): string => {
   // Recreate the macro's original argument string from the array of parse tokens.
   const tokens = context.consumeArgs(1)[0];
   let str = '';
-  let expectedLoc = tokens.at(-1)!.loc!.start;
+  let expectedLoc = assert(tokens.at(-1)?.loc).start;
   for (let i = tokens.length - 1; i >= 0; i--) {
-    const actualLoc = tokens[i].loc!.start;
+    const actualLoc = assert(tokens[i].loc).start;
     if (actualLoc > expectedLoc) {
       // context.consumeArgs has eaten a space.
       str += ' ';
@@ -342,11 +343,12 @@ defineMacro('\\dots', (context) => {
   // (until we support \ifmmode ... \else ... \fi).
   let thedots = '\\dotso';
   const next = context.expandAfterFuture().text;
+  const symbol = symbols.math[next];
   if (next in dotsByToken) {
     thedots = dotsByToken[next];
-  } else if (next.slice(0, 4) === '\\not') {
+  } else if (next.startsWith('\\not')) {
     thedots = '\\dotsb';
-  } else if (next in symbols.math && ['bin', 'rel'].includes(symbols.math[next].group)) {
+  } else if (symbol && ['bin', 'rel'].includes(symbol.group)) {
     thedots = '\\dotsb';
   }
   return thedots;

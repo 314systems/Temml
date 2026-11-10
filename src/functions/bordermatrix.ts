@@ -18,7 +18,7 @@ defineFunction({
     // Find out if the author has defined custom delimiters
     let delimiters = ['(', ')']; // default
     const optArg = optArgs[0] as ParseNode<'ordgroup'> | null | undefined;
-    if (funcName === '\\bordermatrix' && optArg && optArg.body) {
+    if (funcName === '\\bordermatrix' && optArg?.body) {
       const body = optArg.body;
       const first = body[0];
       if (body.length === 1 && first.type === 'delimiter') {
@@ -30,7 +30,7 @@ defineFunction({
     parser.consume();
 
     // Pass control to the environment handler in array.js.
-    const env = environments['bordermatrix'];
+    const env = environments.bordermatrix;
     const context = {
       mode: parser.mode,
       envName: funcName.slice(1),

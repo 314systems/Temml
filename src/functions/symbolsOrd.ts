@@ -38,7 +38,7 @@ defineFunctionBuilders({
     const codePoint = text.text.codePointAt(0) ?? 0;
     // Test for upper-case Greek
     const defaultVariant = 0x03_90 < codePoint && codePoint < 0x03_aa ? 'normal' : 'italic';
-    const variant = getVariant(group, style) || defaultVariant;
+    const variant = getVariant(group, style) ?? defaultVariant;
     if (variant === 'script') {
       text.text = variantChar(text.text, variant);
       return new mathMLTree.MathNode('mi', [text], [style.font]);
@@ -69,7 +69,7 @@ defineFunctionBuilders({
       ch = smallCaps[ch];
     }
     const text = mml.makeText(ch, group.mode, style);
-    const variant = getVariant(group, style) || 'normal';
+    const variant = getVariant(group, style) ?? 'normal';
 
     let node: MathNode;
     if (numberRegEx.test(group.text)) {

@@ -48,8 +48,8 @@ defineFunction({
         break;
       case '\\data': {
         const data = value.split(',');
-        for (let i = 0; i < data.length; i++) {
-          const keyVal = data[i].split('=');
+        for (const entry of data) {
+          const keyVal = entry.split('=');
           if (keyVal.length !== 2) {
             throw new ParseError('Error parsing key-value for \\data');
           }

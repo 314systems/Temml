@@ -44,13 +44,13 @@ export interface SymbolEntry {
   replace: string | null;
 }
 
-const symbols: Record<Mode, Record<string, SymbolEntry>> = Object.create(null);
-symbols.math = Object.create(null);
-symbols.text = Object.create(null);
+const symbols = Object.create(null) as Record<Mode, Record<string, SymbolEntry | undefined>>;
+symbols.math = Object.create(null) as Record<string, SymbolEntry | undefined>;
+symbols.text = Object.create(null) as Record<string, SymbolEntry | undefined>;
 export default symbols;
 
 export const defineSymbol = (
-  mode: Mode,
+  mode: string,
   group: Group,
   replace: string | null,
   name: string,

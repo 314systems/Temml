@@ -5,6 +5,8 @@
  * https://mit-license.org/
  */
 
+import { assert } from './utils';
+
 export const version = '0.14.0';
 
 export const postProcess = (block: Element | Document): void => {
@@ -28,11 +30,11 @@ export const postProcess = (block: Element | Document): void => {
       }
       const labels = parent.getElementsByClassName('tml-label');
       if (labels.length > 0) {
-        const id = parent.attributes.getNamedItem('id')!.value;
+        const id = assert(parent.attributes.getNamedItem('id')).value;
         labelMap[id] = String(i);
         break;
       } else {
-        parent = parent.parentElement!;
+        parent = assert(parent.parentElement);
       }
     }
   }
@@ -44,8 +46,8 @@ export const postProcess = (block: Element | Document): void => {
     if (labels.length > 0) {
       const tags = parent.getElementsByClassName('tml-tag');
       if (tags.length > 0) {
-        const id = parent.attributes.getNamedItem('id')!.value;
-        labelMap[id] = tags[0].textContent!;
+        const id = assert(parent.attributes.getNamedItem('id')).value;
+        labelMap[id] = tags[0].textContent;
       }
     }
   }
@@ -54,13 +56,13 @@ export const postProcess = (block: Element | Document): void => {
   const refs = [...block.getElementsByClassName('tml-ref')];
   for (const ref of refs) {
     const attr = ref.getAttribute('href');
-    let str = labelMap[attr!.slice(1)];
+    let str = labelMap[assert(attr).slice(1)];
     if (ref.className.includes('tml-eqref')) {
       // \eqref. Include parens
-      if (str.charAt(0) !== '(') {
+      if (!str.startsWith('(')) {
         str = '(' + str;
       }
-      if (str.slice(-1) !== ')') {
+      if (!str.endsWith(')')) {
         str = str + ')';
       }
     } else {

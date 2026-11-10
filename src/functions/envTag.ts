@@ -15,7 +15,7 @@ defineFunction({
       body: args[0],
     };
   },
-  mathmlBuilder(group, style) {
+  mathmlBuilder() {
     return new mathMLTree.MathNode('mrow');
   },
 });
@@ -32,7 +32,7 @@ defineFunction({
       mode: parser.mode,
     };
   },
-  mathmlBuilder(group, style) {
+  mathmlBuilder() {
     return new mathMLTree.MathNode('mrow');
   },
 });

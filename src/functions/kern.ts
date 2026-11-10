@@ -55,13 +55,13 @@ defineFunction({
     } else {
       if (dimension.number >= 0) {
         const node = new mathMLTree.MathNode('mspace');
-        node.setAttribute('width', dimension.number + dimension.unit);
+        node.setAttribute('width', `${String(dimension.number)}${dimension.unit}`);
         return node;
       } else {
         // Don't use <mspace> or <mpadded> because
         // WebKit recognizes negative left margin only on a <mrow> element
         const node = new mathMLTree.MathNode('mrow');
-        node.style.marginLeft = dimension.number + dimension.unit;
+        node.style.marginLeft = `${String(dimension.number)}${dimension.unit}`;
         return node;
       }
     }

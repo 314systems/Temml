@@ -39,7 +39,7 @@ defineFunction({
     numArgs: 0,
     allowedInText: true,
   },
-  handler: ({ breakOnTokenText, funcName, parser }, args) => {
+  handler: ({ breakOnTokenText, funcName, parser }) => {
     if (parser.settings.strict && parser.mode === 'math') {
       console.log(`Temml strict-mode warning: Command ${funcName} is invalid in math mode.`);
     }

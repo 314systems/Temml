@@ -67,9 +67,9 @@ export class MathNode implements MathDomNode {
   ) {
     this.type = type;
     this.attributes = {};
-    this.children = children || [];
-    this.classes = classes || [];
-    this.style = style || {};
+    this.children = children ?? [];
+    this.classes = classes ?? [];
+    this.style = style ?? {};
     this.label = '';
   }
 
@@ -109,8 +109,8 @@ export class MathNode implements MathDomNode {
     // Apply inline styles
     Object.assign(node.style, this.style);
 
-    for (let i = 0; i < this.children.length; i++) {
-      node.append(this.children[i].toNode());
+    for (const child of this.children) {
+      node.append(child.toNode());
     }
 
     return node;
@@ -146,8 +146,8 @@ export class MathNode implements MathDomNode {
 
     markup += '>';
 
-    for (let i = 0; i < this.children.length; i++) {
-      markup += this.children[i].toMarkup();
+    for (const child of this.children) {
+      markup += child.toMarkup();
     }
 
     markup += '</' + this.type + '>';

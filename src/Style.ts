@@ -46,11 +46,11 @@ class Style {
   constructor(data: StyleData) {
     this.level = data.level;
     this.color = data.color;
-    this.font = data.font || '';
-    this.fontFamily = data.fontFamily || '';
-    this.fontSize = data.fontSize || 1;
-    this.fontWeight = data.fontWeight || '';
-    this.fontShape = data.fontShape || '';
+    this.font = data.font ?? '';
+    this.fontFamily = data.fontFamily ?? '';
+    this.fontSize = data.fontSize === 0 || Number.isNaN(data.fontSize) ? 1 : (data.fontSize ?? 1);
+    this.fontWeight = data.fontWeight ?? '';
+    this.fontShape = data.fontShape ?? '';
     this.maxSize = data.maxSize;
   }
 

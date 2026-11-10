@@ -1,4 +1,5 @@
 import type { AnyParseNode, ParseNode } from '../parseNode';
+import { assert } from '../utils';
 
 const ordGroup = (body: AnyParseNode[]): ParseNode<'ordgroup'> => {
   return {
@@ -50,19 +51,19 @@ export const bordermatrixParseTree = (
   const leftColumnBody: AnyParseNode[][] = Array.from({ length: body.length - 1 }, () => []);
   for (let i = 1; i < body.length; i++) {
     // The visible part of the cell
-    leftColumnBody[i - 1].push(body[i].shift()!);
+    leftColumnBody[i - 1].push(assert(body[i].shift()));
     // A vphantom with contents from the pmatrix, to set minimum cell height
     const phantomBody: AnyParseNode[] = [];
-    for (let j = 0; j < body[i].length; j++) {
-      phantomBody.push(body[i][j]);
+    for (const cell of body[i]) {
+      phantomBody.push(cell);
     }
     leftColumnBody[i - 1].push(phantom(phantomBody, 'vphantom'));
   }
 
   // Create an array for the top row
   const topRowBody: AnyParseNode[][] = Array.from({ length: body.length }, () => []);
-  for (let j = 0; j < body[0].length; j++) {
-    topRowBody[0].push(body[0][j]);
+  for (const cell of body[0]) {
+    topRowBody[0].push(cell);
   }
   // Copy the rest of the pmatrix, but squashed via \hphantom
   for (let i = 1; i < body.length; i++) {

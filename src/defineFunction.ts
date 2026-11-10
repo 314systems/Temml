@@ -21,7 +21,7 @@ export interface FunctionContext {
 export type FunctionHandler = (
   context: FunctionContext,
   args: AnyParseNode[],
-  optArgs: Array<AnyParseNode | null | undefined>,
+  optArgs: (AnyParseNode | null | undefined)[],
 ) => AnyParseNode;
 
 /** Builds the MathML of a parse node of the given type. */
@@ -115,7 +115,7 @@ type AnyMathMLBuilder = (group: AnyParseNode, style: Style) => MathDomNode;
  * `functions.js` just exports this same dictionary again and makes it public.
  * `Parser.js` requires this dictionary.
  */
-export const _functions: Record<string, FunctionSpecData> = {};
+export const _functions: Record<string, FunctionSpecData | undefined> = {};
 
 /**
  * All MathML builders. Should be only used in the `define*` and the `build*ML`
@@ -154,8 +154,8 @@ const defineFunction = <NODETYPE extends NodeType>({
     primitive: !!props.primitive,
     handler,
   };
-  for (let i = 0; i < names.length; ++i) {
-    _functions[names[i]] = data;
+  for (const name of names) {
+    _functions[name] = data;
   }
   if (mathmlBuilder) {
     registerMathMLBuilder(type, mathmlBuilder);

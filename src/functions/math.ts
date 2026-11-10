@@ -10,7 +10,7 @@ defineFunction({
     allowedInText: true,
     allowedInMath: false,
   },
-  handler({ funcName, parser }, args) {
+  handler({ funcName, parser }) {
     const outerMode = parser.mode;
     parser.switchMode('math');
     const close = funcName === '\\(' ? '\\)' : '$';

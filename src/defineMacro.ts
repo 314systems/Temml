@@ -26,7 +26,7 @@ export type MacroMap = Record<string, MacroDefinition | undefined>;
  * `macros.js` exports this same dictionary again and makes it public.
  * `Parser.js` requires this dictionary via `macros.js`.
  */
-export const _macros: MacroMap = Object.create(null);
+export const _macros = Object.create(null) as MacroMap;
 
 // This function might one day accept an additional argument and do more things.
 const defineMacro = (name: string, body: MacroDefinition): void => {

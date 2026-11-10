@@ -1,4 +1,5 @@
 import ParseError from './ParseError';
+import { assert } from './utils';
 import { postProcess } from './postProcess';
 import type Temml from '../temml';
 import type { Options } from './Settings';
@@ -96,7 +97,7 @@ const splitAtDelimiters = (text: string, delimiters: Delimiter[]): SplitData[] =
       text = text.slice(index); // now text starts with delimiter
     }
     // ... so this always succeeds:
-    const delimiter = delimiters.find((delim) => text.startsWith(delim.left))!;
+    const delimiter = assert(delimiters.find((delim) => text.startsWith(delim.left)));
     index = findEndOfMath(delimiter.right, text, delimiter.left.length);
     if (index === -1) {
       break;
@@ -187,7 +188,7 @@ const delimitersFromKey = (key: string): Delimiter[] => {
       return amsDelimiters;
     }
     case 'all': {
-      return firstDraftDelimiters['('].concat(firstDraftDelimiters['$']).concat(amsDelimiters);
+      return firstDraftDelimiters['('].concat(firstDraftDelimiters.$).concat(amsDelimiters);
     }
     default: {
       return defaultDelimiters;
@@ -209,8 +210,7 @@ const renderMathInText = (text: string, optionsCopy: ResolvedOptions): DocumentF
 
   const fragment = document.createDocumentFragment();
 
-  for (let i = 0; i < data.length; i++) {
-    const item = data[i];
+  for (const item of data) {
     if (item.type === 'text') {
       fragment.append(document.createTextNode(item.data));
     } else {
@@ -249,7 +249,7 @@ const renderElem = (elem: Element, optionsCopy: ResolvedOptions): void => {
     const childNode = elem.childNodes[i];
     if (childNode.nodeType === 3) {
       // Text node
-      const frag = renderMathInText(childNode.textContent!, optionsCopy);
+      const frag = renderMathInText((childNode as Text).data, optionsCopy);
       if (frag) {
         i += frag.childNodes.length - 1;
         childNode.replaceWith(frag);
@@ -269,7 +269,10 @@ const renderElem = (elem: Element, optionsCopy: ResolvedOptions): void => {
   }
 };
 
-export const renderMathInElement = (elem: Element, options?: AutoRenderOptions): void => {
+export const renderMathInElement = (
+  elem: Element | null | undefined,
+  options?: AutoRenderOptions,
+): void => {
   if (!elem) {
     throw new Error('No element provided to render');
   }
@@ -280,15 +283,15 @@ export const renderMathInElement = (elem: Element, options?: AutoRenderOptions):
   if (optionsCopy.fences) {
     optionsCopy.delimiters = delimitersFromKey(optionsCopy.fences);
   } else {
-    optionsCopy.delimiters ||= defaultDelimiters;
+    optionsCopy.delimiters ??= defaultDelimiters;
   }
-  optionsCopy.ignoredTags ||= ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'];
-  optionsCopy.ignoredClasses ||= [];
-  optionsCopy.errorCallback ||= console.error;
+  optionsCopy.ignoredTags ??= ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'];
+  optionsCopy.ignoredClasses ??= [];
+  optionsCopy.errorCallback ??= console.error;
 
   // Enable sharing of global macros defined via `\gdef` between different
   // math elements within a single call to `renderMathInElement`.
-  optionsCopy.macros ||= Object.create(null);
+  optionsCopy.macros ??= Object.create(null);
 
   renderElem(elem, optionsCopy as ResolvedOptions);
   postProcess(elem);

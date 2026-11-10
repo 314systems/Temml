@@ -54,7 +54,7 @@ defineFunction({
     // Check if the body consists entirely of an x-height letter.
     // TODO: Remove this check after Chromium is fixed.
     const inner = (body as { body?: AnyParseNode[] }).body;
-    const text = inner && inner.length === 1 ? (inner[0] as { text?: unknown }).text : undefined;
+    const text = inner?.length === 1 ? (inner[0] as { text?: unknown }).text : undefined;
     if (inner && typeof text === 'string' && xHeights.has(text)) {
       // Chromium does not put enough space above an x-height letter.
       // Insert a strut.

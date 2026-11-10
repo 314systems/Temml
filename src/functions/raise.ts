@@ -12,13 +12,13 @@ const mathmlBuilder: MathMLBuilder<'raise'> = (group, style) => {
   const newStyle = style.withLevel(StyleLevel.TEXT);
   const node = new mathMLTree.MathNode('mpadded', [mml.buildGroup(group.body, newStyle)]);
   const dy = calculateSize(group.dy, style);
-  node.setAttribute('voffset', dy.number + dy.unit);
+  node.setAttribute('voffset', `${String(dy.number)}${dy.unit}`);
   // Add padding, which acts to increase height in Chromium.
   // TODO: Figure out some way to change height in Firefox w/o breaking Chromium.
   if (dy.number > 0) {
-    node.style.padding = dy.number + dy.unit + ' 0 0 0';
+    node.style.padding = `${String(dy.number)}${dy.unit} 0 0 0`;
   } else {
-    node.style.padding = '0 0 ' + Math.abs(dy.number) + dy.unit + ' 0';
+    node.style.padding = `0 0 ${String(Math.abs(dy.number))}${dy.unit} 0`;
   }
   return node;
 };
@@ -55,7 +55,7 @@ defineFunction({
     argTypes: ['size', 'hbox'],
     allowedInText: true,
   },
-  handler({ parser, funcName }, args) {
+  handler({ parser }, args) {
     const amount = assertNodeType(args[0], 'size').value;
     const body = args[1];
     return {

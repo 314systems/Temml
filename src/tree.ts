@@ -36,8 +36,8 @@ export class DocumentFragment implements MathDomNode {
   toNode(): Node {
     const frag = document.createDocumentFragment();
 
-    for (let i = 0; i < this.children.length; i++) {
-      frag.append(this.children[i].toNode());
+    for (const child of this.children) {
+      frag.append(child.toNode());
     }
 
     return frag;
@@ -48,8 +48,8 @@ export class DocumentFragment implements MathDomNode {
     let markup = '';
 
     // Simply concatenate the markup for the children together.
-    for (let i = 0; i < this.children.length; i++) {
-      markup += this.children[i].toMarkup();
+    for (const child of this.children) {
+      markup += child.toMarkup();
     }
 
     return markup;

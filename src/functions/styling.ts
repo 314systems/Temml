@@ -25,7 +25,7 @@ defineFunction({
     allowedInText: true,
     primitive: true,
   },
-  handler({ breakOnTokenText, funcName, parser }, args) {
+  handler({ breakOnTokenText, funcName, parser }) {
     // parse out the implicit body
     const body = parser.parseExpression(true, breakOnTokenText, true);
 

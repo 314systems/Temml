@@ -13,7 +13,7 @@ export type Mapping<Value> = Record<string, Value | undefined>;
 export default class Namespace<Value> {
   current: Mapping<Value>;
   builtins: Mapping<Value>;
-  undefStack: Array<Mapping<Value>>;
+  undefStack: Mapping<Value>[];
 
   /**
    * Both arguments are optional.  The first argument is an object of
@@ -22,8 +22,8 @@ export default class Namespace<Value> {
    * according to any global/top-level `set`s done.
    */
   constructor(
-    builtins: Mapping<Value> = Object.create(null),
-    globalMacros: Mapping<Value> = Object.create(null),
+    builtins = Object.create(null) as Mapping<Value>,
+    globalMacros = Object.create(null) as Mapping<Value>,
   ) {
     this.current = globalMacros;
     this.builtins = builtins;
@@ -34,7 +34,7 @@ export default class Namespace<Value> {
    * Start a new nested group, affecting future local `set`s.
    */
   beginGroup(): void {
-    this.undefStack.push(Object.create(null));
+    this.undefStack.push(Object.create(null) as Mapping<Value>);
   }
 
   /**
@@ -92,17 +92,18 @@ export default class Namespace<Value> {
       // by destroying any undos currently scheduled for this name,
       // and adding an undo with the *new* value (in case it later gets
       // locally reset within this environment).
-      for (let i = 0; i < this.undefStack.length; i++) {
-        delete this.undefStack[i][name];
+      for (const undefs of this.undefStack) {
+        delete undefs[name];
       }
-      if (this.undefStack.length > 0) {
-        this.undefStack.at(-1)![name] = value;
+      const top = this.undefStack.at(-1);
+      if (top) {
+        top[name] = value;
       }
     } else {
       // Undo this set at end of this group (possibly to `undefined`),
       // unless an undo is already in place, in which case that older
       // value is the correct one.
-      const top = this.undefStack.at(-1)!;
+      const top = this.undefStack.at(-1);
       if (top && !Object.hasOwn(top, name)) {
         top[name] = this.current[name];
       }

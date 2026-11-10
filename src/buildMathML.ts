@@ -24,20 +24,19 @@ import type { Mode } from './types';
  * optional replacement from symbols.js.
  */
 export const makeText = (text: string, mode: Mode, style?: Style): TextNode => {
+  const replacement = symbols[mode][text]?.replace;
   if (
-    symbols[mode][text] &&
-    symbols[mode][text].replace &&
+    replacement &&
     // Check the UTF-16 high surrogate used by mathematical alphanumeric symbols.
     // eslint-disable-next-line unicorn/prefer-code-point
     text.charCodeAt(0) !== 0xd8_35 &&
     !(
       Object.hasOwn(ligatures, text) &&
       style &&
-      ((style.fontFamily && style.fontFamily.slice(4, 6) === 'tt') ||
-        (style.font && style.font.slice(4, 6) === 'tt'))
+      (style.fontFamily.slice(4, 6) === 'tt' || style.font.slice(4, 6) === 'tt')
     )
   ) {
-    text = symbols[mode][text].replace!;
+    text = replacement;
   }
 
   return new mathMLTree.TextNode(text);
@@ -64,24 +63,21 @@ export const consolidateText = (mrow: MathDomNode): MathDomNode => {
     return mrow;
   } // empty group, e.g., \text{}
   const newRow = new mathMLTree.MathNode('mrow');
-  for (let i = 0; i < mrow.children.length; i++) {
-    const child = mrow.children[i];
+  for (const child of mrow.children) {
     if (isMathNodeOfType(child, 'mtext') && Object.keys(child.attributes).length === 0) {
       copyChar(newRow, child);
     } else if (isMathNodeOfType(child, 'mrow')) {
       // We'll also check the children of an mrow. One level only. No recursion.
       let canConsolidate = true;
-      for (let j = 0; j < child.children.length; j++) {
-        const grandChild = child.children[j];
+      for (const grandChild of child.children) {
         if (!isMathNodeOfType(grandChild, 'mtext') || Object.keys(child.attributes).length !== 0) {
           canConsolidate = false;
           break;
         }
       }
       if (canConsolidate) {
-        for (let j = 0; j < child.children.length; j++) {
-          const grandChild = child.children[j] as MathNode;
-          copyChar(newRow, grandChild);
+        for (const grandChild of child.children) {
+          copyChar(newRow, grandChild as MathNode);
         }
       } else {
         newRow.children.push(child);
@@ -90,13 +86,12 @@ export const consolidateText = (mrow: MathDomNode): MathDomNode => {
       newRow.children.push(child);
     }
   }
-  for (let i = 0; i < newRow.children.length; i++) {
-    const mtext = newRow.children[i];
+  for (const mtext of newRow.children) {
     if (isMathNodeOfType(mtext, 'mtext')) {
       const text = mtext.children[0] as TextNode;
       // Firefox does not render a space at either end of an <mtext> string.
       // To get proper rendering, we replace leading or trailing spaces with no-break spaces.
-      if (text.text.charAt(0) === ' ') {
+      if (text.text.startsWith(' ')) {
         text.text = '\u{A0}' + text.text.slice(1);
       }
       const L = text.text.length;
@@ -174,8 +169,7 @@ const isComma = (expression: AnyParseNode[], i: number) => {
     node.text === ',' &&
     // Don't consolidate if there is a space after the comma.
     node.loc &&
-    followingNode.loc &&
-    node.loc.end === followingNode.loc.start
+    node.loc.end === followingNode.loc?.start
   );
 };
 
@@ -211,8 +205,8 @@ export const buildExpression = (
   const groups: MathDomNode[] = [];
   const groupArray: MathDomNode[] = [];
   let lastGroup: MathDomNode | undefined;
-  for (let i = 0; i < expression.length; i++) {
-    groupArray.push(buildGroup(expression[i], style));
+  for (const group of expression) {
+    groupArray.push(buildGroup(group, style));
   }
 
   for (let i = 0; i < groupArray.length; i++) {
@@ -301,7 +295,7 @@ const glue = (): MathNode => {
   return new mathMLTree.MathNode('mtd', [], [], { padding: '0', width: '50%' });
 };
 
-const labelContainers: Set<MathNodeType> = new Set(['mrow', 'mtd', 'mtable', 'mtr']);
+const labelContainers = new Set<MathNodeType>(['mrow', 'mtd', 'mtable', 'mtr']);
 const getLabel = (parent: { children: MathDomNode[] }): string | undefined => {
   for (const node of parent.children) {
     if (node instanceof MathNode) {

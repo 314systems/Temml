@@ -17,7 +17,9 @@ const estimatedWidth = (node: AnyParseNode): number => {
   } else if (body) {
     width += estimatedWidth(body as AnyParseNode);
   } else if (node.type === 'supsub') {
-    width += estimatedWidth(node.base!);
+    if (node.base) {
+      width += estimatedWidth(node.base);
+    }
     if (node.sub) {
       width += 0.7 * estimatedWidth(node.sub);
     }
@@ -26,10 +28,9 @@ const estimatedWidth = (node: AnyParseNode): number => {
     }
   } else if (node.type === 'mathord' || node.type === 'textord') {
     for (const ch of node.text.split('')) {
-      const codePoint = ch.codePointAt(0)!;
-      if ((0x60 < codePoint && codePoint < 0x7b) || (0x03_b0 < codePoint && codePoint < 0x3_ca)) {
+      if (/[a-z\u{3B1}-\u{3C9}]/u.test(ch)) {
         width += 0.56; // lower case latin or greek. Use advance width of letter n
-      } else if (0x2f < codePoint && codePoint < 0x3a) {
+      } else if (/[0-9]/.test(ch)) {
         width += 0.5; // numerals.
       } else {
         width += 0.92; // advance width of letter M

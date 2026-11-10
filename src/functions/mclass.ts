@@ -29,7 +29,7 @@ const mathmlBuilder = (group: ParseNode<'mclass'>, style: Style): MathNode => {
         node.setAttribute('mathvariant', 'normal');
       }
     } else {
-      node = new mathMLTree.MathNode('mi', inner);
+      node = new mathMLTree.MathNode(group.mustPromote ? 'mi' : 'mrow', inner);
     }
   } else {
     if (group.mustPromote) {
@@ -151,26 +151,24 @@ defineFunction({
       if (textAtomTypes.has(arg.type)) {
         const argText = textOf(arg);
         const argBody = (arg as { body?: AnyParseNode[] }).body;
-        if (symbols[parser.mode][argText!]) {
-          mord.text += symbols[parser.mode][argText!].replace;
-        } else if (argText) {
-          mord.text += argText;
+        if (argText !== undefined) {
+          mord.text += symbols[parser.mode][argText]?.replace ?? argText;
         } else if (argBody) {
-          argBody.map((e) => {
-            mord.text += textOf(e);
-          });
+          for (const child of argBody) {
+            const text = textOf(child);
+            if (text === undefined) {
+              mustPromote = false;
+              break;
+            }
+            mord.text += text;
+          }
         }
       } else {
         mustPromote = false;
         break;
       }
     }
-    if (
-      mustPromote &&
-      funcName === '\\mathord' &&
-      mord.type === 'mathord' &&
-      mord.text.length > 1
-    ) {
+    if (mustPromote && funcName === '\\mathord' && mord.text.length > 1) {
       return mord;
     } else {
       return {
@@ -191,8 +189,7 @@ export const binrelClass = (arg: AnyParseNode): string => {
   // (by rendering separately and with {}s before and after, and measuring
   // the change in spacing).  We'll do roughly the same by detecting the
   // atom type directly.
-  const atom =
-    arg.type === 'ordgroup' && arg.body.length && arg.body.length === 1 ? arg.body[0] : arg;
+  const atom = arg.type === 'ordgroup' && arg.body.length === 1 ? arg.body[0] : arg;
   if (atom.type === 'atom') {
     // BIN args are sometimes changed to OPEN, so check the original family.
     const body = (arg as ParseNode<'ordgroup'>).body;
@@ -234,7 +231,7 @@ defineFunction({
   props: {
     numArgs: 2,
   },
-  handler({ parser, funcName }, args) {
+  handler({ funcName }, args) {
     const baseArg = args[1];
     const shiftedArg = args[0];
 

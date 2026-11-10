@@ -18,7 +18,7 @@ class ParseError extends Error {
     let error = ' ' + message;
     let start: number | undefined;
 
-    const loc = token && token.loc;
+    const loc = token?.loc;
     if (loc && loc.start <= loc.end) {
       // If we have the input and a position, make the error a bit fancier
 
@@ -31,7 +31,7 @@ class ParseError extends Error {
       if (start === input.length) {
         error += ' at end of input: ';
       } else {
-        error += ' at position ' + (start + 1) + ': \n';
+        error += ` at position ${String(start + 1)}: \n`;
       }
 
       // Underline token in question using combining underscores

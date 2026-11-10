@@ -24,13 +24,7 @@ const mathmlBuilder: MathMLBuilder<'accent'> = (group, style) => {
   const tag = group.label === '\\c' ? 'munder' : 'mover';
   const needsWbkVertShift = needsWebkitVerticalShift.has(group.label);
   const baseText = (group.base as { text?: string }).text;
-  if (
-    tag === 'mover' &&
-    group.mode === 'math' &&
-    !group.isStretchy &&
-    baseText &&
-    baseText.length === 1
-  ) {
+  if (tag === 'mover' && group.mode === 'math' && !group.isStretchy && baseText?.length === 1) {
     const text = baseText;
     const isVec = group.label === '\\vec';
     const vecPostfix = isVec ? '-vec' : '';
@@ -182,8 +176,7 @@ defineFunction({
     const baseText = (base as { text?: string }).text;
     if (
       mode === 'text' &&
-      baseText &&
-      baseText.length === 1 &&
+      baseText?.length === 1 &&
       context.funcName in combiningChar &&
       smalls.includes(baseText)
     ) {
@@ -193,7 +186,7 @@ defineFunction({
         mode: 'text',
         text: baseText + combiningChar[context.funcName],
       };
-    } else if (context.funcName === '\\c' && mode === 'text' && baseText && baseText.length === 1) {
+    } else if (context.funcName === '\\c' && mode === 'text' && baseText?.length === 1) {
       // combining cedilla
       return { type: 'textord', mode: 'text', text: baseText + '\u{327}' };
     } else {

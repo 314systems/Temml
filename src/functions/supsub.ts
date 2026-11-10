@@ -4,7 +4,6 @@ import * as mathMLTree from '../mathMLTree';
 import * as mml from '../buildMathML';
 import type { DocumentFragment, MathDomNode } from '../tree';
 import type { MathNode, MathNodeType } from '../mathMLTree';
-import type { ParseNode } from '../parseNode';
 
 /**
  * Sometimes, groups perform special rules when they have superscripts or
@@ -35,7 +34,7 @@ defineFunctionBuilders({
     let appendSpace = false;
     let needsLeadingSpace: boolean | undefined = false;
 
-    if (group.base && group.base.type === 'horizBracket') {
+    if (group.base?.type === 'horizBracket') {
       isSup = !!group.sup;
       if (isSup === group.base.isOver) {
         isBracket = true;
@@ -55,13 +54,9 @@ defineFunctionBuilders({
     }
 
     // A stacked supsub has an op base whose body holds the stacked group.
+    const stackedBody = group.stack && group.base?.type === 'op' ? group.base.body : undefined;
     const children: MathDomNode[] = [
-      mml.buildGroup(
-        group.stack && (group.base as ParseNode<'op'>).body!.length === 1
-          ? (group.base as ParseNode<'op'>).body![0]
-          : group.base,
-        style,
-      ),
+      mml.buildGroup(stackedBody?.length === 1 ? stackedBody[0] : group.base, style),
     ];
 
     // Note regarding scriptstyle level.
@@ -85,7 +80,7 @@ defineFunctionBuilders({
         sup.setAttribute('scriptlevel', '2');
       }
       const baseText = (group.base as { text?: string } | null | undefined)?.text;
-      if (baseText && baseText.length === 1) {
+      if (baseText?.length === 1) {
         // Make an italic correction on the superscript.
         const text = baseText;
         if (smallPad.includes(text)) {
@@ -105,15 +100,13 @@ defineFunctionBuilders({
     } else if (!group.sub) {
       const base = group.base;
       if (
-        base &&
-        base.type === 'op' &&
+        base?.type === 'op' &&
         base.limits &&
         (style.level === StyleLevel.DISPLAY || base.alwaysHandleSupSub)
       ) {
         nodeType = 'mover';
       } else if (
-        base &&
-        base.type === 'operatorname' &&
+        base?.type === 'operatorname' &&
         base.alwaysHandleSupSub &&
         (base.limits || style.level === StyleLevel.DISPLAY)
       ) {
@@ -131,8 +124,7 @@ defineFunctionBuilders({
       ) {
         nodeType = 'munderover';
       } else if (
-        base &&
-        base.type === 'operatorname' &&
+        base?.type === 'operatorname' &&
         base.alwaysHandleSupSub &&
         (style.level === StyleLevel.DISPLAY || base.limits)
       ) {
@@ -145,15 +137,13 @@ defineFunctionBuilders({
       if (group.stack) {
         nodeType = 'munder';
       } else if (
-        base &&
-        base.type === 'op' &&
+        base?.type === 'op' &&
         base.limits &&
         (style.level === StyleLevel.DISPLAY || base.alwaysHandleSupSub)
       ) {
         nodeType = 'munder';
       } else if (
-        base &&
-        base.type === 'operatorname' &&
+        base?.type === 'operatorname' &&
         base.alwaysHandleSupSub &&
         (base.limits || style.level === StyleLevel.DISPLAY)
       ) {

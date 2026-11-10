@@ -10,12 +10,7 @@ import type { MathDomNode } from '../tree';
 const varNameFonts = new Set(['mathrm', 'mathit']);
 
 const isLongVariableName = (group: ParseNode<'font'>, font: string): boolean => {
-  if (
-    !varNameFonts.has(font) ||
-    !group.body ||
-    group.body.type !== 'ordgroup' ||
-    group.body.body.length === 1
-  ) {
+  if (!varNameFonts.has(font) || group.body.type !== 'ordgroup' || group.body.body.length === 1) {
     return false;
   }
   if (group.body.body[0].type !== 'mathord') {
@@ -43,8 +38,10 @@ const hasChildren = (node: MathDomNode): node is MathNode =>
 const mathmlBuilder: MathMLBuilder<'font'> = (group, style) => {
   const font = group.font;
   const newStyle = style.withFont(font);
-  // The checks below read the children as MathNodes, as the original duck-typed code did.
-  const mathGroup = mml.buildGroup(group.body, newStyle) as MathNode;
+  const mathGroup = mml.buildGroup(group.body, newStyle);
+  if (!(mathGroup instanceof mathMLTree.MathNode)) {
+    return mathGroup;
+  }
 
   if (mathGroup.children.length === 0) {
     return mathGroup;
@@ -54,7 +51,12 @@ const mathmlBuilder: MathMLBuilder<'font'> = (group, style) => {
     return mathGroup;
   }
   // Check if it is possible to consolidate elements into a single <mi> element.
-  const children = mathGroup.children as MathNode[];
+  const children = mathGroup.children.every((child) => child instanceof mathMLTree.MathNode)
+    ? mathGroup.children
+    : null;
+  if (!children) {
+    return mathGroup;
+  }
   if (isLongVariableName(group, font)) {
     // This is a \mathrm{…} or \mathit{…} group. It gets special treatment.
     const grandChild = children[0].children[0];
@@ -89,7 +91,7 @@ const mathmlBuilder: MathMLBuilder<'font'> = (group, style) => {
     if (children[i].type !== 'mi') {
       canConsolidate = false;
     }
-    if (children[i].attributes?.mathvariant !== 'normal') {
+    if (children[i].attributes.mathvariant !== 'normal') {
       canConsolidate = false;
     }
   }
@@ -174,7 +176,7 @@ defineFunction({
     numArgs: 0,
     allowedInText: true,
   },
-  handler: ({ parser, funcName, breakOnTokenText }, args) => {
+  handler: ({ parser, funcName, breakOnTokenText }) => {
     const { mode } = parser;
     const body = parser.parseExpression(true, breakOnTokenText, true);
     const fontStyle = `math${funcName.slice(1)}`;

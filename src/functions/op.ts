@@ -3,6 +3,7 @@ import defineFunction, { ordargument } from '../defineFunction';
 import * as mathMLTree from '../mathMLTree';
 import * as mml from '../buildMathML';
 import { isDelimiter } from './delimiter';
+import { assert } from '../utils';
 import type { MathMLBuilder } from '../defineFunction';
 import type { MathNode } from '../mathMLTree';
 import type { AnyParseNode } from '../parseNode';
@@ -32,8 +33,9 @@ const mathmlBuilder: MathMLBuilder<'op'> = (group, style) => {
 
   if (group.symbol) {
     // This is a symbol. Just add the symbol.
-    node = new mathMLTree.MathNode('mo', [mml.makeText(group.name!, group.mode)]);
-    if (noSuccessor.has(group.name!)) {
+    const name = assert(group.name);
+    node = new mathMLTree.MathNode('mo', [mml.makeText(name, group.mode)]);
+    if (noSuccessor.has(name)) {
       node.setAttribute('largeop', 'false');
     } else {
       node.setAttribute('movablelimits', 'false');
@@ -49,7 +51,7 @@ const mathmlBuilder: MathMLBuilder<'op'> = (group, style) => {
     }
   } else {
     // This is a text operator. Add all of the characters from the operator's name.
-    node = new mathMLTree.MathNode('mi', [new mathMLTree.TextNode(group.name!.slice(1))]);
+    node = new mathMLTree.MathNode('mi', [new mathMLTree.TextNode(assert(group.name).slice(1))]);
 
     if (!group.parentIsSupSub) {
       // Append an invisible <mo>&ApplyFunction;</mo>.
@@ -138,7 +140,7 @@ defineFunction({
   props: {
     numArgs: 0,
   },
-  handler: ({ parser, funcName }, args) => {
+  handler: ({ parser, funcName }) => {
     let fName = funcName;
     if (fName.length === 1) {
       fName = singleCharBigOps[fName];

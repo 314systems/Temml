@@ -47,14 +47,15 @@ const FORBIDDEN_MACRO_KEYS = ['__proto__', 'prototype', 'constructor'];
 // object.
 const sanitizeMacros = (macros: unknown): MacroMap => {
   if (macros == null || typeof macros !== 'object') {
-    return Object.create(null);
+    return Object.create(null) as MacroMap;
   }
   for (const key of FORBIDDEN_MACRO_KEYS) {
     if (Object.hasOwn(macros, key)) {
       delete (macros as Record<string, unknown>)[key];
     }
   }
-  return Object.setPrototypeOf(macros, null);
+  Object.setPrototypeOf(macros, null);
+  return macros as MacroMap;
 };
 
 /**
@@ -78,7 +79,7 @@ export default class Settings {
 
   constructor(options?: Options | null) {
     // allow null options
-    const opts: Options = options || {};
+    const opts: Options = options ?? {};
     this.displayMode = utils.deflt(opts, 'displayMode', false);
     this.annotate = utils.deflt(opts, 'annotate', false);
     this.leqno = utils.deflt(opts, 'leqno', false);
@@ -113,6 +114,6 @@ export default class Settings {
       context.protocol = protocol;
     }
     const trust = typeof this.trust === 'function' ? this.trust(context) : this.trust;
-    return Boolean(trust);
+    return trust;
   }
 }

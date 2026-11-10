@@ -112,9 +112,7 @@ export default class Parser {
    * fetch the next token as the new lookahead token and return it.
    */
   fetch(): Token {
-    if (this.nextToken == null) {
-      this.nextToken = this.gullet.expandNextToken();
-    }
+    this.nextToken ??= this.gullet.expandNextToken();
     return this.nextToken;
   }
 
@@ -156,7 +154,7 @@ export default class Parser {
    */
   parsePreamble(): MacroMap {
     this.parseInGroup();
-    const macros: MacroMap = Object.create(null);
+    const macros = Object.create(null) as MacroMap;
     for (const [key, value] of Object.entries(this.gullet.macros.current)) {
       macros[key] = value;
     }
@@ -243,7 +241,7 @@ export default class Parser {
       if (breakOnMiddle && lex.text === '\\middle') {
         break;
       }
-      if (breakOnInfix && functions[lex.text] && functions[lex.text].infix) {
+      if (breakOnInfix && functions[lex.text]?.infix) {
         break;
       }
       const atom = this.parseAtom(breakOnTokenText);
@@ -344,11 +342,11 @@ export default class Parser {
    * contained within a color node whose color is determined by errorColor
    */
   formatUnsupportedCmd(text: string): ParseNode<'color'> {
-    const textordArray: ParseNode<'textord'>[] = [];
-
-    for (let i = 0; i < text.length; i++) {
-      textordArray.push({ type: 'textord', mode: 'text', text: text[i] });
-    }
+    const textordArray: ParseNode<'textord'>[] = Array.from(text.split(''), (character) => ({
+      type: 'textord',
+      mode: 'text',
+      text: character,
+    }));
 
     const textNode: ParseNode<'text'> = {
       type: 'text',
@@ -376,7 +374,7 @@ export default class Parser {
 
     // Internal nodes (e.g. \relax) cannot support super/subscripts.
     // Instead we will pick up super/subscripts with blank base next round.
-    if (base && base.type === 'internal') {
+    if (base?.type === 'internal') {
       return base;
     }
 
@@ -400,11 +398,11 @@ export default class Parser {
         case '\\limits':
         case '\\nolimits': {
           // We got a limit control
-          if (base && base.type === 'op') {
+          if (base?.type === 'op') {
             const limits = lex.text === '\\limits';
             base.limits = limits;
             base.alwaysHandleSupSub = true;
-          } else if (base && base.type === 'operatorname') {
+          } else if (base?.type === 'operatorname') {
             if (base.alwaysHandleSupSub) {
               base.limits = lex.text === '\\limits';
             }
@@ -491,7 +489,7 @@ export default class Parser {
     }
 
     if (superscript || subscript) {
-      if (base && base.type === 'multiscript' && !base.postscripts) {
+      if (base?.type === 'multiscript' && !base.postscripts) {
         // base is the result of a \prescript function.
         // Write the sub- & superscripts into the multiscript element.
         base.postscripts = { sup: superscript, sub: subscript };
@@ -501,7 +499,7 @@ export default class Parser {
         const isFollowedByDelimiter =
           !base || (base.type !== 'op' && base.type !== 'operatorname')
             ? undefined
-            : isDelimiter(this.nextToken!.text);
+            : isDelimiter(this.fetch().text);
         return {
           type: 'supsub',
           mode: this.mode,
@@ -539,7 +537,7 @@ export default class Parser {
       );
     } else if (this.mode === 'text' && !funcData.allowedInText) {
       throw new ParseError("Can't use function '" + func + "' in text mode", token);
-    } else if (this.mode === 'math' && funcData.allowedInMath === false) {
+    } else if (this.mode === 'math' && !funcData.allowedInMath) {
       throw new ParseError("Can't use function '" + func + "' in math mode", token);
     }
 
@@ -555,7 +553,7 @@ export default class Parser {
   callFunction(
     name: string,
     args: AnyParseNode[],
-    optArgs: Array<AnyParseNode | null | undefined>,
+    optArgs: (AnyParseNode | null | undefined)[],
     token?: Token,
     breakOnTokenText?: string | null,
   ): AnyParseNode {
@@ -566,7 +564,7 @@ export default class Parser {
       breakOnTokenText,
     };
     const func = functions[name];
-    if (func && func.handler) {
+    if (func?.handler) {
       return func.handler(context, args, optArgs);
     } else {
       throw new ParseError(`No function handler for ${name}`);
@@ -579,17 +577,17 @@ export default class Parser {
   parseArguments(
     func: string, // Should look like "\name" or "\begin{name}".
     funcData: ArgumentSpec,
-  ): { args: AnyParseNode[]; optArgs: Array<AnyParseNode | null> } {
+  ): { args: AnyParseNode[]; optArgs: (AnyParseNode | null)[] } {
     const totalArgs = funcData.numArgs + funcData.numOptionalArgs;
     if (totalArgs === 0) {
       return { args: [], optArgs: [] };
     }
 
     const args: AnyParseNode[] = [];
-    const optArgs: Array<AnyParseNode | null> = [];
+    const optArgs: (AnyParseNode | null)[] = [];
 
     for (let i = 0; i < totalArgs; i++) {
-      let argType = funcData.argTypes && funcData.argTypes[i];
+      let argType = funcData.argTypes?.[i];
       const isOptional = i < funcData.numOptionalArgs;
 
       if (
@@ -874,8 +872,8 @@ export default class Parser {
     } else {
       // If there exists a function with this name, parse the function.
       // Otherwise, just return a nucleus
-      result = this.parseFunction(breakOnTokenText, name) || this.parseSymbol();
-      if (result == null && text[0] === '\\' && !Object.hasOwn(implicitCommands, text)) {
+      result = this.parseFunction(breakOnTokenText, name) ?? this.parseSymbol();
+      if (result == null && text.startsWith('\\') && !Object.hasOwn(implicitCommands, text)) {
         if (this.settings.throwOnError) {
           throw new ParseError('Unsupported function name: ' + text, firstToken);
         }
@@ -944,13 +942,13 @@ export default class Parser {
     if (/^\\verb[^a-zA-Z]/.test(text)) {
       this.consume();
       let arg = text.slice(5);
-      const star = arg.charAt(0) === '*';
+      const star = arg.startsWith('*');
       if (star) {
         arg = arg.slice(1);
       }
       // Lexer's tokenRegex is constructed to always have matching
       // first/last characters.
-      if (arg.length < 2 || arg.charAt(0) !== arg.slice(-1)) {
+      if (arg.length < 2 || !arg.startsWith(arg.slice(-1))) {
         throw new ParseError(`\\verb assertion failed --
                     please report what input caused this bug`);
       }
@@ -970,7 +968,7 @@ export default class Parser {
       !symbols[this.mode][text[0]]
     ) {
       // This behavior is not strict (XeTeX-compatible) in math mode.
-      if (this.settings.strict && this.mode === 'math') {
+      if (this.settings.strict) {
         throw new ParseError(
           `Accented Unicode text character "${text[0]}" used in math mode`,
           nucleus,
@@ -990,8 +988,9 @@ export default class Parser {
     }
     // Recognize base symbol
     let symbol: AnyParseNode;
-    if (symbols[this.mode][text]) {
-      let group = symbols[this.mode][text].group;
+    const symbolEntry = symbols[this.mode][text];
+    if (symbolEntry) {
+      let group = symbolEntry.group;
       if (
         group === 'bin' &&
         (binLeftCancellers.has(this.prevAtomType) || this.prevAtomType === '')
@@ -1013,7 +1012,8 @@ export default class Parser {
         if (
           (family === 'rel' || family === 'bin') &&
           this.prevAtomType === 'text' &&
-          textRegEx.test(loc!.lexer.input.slice(loc!.end))
+          loc &&
+          textRegEx.test(loc.lexer.input.slice(loc.end))
         ) {
           atom.needsSpacing = true; // Fix a MathML bug.
         }
@@ -1065,12 +1065,11 @@ export default class Parser {
     this.consume();
     // Transform combining characters into accents
     if (match) {
-      for (let i = 0; i < match[0].length; i++) {
-        const accent = match[0][i];
+      for (const accent of match[0]) {
         if (!unicodeAccents[accent]) {
           throw new ParseError(`Unknown accent ' ${accent}'`, nucleus);
         }
-        const command = unicodeAccents[accent][this.mode] || unicodeAccents[accent].text;
+        const command = unicodeAccents[accent][this.mode] ?? unicodeAccents[accent].text;
         if (!command) {
           throw new ParseError(`Accent ${accent} unsupported in ${this.mode} mode`, nucleus);
         }

@@ -44,8 +44,8 @@ const toNode = function (this: HtmlElementData, tagName: string): HTMLElement {
   }
 
   // Append the children, also as HTML nodes
-  for (let i = 0; i < this.children.length; i++) {
-    node.append(this.children[i].toNode());
+  for (const child of this.children) {
+    node.append(child.toNode());
   }
 
   return node;
@@ -81,8 +81,8 @@ const toMarkup = function (this: HtmlElementData, tagName: string): string {
   markup += '>';
 
   // Add the markup of the children, also as markup
-  for (let i = 0; i < this.children.length; i++) {
-    markup += this.children[i].toMarkup();
+  for (const child of this.children) {
+    markup += child.toMarkup();
   }
 
   markup += `</${tagName}>`;
@@ -102,10 +102,10 @@ export class Span implements HtmlElementData, MathDomNode {
   children: VirtualNode[];
 
   constructor(classes?: string[] | null, children?: VirtualNode[] | null, style?: CssStyle | null) {
-    this.classes = classes || [];
+    this.classes = classes ?? [];
     this.attributes = {};
-    this.style = style || {};
-    this.children = children || [];
+    this.style = style ?? {};
+    this.children = children ?? [];
   }
 
   setAttribute(attribute: string, value: string): void {
@@ -150,7 +150,7 @@ export class AnchorNode implements MathDomNode {
   constructor(href: string, classes: string[], children?: VirtualNode[] | null) {
     this.href = href;
     this.classes = classes;
-    this.children = children || [];
+    this.children = children ?? [];
   }
 
   toNode(): HTMLAnchorElement {
@@ -159,8 +159,8 @@ export class AnchorNode implements MathDomNode {
     if (this.classes.length > 0) {
       node.className = createClass(this.classes);
     }
-    for (let i = 0; i < this.children.length; i++) {
-      node.append(this.children[i].toNode());
+    for (const child of this.children) {
+      node.append(child.toNode());
     }
     return node;
   }
@@ -171,8 +171,8 @@ export class AnchorNode implements MathDomNode {
       markup += ` class="${utils.escape(createClass(this.classes))}"`;
     }
     markup += '>';
-    for (let i = 0; i < this.children.length; i++) {
-      markup += this.children[i].toMarkup();
+    for (const child of this.children) {
+      markup += child.toMarkup();
     }
     markup += '</a>';
     return markup;

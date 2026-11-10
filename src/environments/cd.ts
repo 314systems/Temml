@@ -80,14 +80,15 @@ export const parseCD = (parser: Parser): ParseNode<'array'> => {
   parser.gullet.beginGroup();
   while (true) {
     // Get the parse nodes for the next row.
-    parsedRows.push(parser.parseExpression(false, '\\\\'));
+    const row = parser.parseExpression(false, '\\\\');
+    parsedRows.push(row);
     parser.gullet.endGroup();
     parser.gullet.beginGroup();
     const next = parser.fetch().text;
     if (next === '&' || next === '\\\\') {
       parser.consume();
     } else if (next === '\\end') {
-      if (parsedRows.at(-1)!.length === 0) {
+      if (row.length === 0) {
         parsedRows.pop(); // final row ended in \\
       }
       break;
