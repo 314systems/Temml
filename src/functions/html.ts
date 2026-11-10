@@ -85,9 +85,9 @@ defineFunction({
     }
     element.classes = classes;
 
-    for (const attr in group.attributes) {
-      if (attr !== 'class' && Object.hasOwn(group.attributes, attr)) {
-        element.setAttribute(attr, group.attributes[attr]);
+    for (const [attr, value] of Object.entries(group.attributes)) {
+      if (attr !== 'class') {
+        element.setAttribute(attr, value);
       }
     }
 

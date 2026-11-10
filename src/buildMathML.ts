@@ -44,7 +44,7 @@ export const makeText = (text: string, mode: Mode, style?: Style): TextNode => {
 };
 
 const copyChar = (newRow: MathNode, child: MathNode): void => {
-  const last = newRow.children[newRow.children.length - 1];
+  const last = newRow.children.at(-1);
   if (newRow.children.length === 0 || !isMathNodeOfType(last, 'mtext')) {
     const mtext = new mathMLTree.MathNode('mtext', [
       new mathMLTree.TextNode((child.children[0] as TextNode).text),

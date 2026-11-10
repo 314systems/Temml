@@ -39,10 +39,8 @@ const toNode = function (this: HtmlElementData, tagName: string): HTMLElement {
   Object.assign(node.style, this.style);
 
   // Apply attributes
-  for (const attr in this.attributes) {
-    if (Object.hasOwn(this.attributes, attr)) {
-      node.setAttribute(attr, this.attributes[attr]);
-    }
+  for (const [attr, value] of Object.entries(this.attributes)) {
+    node.setAttribute(attr, value);
   }
 
   // Append the children, also as HTML nodes
@@ -67,10 +65,8 @@ const toMarkup = function (this: HtmlElementData, tagName: string): string {
   let styles = '';
 
   // Add the styles, after hyphenation
-  for (const style in this.style) {
-    if (Object.hasOwn(this.style, style)) {
-      styles += `${utils.hyphenate(style)}:${this.style[style]};`;
-    }
+  for (const [style, value] of Object.entries(this.style)) {
+    styles += `${utils.hyphenate(style)}:${value};`;
   }
 
   if (styles) {
@@ -78,10 +74,8 @@ const toMarkup = function (this: HtmlElementData, tagName: string): string {
   }
 
   // Add the attributes
-  for (const attr in this.attributes) {
-    if (Object.hasOwn(this.attributes, attr)) {
-      markup += ` ${attr}="${utils.escape(this.attributes[attr])}"`;
-    }
+  for (const [attr, value] of Object.entries(this.attributes)) {
+    markup += ` ${attr}="${utils.escape(value)}"`;
   }
 
   markup += '>';
@@ -227,10 +221,8 @@ export class Img implements MathDomNode {
 
     // Add the styles, after hyphenation
     let styles = '';
-    for (const style in this.style) {
-      if (Object.hasOwn(this.style, style)) {
-        styles += `${utils.hyphenate(style)}:${this.style[style]};`;
-      }
+    for (const [style, value] of Object.entries(this.style)) {
+      styles += `${utils.hyphenate(style)}:${value};`;
     }
     if (styles) {
       markup += ` style="${utils.escape(styles)}"`;

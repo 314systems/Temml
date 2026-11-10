@@ -40,12 +40,10 @@ const findEndOfMath = (delimiter: string, text: string, startIndex: number): num
   let index = startIndex;
   let braceLevel = 0;
 
-  const delimLength = delimiter.length;
-
   while (index < text.length) {
     const character = text[index];
 
-    if (braceLevel <= 0 && text.slice(index, index + delimLength) === delimiter) {
+    if (braceLevel <= 0 && text.startsWith(delimiter, index)) {
       return index;
     } else
       switch (character) {
@@ -98,20 +96,20 @@ const splitAtDelimiters = (text: string, delimiters: Delimiter[]): SplitData[] =
       text = text.slice(index); // now text starts with delimiter
     }
     // ... so this always succeeds:
-    const i = delimiters.findIndex((delim) => text.startsWith(delim.left));
-    index = findEndOfMath(delimiters[i].right, text, delimiters[i].left.length);
+    const delimiter = delimiters.find((delim) => text.startsWith(delim.left))!;
+    index = findEndOfMath(delimiter.right, text, delimiter.left.length);
     if (index === -1) {
       break;
     }
-    const rawData = text.slice(0, index + delimiters[i].right.length);
-    const math = amsRegex.test(rawData) ? rawData : text.slice(delimiters[i].left.length, index);
+    const rawData = text.slice(0, index + delimiter.right.length);
+    const math = amsRegex.test(rawData) ? rawData : text.slice(delimiter.left.length, index);
     data.push({
       type: 'math',
       data: math,
       rawData,
-      display: delimiters[i].display,
+      display: delimiter.display,
     });
-    text = text.slice(index + delimiters[i].right.length);
+    text = text.slice(index + delimiter.right.length);
   }
 
   if (text !== '') {
@@ -282,23 +280,15 @@ export const renderMathInElement = (elem: Element, options?: AutoRenderOptions):
   if (optionsCopy.fences) {
     optionsCopy.delimiters = delimitersFromKey(optionsCopy.fences);
   } else {
-    optionsCopy.delimiters = optionsCopy.delimiters || defaultDelimiters;
+    optionsCopy.delimiters ||= defaultDelimiters;
   }
-  optionsCopy.ignoredTags = optionsCopy.ignoredTags || [
-    'script',
-    'noscript',
-    'style',
-    'textarea',
-    'pre',
-    'code',
-    'option',
-  ];
-  optionsCopy.ignoredClasses = optionsCopy.ignoredClasses || [];
-  optionsCopy.errorCallback = optionsCopy.errorCallback || console.error;
+  optionsCopy.ignoredTags ||= ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'];
+  optionsCopy.ignoredClasses ||= [];
+  optionsCopy.errorCallback ||= console.error;
 
   // Enable sharing of global macros defined via `\gdef` between different
   // math elements within a single call to `renderMathInElement`.
-  optionsCopy.macros = optionsCopy.macros || Object.create(null);
+  optionsCopy.macros ||= Object.create(null);
 
   renderElem(elem, optionsCopy as ResolvedOptions);
   postProcess(elem);

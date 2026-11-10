@@ -48,14 +48,11 @@ export default class Namespace<Value> {
           'to pop global namespace; please report this as a bug',
       );
     }
-    for (const undef in undefs) {
-      if (Object.hasOwn(undefs, undef)) {
-        const value = undefs[undef];
-        if (value === undefined) {
-          delete this.current[undef];
-        } else {
-          this.current[undef] = value;
-        }
+    for (const [undef, value] of Object.entries(undefs)) {
+      if (value === undefined) {
+        delete this.current[undef];
+      } else {
+        this.current[undef] = value;
       }
     }
   }

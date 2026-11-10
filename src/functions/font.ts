@@ -89,8 +89,7 @@ const mathmlBuilder: MathMLBuilder<'font'> = (group, style) => {
     if (children[i].type !== 'mi') {
       canConsolidate = false;
     }
-    const localVariant = (children[i].attributes && children[i].attributes.mathvariant) || '';
-    if (localVariant !== 'normal') {
+    if (children[i].attributes?.mathvariant !== 'normal') {
       canConsolidate = false;
     }
   }

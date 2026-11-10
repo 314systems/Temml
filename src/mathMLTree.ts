@@ -98,10 +98,8 @@ export class MathNode implements MathDomNode {
   toNode(): MathMLElement {
     const node = document.createElementNS('http://www.w3.org/1998/Math/MathML', this.type);
 
-    for (const attr in this.attributes) {
-      if (Object.hasOwn(this.attributes, attr)) {
-        node.setAttribute(attr, this.attributes[attr]);
-      }
+    for (const [attr, value] of Object.entries(this.attributes)) {
+      node.setAttribute(attr, value);
     }
 
     if (this.classes.length > 0) {
@@ -125,12 +123,10 @@ export class MathNode implements MathDomNode {
     let markup = '<' + this.type;
 
     // Add the attributes
-    for (const attr in this.attributes) {
-      if (Object.hasOwn(this.attributes, attr)) {
-        markup += ' ' + attr + '="';
-        markup += utils.escape(this.attributes[attr]);
-        markup += '"';
-      }
+    for (const [attr, value] of Object.entries(this.attributes)) {
+      markup += ' ' + attr + '="';
+      markup += utils.escape(value);
+      markup += '"';
     }
 
     if (this.classes.length > 0) {
@@ -140,10 +136,8 @@ export class MathNode implements MathDomNode {
     let styles = '';
 
     // Add the styles, after hyphenation
-    for (const style in this.style) {
-      if (Object.hasOwn(this.style, style)) {
-        styles += `${utils.hyphenate(style)}:${this.style[style]};`;
-      }
+    for (const [style, value] of Object.entries(this.style)) {
+      styles += `${utils.hyphenate(style)}:${value};`;
     }
 
     if (styles) {

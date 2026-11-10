@@ -493,7 +493,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
     for (let i = 0; i < tbl.length; i++) {
       cellsOf(tbl[i])[0].style.paddingLeft = '0em';
       if (tbl[i].children.length === tbl[0].children.length) {
-        cellsOf(tbl[i])[tbl[i].children.length - 1].style.paddingRight = '0em';
+        cellsOf(tbl[i]).at(-1)!.style.paddingRight = '0em';
       }
     }
   }
@@ -510,8 +510,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
           cellsOf(row)[j].classes = ['tml-' + (j % 2 ? 'left' : 'right')];
         }
         if (tagIsPresent) {
-          const k = group.leqno ? 0 : row.children.length - 1;
-          cellsOf(row)[k].classes = []; // Default is center.
+          cellsOf(row).at(group.leqno ? 0 : -1)!.classes = []; // Default is center.
         }
       }
       if (row.children.length > 1 && group.envClasses.includes('cases')) {
@@ -609,8 +608,8 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
             ? '0.06em solid'
             : '0.06em dashed';
       for (const row of table.children as MathNode[]) {
-        cellsOf(row)[row.children.length - 1].style.borderRight = sep;
-        cellsOf(row)[row.children.length - 1].style.paddingRight = '0.4em';
+        cellsOf(row).at(-1)!.style.borderRight = sep;
+        cellsOf(row).at(-1)!.style.paddingRight = '0.4em';
       }
     }
   }
