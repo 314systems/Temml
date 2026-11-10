@@ -194,7 +194,7 @@ defineMacro('\\char', (context) => {
       [digit, numStr] = nextCharNumber(context);
     }
   }
-  return `\\@char{${number}}`;
+  return `\\@char{${String(number)}}`;
 });
 
 const recreateArgStr = (context: MacroExpander): string => {

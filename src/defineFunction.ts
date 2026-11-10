@@ -176,15 +176,9 @@ export const defineFunctionBuilders = <NODETYPE extends NodeType>({
   type: NODETYPE;
   mathmlBuilder?: MathMLBuilder<NODETYPE>;
 }): void => {
-  defineFunction({
-    type,
-    names: [],
-    props: { numArgs: 0 },
-    handler() {
-      throw new Error('Should never be called.');
-    },
-    mathmlBuilder,
-  });
+  if (mathmlBuilder) {
+    registerMathMLBuilder(type, mathmlBuilder);
+  }
 };
 
 export const normalizeArgument = (arg: AnyParseNode): AnyParseNode => {

@@ -50,7 +50,9 @@ export default class Namespace<Value> {
     }
     for (const [undef, value] of Object.entries(undefs)) {
       if (value === undefined) {
-        delete this.current[undef];
+        if (!Reflect.deleteProperty(this.current, undef)) {
+          throw new TypeError('Cannot delete macro ' + undef);
+        }
       } else {
         this.current[undef] = value;
       }
@@ -93,7 +95,9 @@ export default class Namespace<Value> {
       // and adding an undo with the *new* value (in case it later gets
       // locally reset within this environment).
       for (const undefs of this.undefStack) {
-        delete undefs[name];
+        if (!Reflect.deleteProperty(undefs, name)) {
+          throw new TypeError('Cannot delete macro ' + name);
+        }
       }
       const top = this.undefStack.at(-1);
       if (top) {

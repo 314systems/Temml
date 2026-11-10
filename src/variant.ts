@@ -7,10 +7,12 @@ import type { SymbolParseNode } from './parseNode';
 const fontMap: Record<string, string> = {
   // styles
   mathbf: 'bold',
-  mathrm: 'normal',
   textit: 'italic',
   mathit: 'italic',
-  mathnormal: 'italic',
+  greekItalic: 'italic',
+  'up@greek': 'normal',
+  boldsymbol: 'bold-italic',
+  mathboldsymbol: 'bold-italic',
 
   // families
   mathbb: 'double-struck',
@@ -18,6 +20,7 @@ const fontMap: Record<string, string> = {
   mathfrak: 'fraktur',
   mathscr: 'script',
   mathsf: 'sans-serif',
+  mathsfit: 'sans-serif-italic',
   mathtt: 'monospace',
 };
 
@@ -65,38 +68,10 @@ export const getVariant = (group: SymbolParseNode, style: Style): string | null 
     return null;
   }
 
-  switch (font) {
-    case 'mathit':
-      return 'italic';
-    case 'mathrm': {
-      const codePoint = group.text.codePointAt(0) ?? 0;
-      // LaTeX \mathrm returns italic for Greek characters.
-      return 0x03_ab < codePoint && codePoint < 0x03_cf ? 'italic' : 'normal';
-    }
-    case 'greekItalic':
-      return 'italic';
-    case 'up@greek':
-      return 'normal';
-    case 'boldsymbol':
-    case 'mathboldsymbol':
-      return 'bold-italic';
-    case 'mathbf':
-      return 'bold';
-    case 'mathbb':
-      return 'double-struck';
-    case 'mathfrak':
-      return 'fraktur';
-    case 'mathscr':
-    case 'mathcal':
-      return 'script';
-    case 'mathsf':
-      return 'sans-serif';
-    case 'mathsfit':
-      return 'sans-serif-italic';
-    case 'mathtt':
-      return 'monospace';
-    default:
-      break;
+  if (font === 'mathrm') {
+    const codePoint = group.text.codePointAt(0) ?? 0;
+    // LaTeX \mathrm returns italic for Greek characters.
+    return 0x03_ab < codePoint && codePoint < 0x03_cf ? 'italic' : 'normal';
   }
 
   return Object.hasOwn(fontMap, font) ? fontMap[font] : null;

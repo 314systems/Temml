@@ -438,8 +438,8 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
     }
   }
 
-  let sidePadding: string | undefined;
-  let sidePadUnit: string | undefined;
+  let sidePadding = '';
+  let sidePadUnit = 'em';
   if (group.envClasses.length > 0) {
     sidePadding =
       group.envClasses.includes('abut') || group.envClasses.includes('cases')
@@ -449,7 +449,6 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
           : group.envClasses.includes('cd')
             ? '0.25'
             : '0.4'; // default side padding
-    sidePadUnit = 'em';
   }
   if (group.arraycolsep) {
     const arraySidePad = calculateSize(group.arraycolsep, style);
@@ -459,7 +458,7 @@ const mathmlBuilder: MathMLBuilder<'array'> = (group, style) => {
   if (sidePadding) {
     const numCols = tbl.length === 0 ? 0 : tbl[0].children.length;
 
-    const sidePad = (j: number, hand: number): string | undefined => {
+    const sidePad = (j: number, hand: number): string => {
       if (j === 0 && hand === 0) {
         return '0';
       }

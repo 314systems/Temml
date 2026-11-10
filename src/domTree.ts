@@ -11,6 +11,8 @@
 import type { CssStyle, MathDomNode, VirtualNode } from './tree';
 import * as utils from './utils';
 
+export { TextNode } from './tree';
+
 /**
  * Create an HTML className based on a list of classes. In addition to joining
  * with spaces, we also remove empty classes.
@@ -124,20 +126,6 @@ export class Span implements HtmlElementData, MathDomNode {
   // text until postProcess fills it in.
   toText(): string {
     return '';
-  }
-}
-
-export class TextNode implements VirtualNode {
-  text: string;
-
-  constructor(text: string) {
-    this.text = text;
-  }
-  toNode(): Text {
-    return document.createTextNode(this.text);
-  }
-  toMarkup(): string {
-    return utils.escape(this.text);
   }
 }
 

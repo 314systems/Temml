@@ -50,8 +50,8 @@ const sanitizeMacros = (macros: unknown): MacroMap => {
     return Object.create(null) as MacroMap;
   }
   for (const key of FORBIDDEN_MACRO_KEYS) {
-    if (Object.hasOwn(macros, key)) {
-      delete (macros as Record<string, unknown>)[key];
+    if (Object.hasOwn(macros, key) && !Reflect.deleteProperty(macros, key)) {
+      throw new TypeError('Cannot delete macro ' + key);
     }
   }
   Object.setPrototypeOf(macros, null);

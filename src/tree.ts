@@ -1,3 +1,5 @@
+import { escape } from './utils';
+
 /** Inline styles, keyed by camelCase or hyphenated CSS property name. */
 export type CssStyle = Record<string, string>;
 
@@ -10,6 +12,40 @@ export interface VirtualNode {
 /** A node that may be a child of a MathML node. */
 export interface MathDomNode extends VirtualNode {
   toText(): string;
+}
+
+/**
+ * This node represents a piece of text.
+ */
+export class TextNode implements MathDomNode {
+  text: string;
+
+  constructor(text: string) {
+    this.text = text;
+  }
+
+  /**
+   * Converts the text node into a DOM text node.
+   */
+  toNode(): Text {
+    return document.createTextNode(this.text);
+  }
+
+  /**
+   * Converts the text node into escaped HTML markup
+   * (representing the text itself).
+   */
+  toMarkup(): string {
+    return escape(this.toText());
+  }
+
+  /**
+   * Converts the text node into a string
+   * (representing the text itself).
+   */
+  toText(): string {
+    return this.text;
+  }
 }
 
 /**

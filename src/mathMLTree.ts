@@ -9,6 +9,8 @@ import { DocumentFragment } from './tree';
 import type { CssStyle, MathDomNode } from './tree';
 import { createClass } from './domTree';
 
+export { TextNode } from './tree';
+
 /** MathML elements that Temml creates. */
 export type MathNodeType =
   | 'math'
@@ -160,40 +162,6 @@ export class MathNode implements MathDomNode {
    */
   toText(): string {
     return this.children.map((child) => child.toText()).join('');
-  }
-}
-
-/**
- * This node represents a piece of text.
- */
-export class TextNode implements MathDomNode {
-  text: string;
-
-  constructor(text: string) {
-    this.text = text;
-  }
-
-  /**
-   * Converts the text node into a DOM text node.
-   */
-  toNode(): Text {
-    return document.createTextNode(this.text);
-  }
-
-  /**
-   * Converts the text node into escaped HTML markup
-   * (representing the text itself).
-   */
-  toMarkup(): string {
-    return utils.escape(this.toText());
-  }
-
-  /**
-   * Converts the text node into a string
-   * (representing the text itself).
-   */
-  toText(): string {
-    return this.text;
   }
 }
 

@@ -44,14 +44,7 @@ let render = (
     options.wrap = 'none';
   }
   const math = renderToMathMLTree(expression, options);
-  if (alreadyInMathElement) {
-    // The <math> element already exists. Populate it.
-    baseNode.textContent = '';
-    for (const e of math.children) {
-      baseNode.append(e.toNode());
-    }
-  } else if (math.children.length > 1) {
-    baseNode.textContent = '';
+  if (alreadyInMathElement || math.children.length > 1) {
     for (const e of math.children) {
       baseNode.append(e.toNode());
     }
